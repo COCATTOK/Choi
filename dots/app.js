@@ -249,6 +249,54 @@
     const cur = LEVELS[i], next = LEVELS[i + 1];
     return { i, x, cur, next, pct: next ? (x - cur.xp) / (next.xp - cur.xp) : 1 };
   }
+  // ---------- 성장 지수 (주식처럼 쌓이며 오르는 나의 지수) ----------
+  // 100에서 시작. 기록한 날은 그날의 XP만큼 오르고,
+  // 아무것도 하지 않은 날은 쌓인 성장분이 1.5%씩 조금 내려갑니다.
+  const INDEX_BASE = 100;
+  const INDEX_DECAY = 0.015;
+  function dailyXP() {
+    const m = {};
+    const add = (d, v) => (m[d] = (m[d] || 0) + v);
+    for (const d in S.checks) add(d, S.checks[d].length * XP.check);
+    for (const d of S.dots) add(d.date, XP.moment + (d.links || []).filter((l) => byId(l)).length * XP.link);
+    for (const d in S.moods) add(d, XP.mood);
+    return m;
+  }
+  function indexSeries() {
+    const xpByDay = dailyXP();
+    const days = Object.keys(xpByDay).sort();
+    const first = days.length && days[0] < today() ? shift(days[0], -1) : shift(today(), -1);
+    const out = [];
+    let v = INDEX_BASE;
+    for (let d = first; d <= today(); d = shift(d, 1)) {
+      const g = xpByDay[d] || 0;
+      if (d !== first) v = g ? v + g : INDEX_BASE + (v - INDEX_BASE) * (1 - INDEX_DECAY);
+      out.push({ d, v, g });
+    }
+    return out;
+  }
+  const fmtIdx = (v) => v.toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function changeText(from, to) {
+    const diff = to - from;
+    const pct = from ? (diff / from) * 100 : 0;
+    const cls = diff > 0.004 ? 'up' : diff < -0.004 ? 'down' : 'flat';
+    const arrow = cls === 'up' ? '▲' : cls === 'down' ? '▼' : '';
+    return { cls, text: `${arrow} ${fmtIdx(Math.abs(diff))} (${diff >= 0 ? '+' : '-'}${Math.abs(pct).toFixed(2)}%)`.trim() };
+  }
+  // 숫자가 차르르 올라가는 애니메이션
+  const shown = {};
+  function countTo(elm, key, to, render) {
+    const from = shown[key] ?? to;
+    shown[key] = to;
+    if (Math.abs(to - from) < 0.005 || matchMedia('(prefers-reduced-motion: reduce)').matches) return render(to);
+    const t0 = performance.now(), dur = 900;
+    const step = (t) => {
+      const k = Math.min(1, (t - t0) / dur);
+      render(from + (to - from) * (1 - Math.pow(1 - k, 3)));
+      if (k < 1 && elm.isConnected) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
   function perfectDays() {
     let n = 0;
     for (const d in S.checks) {
@@ -349,6 +397,7 @@
 
     renderWeek();
     renderProgress();
+    renderTicker();
     renderHabits();
     renderMoods();
     renderMoments();
@@ -698,7 +747,144 @@
   // =========================================================
   // 3) 성장
   // =========================================================
+  // 오늘 탭의 작은 시세판
+  function renderTicker() {
+    const box = $('#today-ticker');
+    const ser = indexSeries();
+    const last = ser[ser.length - 1];
+    const prev = ser.length > 1 ? ser[ser.length - 2] : last;
+    const ch = changeText(prev.v, last.v);
+    const recent = ser.slice(-30);
+    const color = recent[recent.length - 1].v >= recent[0].v ? 'var(--up)' : 'var(--down)';
+    box.innerHTML = `<span class="tk-name"><b>성장 지수</b>오늘</span>${sparkSVG(recent, 120, 30, color)}` +
+      `<span class="tk-val"><b id="tk-num">${fmtIdx(last.v)}</b><span class="${ch.cls}">${ch.text.split(' (')[0] || '0.00'}</span></span>`;
+    const num = box.querySelector('#tk-num');
+    countTo(num, 'ticker', last.v, (v) => (num.textContent = fmtIdx(v)));
+    box.onclick = () => show('growth');
+  }
+  function sparkSVG(ser, w, h, color) {
+    if (ser.length < 2) return `<svg viewBox="0 0 ${w} ${h}"><line x1="0" y1="${h / 2}" x2="${w}" y2="${h / 2}" stroke="${color}" stroke-width="1.5"/></svg>`;
+    const vs = ser.map((p) => p.v);
+    const lo = Math.min(...vs), hi = Math.max(...vs), span = hi - lo || 1;
+    const pts = ser.map((p, i) => `${((i / (ser.length - 1)) * w).toFixed(1)},${(h - 2 - ((p.v - lo) / span) * (h - 4)).toFixed(1)}`).join(' ');
+    return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
+  }
+
+  // 성장 탭의 주식 차트
+  const PERIODS = [
+    { id: '1w', name: '1주', days: 7 },
+    { id: '1m', name: '1개월', days: 30 },
+    { id: '3m', name: '3개월', days: 90 },
+    { id: '1y', name: '1년', days: 365 },
+    { id: 'all', name: '전체', days: Infinity },
+  ];
+  let period = '1m';
+  function renderIndexHero() {
+    const all = indexSeries();
+    const per = PERIODS.find((p) => p.id === period);
+    const ser = all.slice(-Math.min(all.length, per.days + 1));
+    const first = ser[0], last = ser[ser.length - 1];
+    const up = last.v >= first.v;
+    const color = up ? 'var(--up)' : 'var(--down)';
+    const valEl = $('#idx-value'), chEl = $('#idx-change');
+    const setHeader = (p, label) => {
+      const ch = changeText(first.v, p.v);
+      chEl.innerHTML = `<span class="${ch.cls}">${ch.text}</span><span class="when">${label}</span>`;
+    };
+    const idle = () => {
+      countTo(valEl, 'hero', last.v, (v) => (valEl.textContent = fmtIdx(v)));
+      setHeader(last, per.id === 'all' ? '처음부터' : `지난 ${per.name}`);
+    };
+    idle();
+
+    // 차트
+    const box = $('#idx-chart');
+    box.innerHTML = '';
+    const W = 390, H = 190, T = 14, B = 14;
+    const vs = ser.map((p) => p.v);
+    let lo = Math.min(...vs), hi = Math.max(...vs);
+    if (hi - lo < 1) { hi += 0.5; lo -= 0.5; }
+    const padY = (hi - lo) * 0.12;
+    lo -= padY; hi += padY;
+    const n = ser.length;
+    const PR = 14; // 마지막 점이 잘리지 않도록
+    const x = (i) => (n === 1 ? W / 2 : (i / (n - 1)) * (W - PR));
+    const y = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': `성장 지수 ${fmtIdx(last.v)}` });
+    const defs = el('defs', {}, svg);
+    const gr = el('linearGradient', { id: 'idxGrad', x1: 0, x2: 0, y1: 0, y2: 1 }, defs);
+    el('stop', { offset: '0%', 'stop-color': up ? '#ff5b5b' : '#4d8dff', 'stop-opacity': 0.22 }, gr);
+    el('stop', { offset: '100%', 'stop-color': up ? '#ff5b5b' : '#4d8dff', 'stop-opacity': 0 }, gr);
+    el('line', { class: 'base', x1: 0, x2: W, y1: y(first.v), y2: y(first.v) }, svg); // 기간 시작 기준선
+    const d = ser.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(2)} ${y(p.v).toFixed(2)}`).join(' ');
+    el('path', { class: 'area', d: `${d} L${x(n - 1)} ${H} L${x(0)} ${H} Z`, fill: 'url(#idxGrad)' }, svg);
+    const line = el('path', { class: 'ln', d, stroke: color }, svg);
+    el('circle', { class: 'live', cx: x(n - 1), cy: y(last.v), r: 3.5, fill: color }, svg);
+    el('circle', { cx: x(n - 1), cy: y(last.v), r: 3.5, fill: color }, svg);
+    const cross = el('line', { class: 'cross', y1: 0, y2: H, visibility: 'hidden' }, svg);
+    const dot = el('circle', { r: 4.5, fill: color, stroke: 'var(--bg)', 'stroke-width': 2, visibility: 'hidden' }, svg);
+    box.appendChild(svg);
+    const len = line.getTotalLength();
+    line.style.setProperty('--len', len);
+    line.classList.add('draw');
+
+    // 손가락으로 훑으면 그날의 지수가 보여요 (Apple 주식 앱처럼)
+    const scrub = (ev) => {
+      const r = svg.getBoundingClientRect();
+      const i = Math.max(0, Math.min(n - 1, Math.round((((ev.clientX - r.left) / r.width) * W / (W - PR)) * (n - 1))));
+      const p = ser[i];
+      cross.setAttribute('x1', x(i));
+      cross.setAttribute('x2', x(i));
+      dot.setAttribute('cx', x(i));
+      dot.setAttribute('cy', y(p.v));
+      cross.setAttribute('visibility', 'visible');
+      dot.setAttribute('visibility', 'visible');
+      valEl.textContent = fmtIdx(p.v);
+      setHeader(p, `${fmtDate(p.d)}${p.g ? ` · +${p.g} XP` : ''}`);
+    };
+    const end = () => {
+      cross.setAttribute('visibility', 'hidden');
+      dot.setAttribute('visibility', 'hidden');
+      valEl.textContent = fmtIdx(last.v);
+      setHeader(last, per.id === 'all' ? '처음부터' : `지난 ${per.name}`);
+    };
+    svg.addEventListener('pointerdown', (ev) => { haptic(5); scrub(ev); });
+    svg.addEventListener('pointermove', (ev) => { if (ev.pointerType === 'mouse' || ev.buttons) scrub(ev); });
+    svg.addEventListener('pointerleave', end);
+    svg.addEventListener('pointerup', (ev) => ev.pointerType !== 'mouse' && end());
+    svg.addEventListener('pointercancel', end);
+
+    // 기간 선택
+    const segs = $('#idx-periods');
+    segs.innerHTML = '';
+    for (const p of PERIODS) {
+      const b = document.createElement('button');
+      b.className = 'chip' + (p.id === period ? ' on' : '');
+      b.textContent = p.name;
+      b.onclick = () => {
+        period = p.id;
+        renderIndexHero();
+      };
+      segs.appendChild(b);
+    }
+
+    // 요약: 최고, 최저, 상승한 날, 연속 상승
+    const hiAll = Math.max(...all.map((p) => p.v));
+    const upDays = ser.slice(1).filter((p) => p.g > 0).length;
+    let run = 0;
+    for (let i = all.length - 1; i > 0 && all[i].g > 0; i--) run++;
+    $('#idx-stats').innerHTML = [
+      ['기간 최고', fmtIdx(Math.max(...vs))],
+      ['기간 최저', fmtIdx(Math.min(...vs))],
+      ['역대 최고', fmtIdx(hiAll)],
+      ['상승한 날', `${upDays}일`],
+      ['연속 상승', `${run}일`],
+      ['시작', fmtIdx(INDEX_BASE)],
+    ].map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join('');
+  }
+
   function renderGrowth() {
+    renderIndexHero();
     const lv = level();
     $('#level-card').innerHTML = `<div class="lv">LEVEL ${lv.i + 1}</div><h2>${lv.cur.name}</h2>` +
       `<div class="bar"><i style="width:${Math.round(lv.pct * 100)}%"></i></div>` +
@@ -1325,9 +1511,10 @@
       const d = shift(today(), -i);
       // 시간이 갈수록 더 꾸준해지는 흐름
       const p = 0.45 + (0.45 * (84 - i)) / 84;
-      const list = S.habits.filter((h) => scheduled(h, d) && (hash(d + h.id) % 100) / 100 < p).map((h) => h.id);
+      const rest = i > 2 && hash('rest' + d) % 7 === 0; // 가끔 쉬는 날: 지수가 살짝 내려가요
+      const list = rest ? [] : S.habits.filter((h) => scheduled(h, d) && (hash(d + h.id) % 100) / 100 < p).map((h) => h.id);
       if (list.length) S.checks[d] = list;
-      if (i <= 40 && hash('m' + d) % 5) {
+      if (!rest && i <= 40 && hash('m' + d) % 5) {
         const base = 2.4 + list.length * 0.45 + (list.includes('h2') ? 0.6 : 0);
         S.moods[d] = Math.max(1, Math.min(5, Math.round(base + ((hash('x' + d) % 10) - 5) / 6)));
       }

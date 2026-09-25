@@ -365,3 +365,43 @@ cite { display: block; margin-top: 18px; font-size: 12px; color: var(--muted); f
 #heat .heat-legend svg { width: 14px; height: 14px; }
 .bar-row { grid-template-columns: 84px 1fr 34px; }
 .bar-row .name { white-space: nowrap; }
+
+/* ── 성장 지수 (주식 차트) ───────────────── */
+:root { --up: #ff5b5b; --down: #4d8dff; }
+.stock { padding: 0 0 8px; }
+.stock-label { margin: 0; font-size: 13px; color: var(--muted); font-weight: 500; }
+.stock-value { font-size: 44px; font-weight: 300; letter-spacing: -0.04em; line-height: 1.1; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.stock-change { margin: 6px 0 0; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; min-height: 20px; }
+.stock-change .when { color: var(--muted); font-weight: 400; margin-left: 6px; }
+.up { color: var(--up); }
+.down { color: var(--down); }
+.flat { color: var(--text-2); }
+.stock-chart { position: relative; margin: 20px -20px 0; touch-action: pan-y; }
+.stock-chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.stock-chart .base { stroke: var(--hair-2); stroke-width: 1; stroke-dasharray: 2 4; }
+.stock-chart .ln { fill: none; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.stock-chart .ln.draw { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: draw 1.1s var(--ease) forwards; }
+.stock-chart .area { opacity: 0; animation: fadeArea .8s .5s var(--ease) forwards; }
+@keyframes fadeArea { to { opacity: 1; } }
+.stock-chart .cross { stroke: var(--text-2); stroke-width: 1; }
+.stock-chart .live { transform-box: fill-box; transform-origin: center; animation: live 2s ease-out infinite; }
+@keyframes live { 0% { transform: scale(1); opacity: .6; } 100% { transform: scale(3.2); opacity: 0; } }
+.periods { margin-top: 14px; }
+.periods .chip { font-size: 12px; }
+.stock-stats { display: grid; grid-template-columns: repeat(2, 1fr); column-gap: 24px; margin-top: 20px; }
+.stock-stats div { display: flex; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--hair); font-size: 13px; }
+.stock-stats span { color: var(--muted); }
+.stock-stats b { font-weight: 500; font-variant-numeric: tabular-nums; }
+.stock + .level { margin-top: 32px; }
+
+.ticker {
+  width: 100%; margin-top: 28px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px;
+  padding: 14px 16px; border: 0; border-radius: var(--r); background: var(--surface); cursor: pointer; text-align: left;
+}
+.ticker .tk-name { font-size: 13px; color: var(--text-2); }
+.ticker .tk-name b { display: block; color: var(--text); font-size: 15px; font-weight: 600; margin-bottom: 1px; }
+.ticker svg { width: 100%; height: 30px; display: block; }
+.ticker .tk-val { text-align: right; font-variant-numeric: tabular-nums; }
+.ticker .tk-val b { display: block; font-size: 16px; font-weight: 600; }
+.ticker .tk-val span { font-size: 12px; font-weight: 500; }
+.ticker:active { background: var(--surface-2); }
