@@ -123,3 +123,20 @@ input[type=color] { width: 48px; height: 32px; border: 0; background: none; padd
 .overlay[hidden] { display: none; }
 .overlay-box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 24px 32px; text-align: center; }
 #exportProgress { font-size: 28px; font-weight: 900; color: var(--accent); margin: 8px 0; }
+
+.share { border-top: 1px solid var(--line); padding-top: 12px; }
+.share h2 { margin: 0 0 4px; }
+.share-list { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 8px; }
+.share-list li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.share-list li.done { opacity: .55; }
+.share-list a { color: var(--accent); font-weight: 700; text-decoration: none; }
+.share-list .app-only { color: var(--muted); font-size: 12px; }
+.share-list small { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }

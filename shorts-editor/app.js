@@ -348,13 +348,14 @@ function drawBackground(scene, localT) {
 // ===== 장면별 그리기 =====
 const RENDERERS = {
   hook(scene, t) {
+    const layout = layoutText(scene.text, { size: 150, maxLines: 3 });
+    const top = 860 - layout.height / 2;
+    // 라벨은 제목 바로 위에 둔다 (제목 줄 수에 따라 위치가 달라짐)
     const badgeP = easeOut(clamp01(t / 0.25));
     ctx.save();
     ctx.globalAlpha = badgeP;
-    drawPill(scene.badge, W / 2, 520 - (1 - badgeP) * 40, { size: 58 });
+    drawPill(scene.badge, W / 2, Math.min(520, top - 130) - (1 - badgeP) * 40, { size: 58 });
     ctx.restore();
-    const layout = layoutText(scene.text, { size: 150, maxLines: 3 });
-    const top = 860 - layout.height / 2;
     withPop(W / 2, 860, t / 0.35, () => drawText(layout, W / 2, top));
   },
 
@@ -668,6 +669,7 @@ function exportVideo() {
   };
   state.recorder = rec;
   state.exporting = true;
+  resetShareChecks();
   state.time = 0;
   $('exportOverlay').hidden = false;
   $('exportProgress').textContent = '0%';
@@ -856,6 +858,37 @@ function addMedia(file) {
   return id;
 }
 
+// ===== 업로드 체크리스트 =====
+const SHARE_KEY = 'sports-hanip-shared-v1';
+
+function saveShareChecks() {
+  const done = [...document.querySelectorAll('#shareList input')].filter((c) => c.checked).map((c) => c.dataset.platform);
+  try { localStorage.setItem(SHARE_KEY, JSON.stringify(done)); } catch (e) { /* 저장 불가 환경 */ }
+}
+
+function applyShareChecks(done) {
+  document.querySelectorAll('#shareList input').forEach((c) => {
+    c.checked = done.includes(c.dataset.platform);
+    c.closest('li').classList.toggle('done', c.checked);
+  });
+}
+
+// 새 영상을 내보내면 체크리스트를 처음부터 다시 시작한다
+function resetShareChecks() {
+  applyShareChecks([]);
+  saveShareChecks();
+}
+
+function bindShareList() {
+  let done = [];
+  try { done = JSON.parse(localStorage.getItem(SHARE_KEY)) || []; } catch (e) { /* 없음 */ }
+  applyShareChecks(done);
+  document.querySelectorAll('#shareList input').forEach((c) => c.addEventListener('change', () => {
+    c.closest('li').classList.toggle('done', c.checked);
+    saveShareChecks();
+  }));
+}
+
 // ===== 저장 / 불러오기 =====
 function projectData() {
   // 사진/영상 파일은 브라우저에 저장할 수 없어서 글자와 설정만 저장한다.
@@ -993,6 +1026,7 @@ function bindUI() {
   $('seek').addEventListener('input', (e) => seek(Number(e.target.value)));
   $('safeToggle').addEventListener('change', (e) => { $('safeZone').hidden = !e.target.checked; });
   $('exportBtn').addEventListener('click', exportVideo);
+  bindShareList();
 
   document.addEventListener('keydown', (e) => {
     if (e.code !== 'Space' || state.exporting) return;
