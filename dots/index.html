@@ -58,10 +58,12 @@
       </div>
       <div class="group">
         <ul class="list" id="moment-list"></ul>
-        <button class="row-btn prompt" id="prompt-btn">
-          <span class="prompt-q" id="prompt-q"></span>
-          <svg class="chev"><use href="#i-chev"/></svg>
-        </button>
+        <form class="quick" id="quick-form" autocomplete="off">
+          <span class="quick-dot" aria-hidden="true"></span>
+          <input id="quick-input" maxlength="60" enterkeyhint="done" aria-label="오늘의 점 빠르게 찍기">
+          <button type="submit" class="quick-go" id="quick-go" aria-label="점 찍기" hidden><svg><use href="#i-plus"/></svg></button>
+          <button type="button" class="quick-more" id="quick-more" aria-label="자세히 쓰기"><svg class="chev"><use href="#i-chev"/></svg></button>
+        </form>
       </div>
 
       <section class="lookback" id="lookback" hidden></section>
@@ -290,7 +292,8 @@
   </div>
 
   <div class="tooltip" id="tooltip" hidden></div>
-  <div class="toast" id="toast" hidden></div>
+  <div class="toast" id="toast" hidden><span id="toast-msg"></span><button id="toast-act" hidden></button></div>
+  <div class="minibar" id="minibar" aria-hidden="true"><span id="minibar-title"></span></div>
 
   <script src="app.js"></script>
 </body>

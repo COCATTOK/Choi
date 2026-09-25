@@ -10,6 +10,46 @@
   "theme_color": "#000000",
   "lang": "ko",
   "icons": [
-    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "오늘의 점 찍기",
+      "short_name": "점 찍기",
+      "url": "./index.html?go=add",
+      "icons": [
+        {
+          "src": "icon.svg",
+          "sizes": "any"
+        }
+      ]
+    },
+    {
+      "name": "성장 지수 보기",
+      "short_name": "성장 지수",
+      "url": "./index.html?go=growth",
+      "icons": [
+        {
+          "src": "icon.svg",
+          "sizes": "any"
+        }
+      ]
+    },
+    {
+      "name": "나의 별자리",
+      "short_name": "별자리",
+      "url": "./index.html?go=sky",
+      "icons": [
+        {
+          "src": "icon.svg",
+          "sizes": "any"
+        }
+      ]
+    }
   ]
 }

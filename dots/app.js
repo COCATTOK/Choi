@@ -487,21 +487,56 @@
 
   // ---------- 탭 ----------
   let view = 'today';
+  const ORDER = ['today', 'sky', 'growth', 'me'];
   function show(v) {
+    const dir = ORDER.indexOf(v) >= ORDER.indexOf(view) ? 'from-right' : 'from-left';
     view = v;
-    $$('.view').forEach((el) => el.classList.toggle('active', el.id === `view-${v}`));
+    $$('.view').forEach((el) => {
+      const on = el.id === `view-${v}`;
+      el.classList.toggle('active', on);
+      el.classList.remove('from-right', 'from-left');
+      if (on) {
+        void el.offsetWidth;
+        el.classList.add(dir);
+      }
+    });
     $$('.tab').forEach((t) => t.classList.toggle('active', t.dataset.view === v));
     render();
     window.scrollTo(0, 0);
+    onScroll();
   }
-  $$('.tab').forEach((t) => t.addEventListener('click', () => show(t.dataset.view)));
+  // 같은 탭을 다시 누르면 맨 위로
+  $$('.tab').forEach((t) => t.addEventListener('click', () => {
+    if (t.dataset.view === view) window.scrollTo({ top: 0, behavior: 'smooth' });
+    else show(t.dataset.view);
+  }));
   $$('[data-action="add"]').forEach((b) => b.addEventListener('click', () => openForm()));
+
+  function onScroll() {
+    const bar = $('#minibar');
+    const h1 = $(`#view-${view} .top h1`);
+    const show = window.scrollY > 64;
+    if (h1) $('#minibar-title').textContent = h1.textContent;
+    bar.classList.toggle('show', show);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  function updateBadge() {
+    const p = dayProgress(today());
+    const left = p.total - p.done;
+    document.title = left > 0 ? `(${left}) 점과 선` : '점과 선';
+    try {
+      if (left > 0 && navigator.setAppBadge) navigator.setAppBadge(left);
+      else if (navigator.clearAppBadge) navigator.clearAppBadge();
+    } catch (e) { /* 지원하지 않는 기기 */ }
+  }
 
   function render() {
     if (view === 'today') renderToday();
     if (view === 'sky') renderSky();
     if (view === 'growth') renderGrowth();
     if (view === 'me') renderMe();
+    updateBadge();
   }
 
   // =========================================================
@@ -560,6 +595,7 @@
 
   // 오늘의 진행: 완료한 습관 수만큼 점이 차오르고, 이어진 점은 선이 됩니다
   // 오늘의 진행: 완료한 습관만큼 점이 채워지고, 채워진 점끼리 선으로 이어집니다
+  // 오늘의 진행: 완료한 습관만큼 점이 채워지고, 채워진 점끼리 선으로 이어집니다
   function renderProgress() {
     const p = dayProgress(selDay);
     const card = $('#progress-card');
@@ -574,11 +610,19 @@
       : `${isToday ? '' : `${fmtLong(selDay)} · `}${who} ${p.done}표.`;
     const n = p.total;
     const x = (i) => (n === 1 ? 50 : (i / (n - 1)) * 100);
+    const track = card.querySelector('.track');
+    if (track && track.querySelectorAll('i').length === n) {
+      // 이미 그려져 있으면 값만 바꿔서 선이 스르륵 늘어나게
+      card.querySelector('.count').innerHTML = `${p.done}<small>/ ${p.total}</small>`;
+      card.querySelector('.caption').innerHTML = caption;
+      track.querySelectorAll('i').forEach((dot, i) => dot.classList.toggle('on', i < p.done));
+      track.querySelector('.fill').style.width = `${p.done > 1 ? x(p.done - 1) : 0}%`;
+      return;
+    }
     let dots = '';
     for (let i = 0; i < n; i++) dots += `<i class="${i < p.done ? 'on' : ''}" style="left:${x(i)}%"></i>`;
-    const fill = p.done > 1 ? `<span class="fill" style="width:${x(p.done - 1)}%"></span>` : '';
     card.innerHTML = `<div class="count">${p.done}<small>/ ${p.total}</small></div><p class="caption">${caption}</p>` +
-      `<div class="track" aria-hidden="true"><span class="base"></span>${fill}${dots}</div>`;
+      `<div class="track" aria-hidden="true"><span class="base"></span><span class="fill" style="width:${p.done > 1 ? x(p.done - 1) : 0}%"></span>${dots}</div>`;
   }
 
   // 습관별 최근 n일 점-선 (체크한 날이 이어지면 선이 됨)
@@ -606,6 +650,7 @@
     return `<svg class="${cls}" viewBox="0 0 ${w} ${hgt}" aria-hidden="true">${lines}${circles}</svg>`;
   }
 
+  const nowSlot = () => { const h = new Date().getHours(); return h < 11 ? 'morning' : h < 17 ? 'afternoon' : 'evening'; };
   function renderHabits() {
     const box = $('#habit-groups');
     box.innerHTML = '';
@@ -619,7 +664,9 @@
       if (!hs.length) continue;
       const title = document.createElement('h2');
       title.className = 'section';
-      title.textContent = t.name;
+      const now = selDay === today() && t.id === nowSlot();
+      title.textContent = now ? `지금 · ${t.name}` : t.name;
+      if (now) title.classList.add('now');
       const group = document.createElement('div');
       group.className = 'group';
       const ul = document.createElement('div');
@@ -653,11 +700,27 @@
     else list.push(h.id);
     if (!S.checks[selDay].length) delete S.checks[selDay];
     save();
-    renderToday();
+    const row = document.querySelector(`.habit[data-id="${h.id}"]`);
+    if (row) {
+      const fresh = habitRow(h);
+      row.className = fresh.className;
+      row.querySelector('.check').setAttribute('aria-pressed', !was);
+      row.querySelector('.sub').innerHTML = fresh.querySelector('.sub').innerHTML;
+      row.querySelector('.trail').replaceWith(fresh.querySelector('.trail'));
+      if (!was) {
+        void row.offsetWidth;
+        row.classList.add('pulse');
+      }
+    } else renderHabits();
+    renderWeek();
+    renderProgress();
+    renderTicker();
+    renderGoal();
+    updateBadge();
+    const st = streak();
+    $('#streak-pill').innerHTML = st ? `<b>${st}</b>일 연속` + (S.freezes ? ` <span class="shield">${'◆'.repeat(S.freezes)}</span>` : '') : '';
     if (!was) {
       haptic(10);
-      const row = document.querySelector(`.habit[data-id="${h.id}"]`);
-      if (row) row.classList.add('pulse');
       const p = dayProgress(selDay);
       if (p.total && p.done === p.total) {
         haptic([15, 80, 15]);
@@ -706,8 +769,9 @@
       ul.appendChild(li);
     }
     const q = PROMPTS[(parse(selDay).getDate() + parse(selDay).getMonth()) % PROMPTS.length];
-    $('#prompt-q').textContent = list.length ? '또 다른 점 찍기' : q;
-    $('#prompt-btn').onclick = () => openForm(null, { date: selDay, prompt: list.length ? null : q });
+    const input = $('#quick-input');
+    input.placeholder = list.length ? '또 다른 점 찍기' : q;
+    $('#quick-more').onclick = () => openForm(null, { date: selDay, prompt: list.length ? null : q, title: input.value.trim() });
   }
 
   // 돌아보기: 과거의 점 하나를 꺼내 “오늘과 이어지나요?” 묻기
@@ -1238,11 +1302,11 @@
     editingId = id;
     const d = id ? byId(id) : null;
     form.reset();
-    form.title.value = d ? d.title : '';
+    form.title.value = d ? d.title : opts.title || '';
     form.note.value = d ? d.note || '' : '';
     form.date.value = d ? d.date : opts.date || today();
     form.date.max = today();
-    selCat = d ? d.cat : selCat;
+    selCat = d ? d.cat : S.lastCat || selCat;
     selLinks = new Set(d ? d.links || [] : opts.links || []);
     form.querySelector('h2').textContent = d ? '점 다듬기' : '오늘의 점';
     $('#title-label').textContent = opts.prompt || '무엇을 했나요?';
@@ -1253,6 +1317,29 @@
     openSheet('#add-sheet');
     if (!d) setTimeout(() => form.title.focus(), 250);
   }
+
+  // 빠른 기록: 제목만 쓰고 엔터 → 바로 점이 찍힘. 잇기·메모는 나중에.
+  $('#quick-input').addEventListener('input', (e) => ($('#quick-go').hidden = !e.target.value.trim()));
+  $('#quick-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = $('#quick-input');
+    const title = input.value.trim();
+    if (!title) return;
+    const dot = { id: uid(), createdAt: Date.now(), title, note: '', cat: S.lastCat || 'learn', date: selDay, links: [] };
+    S.dots.push(dot);
+    save();
+    input.value = '';
+    input.blur();
+    $('#quick-go').hidden = true;
+    haptic(12);
+    renderMoments();
+    renderTicker();
+    renderWeek();
+    const li = [...$$('#moment-list .li')].pop();
+    if (li) li.classList.add('fresh');
+    toast('새로운 점', { label: '과거와 잇기', run: () => openForm(dot.id) });
+    afterAction();
+  });
 
   function renderChips(box, items, get, set, withColor) {
     box.innerHTML = '';
@@ -1300,6 +1387,7 @@
     e.preventDefault();
     const title = form.title.value.trim();
     if (!title) return;
+    S.lastCat = selCat;
     const data = { title, note: form.note.value.trim(), cat: selCat, date: form.date.value || today(), links: [...selLinks] };
     if (editingId) {
       Object.assign(byId(editingId), data);
@@ -1387,7 +1475,7 @@
     render();
   });
   $('#habit-delete').onclick = () => {
-    if (!confirm('이 습관과 체크 기록을 삭제할까요?')) return;
+    const snap = JSON.stringify(S);
     S.habits = S.habits.filter((x) => x.id !== editingHabit);
     for (const d in S.checks) {
       S.checks[d] = S.checks[d].filter((x) => x !== editingHabit);
@@ -1396,7 +1484,7 @@
     save();
     closeSheets();
     render();
-    toast('삭제했습니다');
+    undoToast('습관을 삭제했습니다', snap);
   };
 
   // =========================================================
@@ -1429,13 +1517,13 @@
     }
     box.querySelector('[data-edit]').onclick = () => openForm(id);
     box.querySelector('[data-del]').onclick = () => {
-      if (!confirm('이 점과 이어진 선을 삭제할까요?')) return;
+      const snap = JSON.stringify(S);
       S.dots = S.dots.filter((x) => x.id !== id);
       for (const x of S.dots) x.links = (x.links || []).filter((l) => l !== id);
       save();
       closeSheets();
       render();
-      toast('삭제했습니다');
+      undoToast('점을 삭제했습니다', snap);
     };
     openSheet('#detail-sheet');
   }
@@ -1486,13 +1574,51 @@
   }
 
   function openSheet(sel) {
-    closeSheets();
+    $$('.sheet-backdrop').forEach((b) => { b.hidden = true; b.classList.remove('closing'); });
     hideTip();
-    $(sel).hidden = false;
+    const bd = $(sel);
+    bd.hidden = false;
+    bd.querySelector('.sheet').style.transform = '';
+    document.body.classList.add('locked');
   }
   function closeSheets() {
-    $$('.sheet-backdrop').forEach((s) => (s.hidden = true));
+    document.body.classList.remove('locked');
+    $$('.sheet-backdrop').forEach((b) => {
+      if (b.hidden || b.classList.contains('closing')) return;
+      b.classList.add('closing');
+      setTimeout(() => {
+        b.hidden = true;
+        b.classList.remove('closing');
+        b.querySelector('.sheet').style.transform = '';
+      }, 260);
+    });
   }
+  // 시트 윗부분을 잡고 아래로 끌면 닫힘
+  $$('.sheet').forEach((sheet) => {
+    let y0 = null, dy = 0, t0 = 0;
+    sheet.addEventListener('pointerdown', (e) => {
+      const top = sheet.getBoundingClientRect().top;
+      if (e.clientY - top > 64 || e.target.closest('input, textarea, button:not(.grip)')) return;
+      y0 = e.clientY; dy = 0; t0 = performance.now();
+      sheet.style.transition = 'none';
+      sheet.setPointerCapture(e.pointerId);
+    });
+    sheet.addEventListener('pointermove', (e) => {
+      if (y0 === null) return;
+      dy = Math.max(0, e.clientY - y0);
+      sheet.style.transform = `translateY(${dy}px)`;
+    });
+    const end = () => {
+      if (y0 === null) return;
+      const v = dy / Math.max(1, performance.now() - t0);
+      sheet.style.transition = '';
+      if (dy > 110 || v > 0.6) closeSheets();
+      else sheet.style.transform = '';
+      y0 = null;
+    };
+    sheet.addEventListener('pointerup', end);
+    sheet.addEventListener('pointercancel', end);
+  });
   document.addEventListener('click', (e) => {
     if (e.target.matches('.sheet-backdrop') || e.target.closest('[data-close]')) closeSheets();
   });
@@ -1514,7 +1640,20 @@
   function nextToast() {
     const t = $('#toast');
     if (!toastQ.length) return;
-    t.textContent = toastQ[0];
+    const { msg, action } = toastQ[0];
+    $('#toast-msg').textContent = msg;
+    const act = $('#toast-act');
+    act.hidden = !action;
+    if (action) {
+      act.textContent = action.label;
+      act.onclick = () => {
+        action.run();
+        clearTimeout(toastTimer);
+        t.hidden = true;
+        toastQ.shift();
+        setTimeout(nextToast, 200);
+      };
+    }
     t.hidden = true;
     void t.offsetWidth; // 애니메이션 다시 시작
     t.hidden = false;
@@ -1523,12 +1662,23 @@
       t.hidden = true;
       toastQ.shift();
       setTimeout(nextToast, 250);
-    }, toastQ.length > 1 ? 1800 : 2600);
+    }, action ? 4000 : toastQ.length > 1 ? 1800 : 2600);
   }
   const toastQ = [];
-  function toast(msg) {
-    toastQ.push(msg);
+  function toast(msg, action) {
+    toastQ.push({ msg, action });
     if (toastQ.length === 1) nextToast();
+  }
+  function undoToast(msg, snap) {
+    toast(msg, {
+      label: '되돌리기',
+      run: () => {
+        S = JSON.parse(snap);
+        save();
+        render();
+        haptic(8);
+      },
+    });
   }
   function haptic(p) {
     try {
@@ -1682,6 +1832,32 @@
     save();
   }
 
+  // 오늘 탭: 좌우로 밀어 어제/오늘 넘기기
+  (() => {
+    const area = $('#view-today');
+    let x0 = null, y0 = 0;
+    area.addEventListener('touchstart', (e) => {
+      if (e.target.closest('input, textarea, .week, .chips, #idx-chart')) return (x0 = null);
+      x0 = e.touches[0].clientX;
+      y0 = e.touches[0].clientY;
+    }, { passive: true });
+    area.addEventListener('touchend', (e) => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+      x0 = null;
+      if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      const next = shift(selDay, dx < 0 ? 1 : -1);
+      if (next > today() || dayDiff(next, today()) > 6) return;
+      selDay = next;
+      haptic(6);
+      const hero = $('#progress-card');
+      hero.classList.remove('slide-l', 'slide-r');
+      renderToday();
+      void hero.offsetWidth;
+      hero.classList.add(dx < 0 ? 'slide-l' : 'slide-r');
+    }, { passive: true });
+  })();
+
   // ---------- 시작 ----------
   let resizeT;
   window.addEventListener('resize', () => {
@@ -1703,6 +1879,12 @@
     lastLevel = level().i;
   }
   render();
+  const go = new URLSearchParams(location.search).get('go');
+  if (S.profile.onboarded && go) {
+    history.replaceState(null, '', location.pathname);
+    if (go === 'add') openForm();
+    else if (ORDER.includes(go)) show(go);
+  }
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }

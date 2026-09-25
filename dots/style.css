@@ -436,3 +436,82 @@ cite { display: block; margin-top: 18px; font-size: 12px; color: var(--muted); f
 .notice p:last-child { margin: 6px 0 0; color: var(--text-2); font-size: 14px; }
 
 #quote { margin-top: 44px; padding: 0 12px; line-height: 1.7; }
+
+/* ── 부드러움 ─────────────────────────── */
+:root { --spring: cubic-bezier(.34, 1.4, .64, 1); }
+html { scroll-behavior: smooth; }
+body.locked { overflow: hidden; }
+
+/* 탭 전환: 옆에서 살짝 밀려 들어옴 */
+.view.active { animation: none; }
+.view.from-right { animation: inR .42s var(--ease); }
+.view.from-left { animation: inL .42s var(--ease); }
+@keyframes inR { from { opacity: 0; transform: translateX(18px); } }
+@keyframes inL { from { opacity: 0; transform: translateX(-18px); } }
+.tab svg { transition: transform .35s var(--spring); }
+.tab.active svg { transform: translateY(-1px) scale(1.06); }
+
+/* 누르는 손맛: 모든 버튼이 살짝 눌림 */
+.btn, .icon-btn, .row-btn, .li, .ticker, .goal, .chip, .mood, .day, .tpl, .badge, .quick-go, .quick-more {
+  transition: transform .25s var(--spring), background .2s, color .2s, opacity .2s;
+}
+.btn:active, .icon-btn:active, .ticker:active, .goal:active, .chip:active, .mood:active, .day:active, .badge:active { transform: scale(.96); opacity: 1; }
+.li:active, .row-btn:active, .tpl:active { transform: scale(.985); }
+
+/* 스크롤하면 나타나는 작은 제목 */
+.minibar {
+  position: fixed; top: 0; left: 50%; z-index: 9; width: 100%; max-width: 480px; transform: translate(-50%, -100%);
+  padding: calc(var(--safe-t) + 12px) 20px 12px; text-align: center; font-size: 15px; font-weight: 600;
+  background: rgba(0, 0, 0, .72); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--hair); transition: transform .35s var(--ease); pointer-events: none;
+}
+.minibar.show { transform: translate(-50%, 0); }
+
+/* 지금 해야 할 습관 */
+.section.now { color: var(--text); }
+.section.now::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--warm); margin-right: 8px; vertical-align: 1px; animation: breathe 2.4s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .35; } }
+
+/* 습관 체크: 행 전체가 부드럽게 */
+.habit { transition: opacity .3s var(--ease); }
+.habit .trail circle, .habit .trail line { transition: .3s var(--ease); }
+.habit.done .check { transform: scale(1); }
+.habit.pulse .check { animation: pulse .5s var(--ease), bounce .45s var(--spring); }
+@keyframes bounce { 0% { transform: scale(.7); } 100% { transform: scale(1); } }
+.hero .count { transition: opacity .2s; }
+.hero.slide-l { animation: slideL .35s var(--ease); }
+.hero.slide-r { animation: slideR .35s var(--ease); }
+@keyframes slideL { from { opacity: 0; transform: translateX(24px); } }
+@keyframes slideR { from { opacity: 0; transform: translateX(-24px); } }
+
+/* 빠른 기록 */
+.quick { position: relative; display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 8px 0 16px; }
+.list:not(:empty) + .quick::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: 1px; background: var(--hair); }
+.quick-dot { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--hair-2); flex: none; }
+.quick input { flex: 1; min-width: 0; border: 0; background: none; outline: none; padding: 14px 0; font-size: 15px; }
+.quick input:focus + .quick-go + .quick-more, .quick input:focus ~ .quick-more { opacity: .6; }
+.quick-go, .quick-more { width: 34px; height: 34px; border: 0; border-radius: 50%; background: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; flex: none; }
+.quick-go { background: var(--text); color: #000; animation: appear .3s var(--spring); }
+.quick-go svg { width: 16px; height: 16px; }
+.quick-go[hidden] { display: none; }
+.li.fresh { animation: fresh .6s var(--ease); }
+@keyframes fresh { from { opacity: 0; transform: translateY(-6px); background: var(--surface-2); } }
+
+/* 시트: 스프링으로 올라오고, 부드럽게 내려감 */
+.sheet { transition: transform .3s var(--ease); animation: up .45s var(--ease); touch-action: pan-y; }
+.sheet-backdrop.closing { animation: fadeOut .26s ease forwards; }
+.sheet-backdrop.closing .sheet { animation: down .26s var(--ease) forwards; }
+@keyframes fadeOut { to { opacity: 0; } }
+@keyframes down { to { transform: translateY(100%); } }
+.grip { cursor: grab; }
+
+/* 되돌리기가 붙는 토스트 */
+.toast { display: flex; align-items: center; gap: 14px; }
+.toast[hidden] { display: none; }
+#toast-act { border: 0; background: none; color: var(--warm); font-weight: 600; font-size: 14px; padding: 0; cursor: pointer; }
+#toast-act[hidden] { display: none; }
+/* 가로로 밀 때 브라우저 ‘뒤로 가기’가 끼어들지 않게 */
+html, body { overscroll-behavior-x: none; }
+/* 알림은 엄지가 닿는 아래쪽, 탭바 바로 위 */
+.toast { top: auto; bottom: calc(76px + var(--safe-b)); animation: toastUp .45s var(--spring); }
+@keyframes toastUp { from { transform: translate(-50%, 16px) scale(.96); opacity: 0; } }

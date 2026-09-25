@@ -1,6 +1,6 @@
 // 오프라인에서도 앱이 열리도록 앱 파일을 캐시합니다.
 // 온라인이면 항상 최신 파일을 먼저 받고(network-first), 끊겼을 때만 캐시를 씁니다.
-const CACHE = 'dots-v4';
+const CACHE = 'dots-v5';
 const FILES = ['./', './index.html', './style.css', './app.js', './icon.svg', './manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
