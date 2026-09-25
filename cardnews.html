@@ -85,6 +85,16 @@
     }
     textarea { min-height: 260px; resize: vertical; line-height: 1.6; }
     textarea.short { min-height: 100px; }
+    .group {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 4px 14px 14px;
+      margin: 20px 0 0;
+    }
+    .group legend { font-size: 13px; font-weight: 700; padding: 0 6px; }
+    .file-row { display: flex; gap: 8px; align-items: center; }
+    .file-row input { flex: 1; min-width: 0; font-size: 13px; }
+    .file-row button { padding: 6px 10px; font-size: 12px; flex: none; }
     .ai {
       border: 1px solid var(--line);
       border-radius: 10px;
@@ -297,6 +307,33 @@
       <label for="cta">마지막 카드 문구</label>
       <input type="text" id="cta" value="도움이 됐다면 저장하고 팔로우해 주세요!">
 
+      <fieldset class="group">
+        <legend>마지막 카드 · 팔로우 배너</legend>
+        <label for="profileName">프로필 이름</label>
+        <input type="text" id="profileName" value="초이뉴스 | 웹 & 코딩 매거진">
+
+        <label for="profileBio">한 줄 소개</label>
+        <input type="text" id="profileBio" value="매일, 가장 쉬운 코딩 설명과 활용법까지">
+
+        <label for="bannerPos">배너 위치</label>
+        <select id="bannerPos">
+          <option value="center" selected>가운데</option>
+          <option value="bottom">아래</option>
+        </select>
+
+        <label for="logoImg">프로필 로고 <span class="hint">(선택 · 없으면 이름 첫 글자)</span></label>
+        <div class="file-row">
+          <input type="file" id="logoImg" accept="image/*">
+          <button class="ghost" type="button" data-clear="logoImg">제거</button>
+        </div>
+
+        <label for="endImg">배경 사진 <span class="hint">(선택 · 배너 뒤에 깔림)</span></label>
+        <div class="file-row">
+          <input type="file" id="endImg" accept="image/*">
+          <button class="ghost" type="button" data-clear="endImg">제거</button>
+        </div>
+      </fieldset>
+
       <label for="caption">게시글 캡션 <span class="hint">— 해시태그 포함, 게시물 아래에 붙는 글</span></label>
       <textarea id="caption" class="short"></textarea>
       <div class="actions">
@@ -325,14 +362,16 @@
         </div>
       </div>
 
-      <label for="bgimg">표지 배경 이미지 <span class="hint">(선택)</span></label>
-      <input type="file" id="bgimg" accept="image/*">
+      <label for="coverImg">표지 배경 이미지 <span class="hint">(선택)</span></label>
+      <div class="file-row">
+        <input type="file" id="coverImg" accept="image/*">
+        <button class="ghost" type="button" data-clear="coverImg">제거</button>
+      </div>
 
       <div class="check"><input type="checkbox" id="showCover" checked><label for="showCover" style="margin:0;font-weight:400">표지 카드 포함</label></div>
       <div class="check"><input type="checkbox" id="showEnd" checked><label for="showEnd" style="margin:0;font-weight:400">마지막 카드 포함</label></div>
 
       <div class="actions">
-        <button class="ghost" id="clearImg" type="button">배경 이미지 제거</button>
         <button class="ghost" id="sample" type="button">예시 불러오기</button>
       </div>
     </section>
@@ -419,7 +458,7 @@ JavaScript란?
 HTML은 구조, CSS는 디자인, JavaScript는 동작을 담당합니다.`;
 
     const $ = (id) => document.getElementById(id);
-    const state = { theme: 0, bgImage: null };
+    const state = { theme: 0, img: { coverImg: null, endImg: null, logoImg: null } };
     const STORE_KEY = 'cardnews-draft';
 
     // ---------- 텍스트 줄바꿈 ----------
@@ -469,13 +508,13 @@ HTML은 구조, CSS는 디자인, JavaScript는 동작을 담당합니다.`;
       ctx.fillRect(0, 0, W, H);
     }
 
-    function paintImage(ctx, H, img) {
+    function paintImage(ctx, H, img, top = 0.25, bottom = 0.8) {
       const s = Math.max(W / img.width, H / img.height);
       const w = img.width * s, h = img.height * s;
       ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
       const g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, 'rgba(0,0,0,0.25)');
-      g.addColorStop(1, 'rgba(0,0,0,0.8)');
+      g.addColorStop(0, `rgba(0,0,0,${top})`);
+      g.addColorStop(1, `rgba(0,0,0,${bottom})`);
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
     }
@@ -554,8 +593,8 @@ HTML은 구조, CSS는 디자인, JavaScript는 동작을 담당합니다.`;
     }
 
     function drawCover(ctx, H, scale, d, t) {
-      const onImage = !!state.bgImage;
-      onImage ? paintImage(ctx, H, state.bgImage) : paintBackground(ctx, H, t);
+      const onImage = !!state.img.coverImg;
+      onImage ? paintImage(ctx, H, state.img.coverImg) : paintBackground(ctx, H, t);
       const text = onImage ? '#ffffff' : t.text;
       const sub = onImage ? 'rgba(255,255,255,0.8)' : t.sub;
       drawHeader(ctx, d.brand, '', { ...t, sub });
@@ -616,40 +655,117 @@ HTML은 구조, CSS는 디자인, JavaScript는 동작을 담당합니다.`;
       drawProgress(ctx, H, index, total, t);
     }
 
+    // 마지막 카드: 배경(사진 또는 테마) 위에 팔로우 배너를 고정
     function drawEnd(ctx, H, scale, d, t, index, total) {
-      paintBackground(ctx, H, t);
-      drawHeader(ctx, d.brand, `${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`, t);
+      const photo = state.img.endImg;
+      if (photo) {
+        paintImage(ctx, H, photo, 0.1, 0.35);
+      } else {
+        paintBackground(ctx, H, t);
+        drawHeader(ctx, d.brand, `${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`, t);
+      }
 
-      const maxW = W - PAD * 2;
-      ctx.textBaseline = 'top';
+      const bx = 60, bw = W - 120, bh = 200;
+      const by = d.bannerPos === 'bottom' ? H - bh - 120 : Math.round((H - bh) / 2);
+
+      // 마무리 문구는 배너 위에
+      if (d.cta) {
+        ctx.font = `900 ${Math.round(60 * scale)}px ${FONT}`;
+        const lines = wrap(ctx, d.cta, W - PAD * 2);
+        const lh = Math.round(60 * scale * 1.35);
+        let y = by - 60 - lines.length * lh;
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = photo ? '#ffffff' : t.text;
+        if (photo) { ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 16; }
+        for (const l of lines) { ctx.fillText(l, W / 2, y); y += lh; }
+        ctx.restore();
+      }
+
+      drawBanner(ctx, bx, by, bw, bh, d, t);
+      if (!photo) drawProgress(ctx, H, index, total, t);
+    }
+
+    function drawBanner(ctx, x, y, w, h, d, t) {
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.25)';
+      ctx.shadowBlur = 40;
+      ctx.shadowOffsetY = 10;
+      ctx.fillStyle = '#ffffff';
+      roundRect(ctx, x, y, w, h, h / 2);
+      ctx.fill();
+      ctx.restore();
+
+      const r = 62;
+      const cx = x + 36 + r, cy = y + h / 2;
+      const name = d.profileName || d.brand || '프로필 이름';
+      drawAvatar(ctx, cx, cy, r, name, t);
+
+      // 팔로우 버튼
+      const fw = 170, fh = 86;
+      const fx = x + w - 44 - fw, fy = y + (h - fh) / 2;
+      ctx.fillStyle = '#4a9df8';
+      roundRect(ctx, fx, fy, fw, fh, 22);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `700 36px ${FONT}`;
       ctx.textAlign = 'center';
-      ctx.font = `900 ${Math.round(72 * scale)}px ${FONT}`;
-      const lines = wrap(ctx, d.cta, maxW);
-      const lh = Math.round(72 * scale * 1.35);
-      let y = (H - lines.length * lh - 220) / 2;
-      ctx.fillStyle = t.text;
-      for (const l of lines) { ctx.fillText(l, W / 2, y); y += lh; }
+      ctx.textBaseline = 'middle';
+      ctx.fillText('팔로우', fx + fw / 2, fy + fh / 2 + 2);
 
-      y += 70;
-      ctx.font = `700 34px ${FONT}`;
-      const pills = ['저장', '공유', '팔로우'];
-      const pw = 190, ph = 76, gap = 24;
-      let x = (W - (pw * 3 + gap * 2)) / 2;
-      for (const label of pills) {
-        ctx.fillStyle = t.accent;
-        roundRect(ctx, x, y, pw, ph, ph / 2);
-        ctx.fill();
-        ctx.fillStyle = t.bg[0];
-        ctx.textBaseline = 'middle';
-        ctx.fillText(label, x + pw / 2, y + ph / 2 + 2);
-        x += pw + gap;
+      // 이름 · 소개
+      const tx = cx + r + 28, maxW = fx - 28 - tx;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#111111';
+      shrinkFont(ctx, name, maxW, 900, 44, 34);
+      ctx.textBaseline = d.profileBio ? 'bottom' : 'middle';
+      ctx.fillText(fitText(ctx, name, maxW), tx, d.profileBio ? cy - 2 : cy);
+      if (d.profileBio) {
+        ctx.fillStyle = '#6b7280';
+        shrinkFont(ctx, d.profileBio, maxW, 500, 32, 26);
+        ctx.textBaseline = 'top';
+        ctx.fillText(fitText(ctx, d.profileBio, maxW), tx, cy + 12);
       }
       ctx.textBaseline = 'top';
-      ctx.font = `700 40px ${FONT}`;
-      ctx.fillStyle = t.sub;
-      ctx.fillText(d.brand, W / 2, y + ph + 60);
-      ctx.textAlign = 'left';
-      drawProgress(ctx, H, index, total, t);
+    }
+
+    function drawAvatar(ctx, cx, cy, r, name, t) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.clip();
+      const logo = state.img.logoImg;
+      if (logo) {
+        const s = Math.max((r * 2) / logo.width, (r * 2) / logo.height);
+        ctx.drawImage(logo, cx - (logo.width * s) / 2, cy - (logo.height * s) / 2, logo.width * s, logo.height * s);
+      } else {
+        const g = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+        g.addColorStop(0, t.bg[0]);
+        g.addColorStop(1, t.accent);
+        ctx.fillStyle = g;
+        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `900 ${Math.round(r * 0.9)}px ${FONT}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText([...name.replace(/^@/, '')][0] || '', cx, cy + 2);
+      }
+      ctx.restore();
+    }
+
+    // 폭에 맞을 때까지 글자 크기를 줄임 (최소 크기까지)
+    function shrinkFont(ctx, text, maxW, weight, max, min) {
+      let size = max;
+      do { ctx.font = `${weight} ${size}px ${FONT}`; } while (ctx.measureText(text).width > maxW && --size > min);
+    }
+
+    // 폭을 넘으면 말줄임표로 자름
+    function fitText(ctx, text, maxW) {
+      if (ctx.measureText(text).width <= maxW) return text;
+      const chars = [...text];
+      while (chars.length && ctx.measureText(chars.join('') + '…').width > maxW) chars.pop();
+      return chars.join('') + '…';
     }
 
     function roundRect(ctx, x, y, w, h, r) {
@@ -669,7 +785,10 @@ HTML은 구조, CSS는 디자인, JavaScript는 동작을 담당합니다.`;
         title: $('title').value.trim() || '제목을 입력하세요',
         subtitle: $('subtitle').value.trim(),
         body: $('body').value,
-        cta: $('cta').value.trim() || '읽어 주셔서 감사합니다',
+        cta: $('cta').value.trim(),
+        profileName: $('profileName').value.trim(),
+        profileBio: $('profileBio').value.trim(),
+        bannerPos: $('bannerPos').value,
         H: Number($('ratio').value),
         scale: Number($('size').value),
         cover: $('showCover').checked,
@@ -738,8 +857,11 @@ HTML은 구조, CSS는 디자인, JavaScript는 동작을 담당합니다.`;
     function renderPost(d, t) {
       const name = (d.brand || 'my_account').replace(/^@/, '');
       $('postName').textContent = name;
-      $('avatar').textContent = name.charAt(0).toUpperCase();
-      $('avatar').style.background = `linear-gradient(135deg, ${t.bg[0]}, ${t.accent})`;
+      const logo = state.img.logoImg;
+      $('avatar').textContent = logo ? '' : name.charAt(0).toUpperCase();
+      $('avatar').style.background = logo
+        ? `center / cover no-repeat url(${logo.src})`
+        : `linear-gradient(135deg, ${t.bg[0]}, ${t.accent})`;
 
       // 미리보기용은 절반 해상도로 복사
       const track = $('track');
@@ -800,7 +922,8 @@ HTML은 구조, CSS는 디자인, JavaScript는 동작을 담당합니다.`;
       const lines = [d.title];
       if (d.subtitle) lines.push(d.subtitle);
       if (points.length) lines.push('', ...points);
-      lines.push('', d.cta, '', '#카드뉴스 #정보공유 #오늘의정보');
+      if (d.cta) lines.push('', d.cta);
+      lines.push('', '#카드뉴스 #정보공유 #오늘의정보');
       return lines.join('\n');
     }
 
@@ -962,7 +1085,7 @@ ${source || '없음. 일반적으로 널리 알려진 내용만 사용하세요.
     };
 
     // ---------- 임시 저장 ----------
-    const FIELDS = ['brand', 'title', 'subtitle', 'body', 'cta', 'caption', 'ratio', 'size'];
+    const FIELDS = ['brand', 'title', 'subtitle', 'body', 'cta', 'profileName', 'profileBio', 'bannerPos', 'caption', 'ratio', 'size'];
     function save() {
       try {
         const data = { theme: state.theme };
@@ -1004,14 +1127,23 @@ ${source || '없음. 일반적으로 널리 알려진 내용만 사용하세요.
       if (el.type !== 'file' && el.id !== 'caption' && !el.closest('#ai')) el.addEventListener('input', schedule);
     });
 
-    $('bgimg').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const img = new Image();
-      img.onload = () => { state.bgImage = img; generate(); };
-      img.src = URL.createObjectURL(file);
+    for (const id of Object.keys(state.img)) {
+      $(id).addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const img = new Image();
+        img.onload = () => { state.img[id] = img; generate(); };
+        img.src = URL.createObjectURL(file);
+      });
+    }
+    document.querySelectorAll('[data-clear]').forEach((btn) => {
+      btn.onclick = () => {
+        const id = btn.dataset.clear;
+        state.img[id] = null;
+        $(id).value = '';
+        generate();
+      };
     });
-    $('clearImg').onclick = () => { state.bgImage = null; $('bgimg').value = ''; generate(); };
     $('sample').onclick = () => { $('body').value = SAMPLE; generate(); };
     async function downloadAllPng() {
       for (let i = 0; i < state.canvases.length; i++) {
