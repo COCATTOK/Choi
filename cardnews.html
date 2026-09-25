@@ -147,6 +147,82 @@
       color: var(--muted);
     }
     .card-foot button { padding: 6px 10px; font-size: 12px; }
+
+    /* ---------- 게시물 미리보기 ---------- */
+    .post-area {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+    .post {
+      width: 400px;
+      max-width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      font-size: 14px;
+    }
+    .post-top { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 15px;
+      flex: none;
+    }
+    .post-name { font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .post-media { position: relative; background: #000; }
+    .track {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+    .track::-webkit-scrollbar { display: none; }
+    .track canvas { flex: 0 0 100%; width: 100%; height: auto; display: block; scroll-snap-align: start; }
+    .badge {
+      position: absolute; top: 12px; right: 12px;
+      background: rgba(0,0,0,0.6); color: #fff;
+      font-size: 12px; padding: 3px 9px; border-radius: 999px;
+    }
+    .nav {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 30px; height: 30px; border-radius: 50%;
+      border: 0; background: rgba(255,255,255,0.85); color: #111;
+      font-size: 16px; line-height: 1; cursor: pointer;
+    }
+    .nav:disabled { display: none; }
+    .nav.prev { left: 10px; }
+    .nav.next { right: 10px; }
+    .post-actions { display: flex; align-items: center; padding: 8px 12px 4px; gap: 14px; }
+    .post-actions svg { width: 24px; height: 24px; }
+    .dots { flex: 1; display: flex; justify-content: center; gap: 4px; }
+    .dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+    .dots span.on { background: var(--accent); }
+    .post-caption { padding: 4px 12px 0; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+    .post-caption.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .post-caption .tag { color: #3b82f6; }
+    .more { border: 0; background: none; color: var(--muted); padding: 2px 12px; font: inherit; font-size: 14px; cursor: pointer; }
+    .post-time { color: var(--muted); font-size: 11px; padding: 6px 12px 14px; }
+    .publish {
+      flex: 1;
+      min-width: 240px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .publish h3 { margin: 0 0 6px; font-size: 15px; }
+    .publish p { margin: 0 0 14px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .publish button { width: 100%; margin-top: 8px; }
+    .stat { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+    .stat.warn { color: #dc2626; }
     @media (max-width: 860px) {
       main { grid-template-columns: 1fr; padding: 16px; }
       .panel { position: static; max-height: none; }
@@ -221,6 +297,12 @@
       <label for="cta">마지막 카드 문구</label>
       <input type="text" id="cta" value="도움이 됐다면 저장하고 팔로우해 주세요!">
 
+      <label for="caption">게시글 캡션 <span class="hint">— 해시태그 포함, 게시물 아래에 붙는 글</span></label>
+      <textarea id="caption" class="short"></textarea>
+      <div class="actions">
+        <button class="ghost" id="autoCaption" type="button">카드 내용으로 캡션 자동 작성</button>
+      </div>
+
       <label>테마</label>
       <div class="themes" id="themes"></div>
 
@@ -257,13 +339,54 @@
 
     <section>
       <div class="preview-head">
-        <h2 id="count">미리보기</h2>
-        <button class="primary" id="downloadAll" type="button">전체 PNG 다운로드</button>
+        <h2>게시물 미리보기</h2>
+      </div>
+      <div class="post-area">
+        <article class="post" aria-label="게시물 미리보기">
+          <div class="post-top">
+            <div class="avatar" id="avatar"></div>
+            <div class="post-name" id="postName"></div>
+            <span aria-hidden="true">···</span>
+          </div>
+          <div class="post-media">
+            <div class="track" id="track"></div>
+            <span class="badge" id="badge"></span>
+            <button class="nav prev" id="prev" type="button" aria-label="이전 카드">‹</button>
+            <button class="nav next" id="next" type="button" aria-label="다음 카드">›</button>
+          </div>
+          <div class="post-actions" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 12a8 8 0 1 1-3.3-6.5A8 8 0 0 1 20 12zm0 0l1 7-6-2"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 3L3 10l7 3 3 7 8-17zM10 13l5-5"/></svg>
+            <div class="dots" id="dots"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h12v18l-6-5-6 5z"/></svg>
+          </div>
+          <div class="post-caption clamp" id="postCaption"></div>
+          <button class="more" id="more" type="button">더 보기</button>
+          <div class="post-time">방금 전</div>
+        </article>
+
+        <div class="publish">
+          <h3>게시 준비</h3>
+          <p>카드 이미지와 캡션을 ZIP 하나로 저장하거나, 캡션만 복사해 바로 붙여넣을 수 있어요.</p>
+          <div class="stat" id="statCards"></div>
+          <div class="stat" id="statLen"></div>
+          <div class="stat" id="statTags"></div>
+          <button class="primary" id="saveSet" type="button">이미지 + 캡션 한번에 저장 (ZIP)</button>
+          <button class="ghost" id="copyCaption" type="button">캡션 복사</button>
+          <button class="ghost" id="downloadAll" type="button">이미지만 전체 저장</button>
+          <p class="hint" id="publishMsg" role="status" style="margin:10px 0 0"></p>
+        </div>
+      </div>
+
+      <div class="preview-head">
+        <h2 id="count">카드별 저장</h2>
       </div>
       <div class="grid" id="grid"></div>
     </section>
   </main>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script>
     const W = 1080;
     const PAD = 96;
@@ -568,6 +691,7 @@ HTML은 구조, CSS는 디자인, JavaScript는 동작을 담당합니다.`;
 
       const grid = $('grid');
       grid.innerHTML = '';
+      const canvases = [];
       pages.forEach((page, i) => {
         const canvas = document.createElement('canvas');
         canvas.width = W;
@@ -576,6 +700,7 @@ HTML은 구조, CSS는 디자인, JavaScript는 동작을 담당합니다.`;
         if (page.type === 'cover') drawCover(ctx, d.H, d.scale, d, t);
         else if (page.type === 'end') drawEnd(ctx, d.H, d.scale, d, t, i, pages.length);
         else drawContent(ctx, d.H, d.scale, page.p, d, t, page.num, i, pages.length);
+        canvases.push(canvas);
 
         const card = document.createElement('div');
         card.className = 'card';
@@ -592,7 +717,9 @@ HTML은 구조, CSS는 디자인, JavaScript는 동작을 담당합니다.`;
         card.appendChild(foot);
         grid.appendChild(card);
       });
-      $('count').textContent = `미리보기 · 총 ${pages.length}장`;
+      $('count').textContent = `카드별 저장 · 총 ${pages.length}장`;
+      state.canvases = canvases;
+      renderPost(d, t);
       save();
     }
 
@@ -601,6 +728,126 @@ HTML은 구조, CSS는 디자인, JavaScript는 동작을 담당합니다.`;
       a.download = `cardnews_${String(n).padStart(2, '0')}.png`;
       a.href = canvas.toDataURL('image/png');
       a.click();
+    }
+
+    // ---------- 게시물 미리보기 ----------
+    const CAPTION_MAX = 2200;
+    const TAG_MAX = 30;
+    let slide = 0;
+
+    function renderPost(d, t) {
+      const name = (d.brand || 'my_account').replace(/^@/, '');
+      $('postName').textContent = name;
+      $('avatar').textContent = name.charAt(0).toUpperCase();
+      $('avatar').style.background = `linear-gradient(135deg, ${t.bg[0]}, ${t.accent})`;
+
+      // 미리보기용은 절반 해상도로 복사
+      const track = $('track');
+      track.innerHTML = '';
+      for (const src of state.canvases) {
+        const c = document.createElement('canvas');
+        c.width = W / 2;
+        c.height = src.height / 2;
+        c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+        track.appendChild(c);
+      }
+      $('dots').innerHTML = state.canvases.map(() => '<span></span>').join('');
+      slide = Math.min(slide, state.canvases.length - 1);
+      track.scrollLeft = slide * track.clientWidth;
+      updateSlide();
+      renderCaption();
+    }
+
+    function updateSlide() {
+      const n = state.canvases.length;
+      $('badge').textContent = `${slide + 1}/${n}`;
+      $('prev').disabled = slide <= 0;
+      $('next').disabled = slide >= n - 1;
+      [...$('dots').children].forEach((dot, i) => dot.classList.toggle('on', i === slide));
+      $('statCards').textContent = `카드 ${n}장` + (n > 20 ? ' · 한 게시물은 최대 20장까지 올릴 수 있어요' : '');
+      $('statCards').classList.toggle('warn', n > 20);
+    }
+
+    function goTo(i) {
+      const track = $('track');
+      track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' });
+    }
+
+    const escapeHtml = (str) => str.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const countTags = (str) => (str.match(/#[^\s#]+/g) || []).length;
+
+    function renderCaption() {
+      const caption = $('caption').value.trim();
+      const name = ($('brand').value.trim() || 'my_account').replace(/^@/, '');
+      const body = escapeHtml(caption).replace(/#[^\s#]+/g, (tag) => `<span class="tag">${tag}</span>`);
+      const box = $('postCaption');
+      box.innerHTML = `<b>${escapeHtml(name)}</b> ${body || '<span style="color:var(--muted)">캡션을 입력하세요</span>'}`;
+      box.classList.add('clamp');
+      $('more').hidden = box.scrollHeight <= box.clientHeight + 1;
+
+      const len = [...caption].length;
+      const tags = countTags(caption);
+      $('statLen').textContent = `캡션 ${len.toLocaleString()} / ${CAPTION_MAX.toLocaleString()}자`;
+      $('statLen').classList.toggle('warn', len > CAPTION_MAX);
+      $('statTags').textContent = `해시태그 ${tags} / ${TAG_MAX}개`;
+      $('statTags').classList.toggle('warn', tags > TAG_MAX);
+    }
+
+    // 카드 내용으로 기본 캡션을 만듦 (AI 없이 쓸 때)
+    function buildCaption() {
+      const d = readInputs();
+      const points = parseBody(d.body).map((c) => `✔ ${c.heading}`);
+      const lines = [d.title];
+      if (d.subtitle) lines.push(d.subtitle);
+      if (points.length) lines.push('', ...points);
+      lines.push('', d.cta, '', '#카드뉴스 #정보공유 #오늘의정보');
+      return lines.join('\n');
+    }
+
+    $('track').addEventListener('scroll', () => {
+      const track = $('track');
+      const i = Math.round(track.scrollLeft / track.clientWidth);
+      if (i !== slide) { slide = i; updateSlide(); }
+    });
+    $('prev').onclick = () => goTo(slide - 1);
+    $('next').onclick = () => goTo(slide + 1);
+    $('more').onclick = () => { $('postCaption').classList.remove('clamp'); $('more').hidden = true; };
+    $('caption').addEventListener('input', () => { renderCaption(); save(); });
+    $('autoCaption').onclick = () => { $('caption').value = buildCaption(); renderCaption(); save(); };
+
+    $('copyCaption').onclick = async () => {
+      const ok = await copyText($('caption').value.trim());
+      $('publishMsg').textContent = ok ? '캡션을 복사했어요.' : '복사에 실패했어요. 브라우저의 클립보드 권한을 확인해 주세요.';
+    };
+
+    const toBlob = (canvas) => new Promise((r) => canvas.toBlob(r, 'image/png'));
+
+    $('saveSet').onclick = async () => {
+      const msg = $('publishMsg');
+      if (!window.JSZip) {
+        msg.textContent = 'ZIP 도구를 불러오지 못해 파일을 하나씩 저장합니다.';
+        await downloadAllPng();
+        downloadBlob(new Blob([$('caption').value.trim()], { type: 'text/plain' }), 'caption.txt');
+        return;
+      }
+      msg.textContent = 'ZIP 파일을 만드는 중…';
+      const zip = new JSZip();
+      for (let i = 0; i < state.canvases.length; i++) {
+        zip.file(`cardnews_${String(i + 1).padStart(2, '0')}.png`, await toBlob(state.canvases[i]));
+      }
+      zip.file('caption.txt', $('caption').value.trim());
+      // 한글 파일명은 일부 브라우저에서 무시되므로 날짜로 이름을 붙임
+      const stamp = new Date().toISOString().slice(0, 16).replace(/[-:]/g, '').replace('T', '_');
+      downloadBlob(await zip.generateAsync({ type: 'blob' }), `cardnews_${stamp}.zip`);
+      msg.textContent = `카드 ${state.canvases.length}장과 caption.txt를 ZIP으로 저장했어요.`;
+    };
+
+    function downloadBlob(blob, filename) {
+      const a = document.createElement('a');
+      a.download = filename;
+      a.href = URL.createObjectURL(blob);
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     }
 
     // ---------- AI 원고 프롬프트 ----------
@@ -705,16 +952,17 @@ ${source || '없음. 일반적으로 널리 알려진 내용만 사용하세요.
       if (r.title) $('title').value = r.title;
       if (r.subtitle) $('subtitle').value = r.subtitle;
       if (r.cta) $('cta').value = r.cta;
+      if (r.caption) $('caption').value = r.caption;
       // 카드 안의 빈 줄 대신 카드 사이만 빈 줄 하나로 정리
       $('body').value = r.body.replace(/\n{3,}/g, '\n\n');
       generate();
       $('aiMsg').textContent = r.caption
-        ? '카드에 적용했어요. 게시글 캡션은 답변 창에 그대로 남아 있어요.'
-        : '카드에 적용했어요.';
+        ? '카드와 게시글 캡션에 적용했어요. 오른쪽 게시물 미리보기를 확인하세요.'
+        : '카드에 적용했어요. 캡션은 "카드 내용으로 캡션 자동 작성"으로 만들 수 있어요.';
     };
 
     // ---------- 임시 저장 ----------
-    const FIELDS = ['brand', 'title', 'subtitle', 'body', 'cta', 'ratio', 'size'];
+    const FIELDS = ['brand', 'title', 'subtitle', 'body', 'cta', 'caption', 'ratio', 'size'];
     function save() {
       try {
         const data = { theme: state.theme };
@@ -753,7 +1001,7 @@ ${source || '없음. 일반적으로 널리 알려진 내용만 사용하세요.
     }
 
     document.querySelectorAll('input, textarea, select').forEach((el) => {
-      if (el.type !== 'file') el.addEventListener('input', schedule);
+      if (el.type !== 'file' && el.id !== 'caption' && !el.closest('#ai')) el.addEventListener('input', schedule);
     });
 
     $('bgimg').addEventListener('change', (e) => {
@@ -765,15 +1013,16 @@ ${source || '없음. 일반적으로 널리 알려진 내용만 사용하세요.
     });
     $('clearImg').onclick = () => { state.bgImage = null; $('bgimg').value = ''; generate(); };
     $('sample').onclick = () => { $('body').value = SAMPLE; generate(); };
-    $('downloadAll').onclick = async () => {
-      const canvases = [...document.querySelectorAll('#grid canvas')];
-      for (let i = 0; i < canvases.length; i++) {
-        download(canvases[i], i + 1);
+    async function downloadAllPng() {
+      for (let i = 0; i < state.canvases.length; i++) {
+        download(state.canvases[i], i + 1);
         await new Promise((r) => setTimeout(r, 300));
       }
-    };
+    }
+    $('downloadAll').onclick = downloadAllPng;
 
     if (!load()) $('body').value = SAMPLE;
+    if (!$('caption').value) $('caption').value = buildCaption();
     renderThemeButtons();
     generate();
     // 웹폰트가 로드되면 다시 그림
