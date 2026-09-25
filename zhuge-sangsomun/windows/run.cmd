@@ -1,6 +1,6 @@
 @echo off
 rem Zhuge Liang Sangsomun - daily runner (Windows)
-rem Opens the sangsomun window, then (once a day) asks Claude Code to write a new one.
+rem Once a day asks Claude Code to write a new sangsomun, then opens the window when it is ready.
 setlocal
 if "%~1"=="min" goto main
 start "Sangsomun" /min cmd /c ""%~f0" min"
@@ -20,18 +20,17 @@ where claude >nul 2>nul
 if errorlevel 1 goto noclaude
 
 call :status writing ""
-call :openwindow
 (type "prompt.md" & echo. & echo TODAY: %TODAY%) > "data\prompt-full.txt"
 call claude -p --allowedTools "Read,Write" --add-dir "%USERPROFILE%\.claude" < "data\prompt-full.txt" > "data\claude-log.txt" 2>&1
 findstr /c:"%TODAY%" "data\today.js" >nul 2>nul
 if errorlevel 1 goto failed
 >"data\last-generated.txt" echo %TODAY%
 call :status done ""
-exit /b
+goto openonly
 
 :failed
 call :status failed bad-output
-exit /b
+goto openonly
 
 :noclaude
 call :status failed claude-not-found

@@ -18,7 +18,7 @@ rem Logon tasks need admin on some PCs: use the Startup folder instead.
 :done
 echo.
 echo [OK] Installed: every day 07:00 + every logon.
-echo Opening your first sangsomun now...
+echo Zhuge Liang is writing your first sangsomun. The window opens by itself in a few minutes.
 call "%RUN%"
 pause
 exit /b

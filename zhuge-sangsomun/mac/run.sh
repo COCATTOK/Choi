@@ -1,7 +1,7 @@
 #!/bin/bash
 # 제갈량 상소문 - 매일 실행 스크립트 (macOS)
-# 1) 상소문 창을 띄우고
-# 2) 오늘의 상소가 아직 없으면 claude -p 에게 prompt.md 대로 새 상소를 써서 data/today.js 에 저장하게 한다.
+# 1) 오늘의 상소가 아직 없으면 claude -p 에게 prompt.md 대로 새 상소를 써서 data/today.js 에 저장하게 하고,
+# 2) 다 쓰면 상소문 창을 띄운다.
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DATA="$ROOT/data"
@@ -30,7 +30,6 @@ trap 'rmdir "$DATA/writing.lock" 2>/dev/null' EXIT
 if ! command -v claude >/dev/null 2>&1; then status failed claude-not-found; open_window; exit 0; fi
 
 status writing ""
-open_window
 
 cd "$ROOT"
 { cat prompt.md; printf '\nTODAY: %s\n' "$TODAY"; } > "$DATA/prompt-full.txt"
@@ -42,3 +41,4 @@ if grep -q "$TODAY" "$DATA/today.js" 2>/dev/null; then
 else
   status failed bad-output
 fi
+open_window
