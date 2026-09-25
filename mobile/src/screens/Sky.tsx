@@ -1,14 +1,16 @@
 import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { CATS, edges } from '../lib/model';
-import { useStore } from '../store/Store';
+import { useAct, useJustAdded, useS } from '../store/Store';
 import { Constellation } from '../ui/charts';
 import { Icon, Sw, Tap } from '../ui/kit';
 import { Screen } from '../ui/shell';
 import { C } from '../ui/theme';
 
 export default function Sky() {
-  const { S, openSheet, justAdded, setJustAdded } = useStore();
+  const S = useS();
+  const justAdded = useJustAdded();
+  const { openSheet, setJustAdded } = useAct();
   const used = new Set(S.dots.map((d) => d.cat));
   // 새로 이은 선은 잠깐 밝게 보여주고 제자리로
   useEffect(() => {

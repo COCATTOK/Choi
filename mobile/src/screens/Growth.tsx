@@ -6,9 +6,9 @@ import {
   BADGES, CATS, INDEX_BASE, activeHabits, bestStreak, catOf, change, degreeMap, edges, fmtIdx, habitRate, habitStreak,
   indexSeries, isDone, level, scheduled, streak, totalChecks, type IndexPoint,
 } from '../lib/model';
-import { useStore } from '../store/Store';
+import { useAct, useS } from '../store/Store';
 import { Heat, MoodChart, StockChart } from '../ui/charts';
-import { Medal, Segment, Sep, Sw, Tap, TrailAuto, useCountUp } from '../ui/kit';
+import { Medal, Segment, Sep, Sw, Tap, TrailAuto, useAfterFirstFrame, useCountUp } from '../ui/kit';
 import { Screen } from '../ui/shell';
 import { C, S as T, num } from '../ui/theme';
 
@@ -22,7 +22,8 @@ const PERIODS = [
 type PeriodId = (typeof PERIODS)[number]['id'];
 
 export default function Growth() {
-  const { S } = useStore();
+  const S = useS();
+  const rest = useAfterFirstFrame(); // 지수 차트부터 바로, 나머지는 다음 프레임에
   return (
     <Screen eyebrow="성장" title="점이 모여 선이 되다" scrollProps={{ scrollEventThrottle: 16 }}>
       <Stock />
@@ -35,29 +36,33 @@ export default function Growth() {
           </View>
         ))}
       </View>
-      <View style={{ paddingTop: 28 }}>
-        <Text style={{ color: C.text2, fontSize: 14 }}>{S.profile.identity ? `${S.profile.identity} 사람` : '되고 싶은 나'}에게 던진 표</Text>
-        <Text style={[st.big, num]}>{totalChecks(S)}<Text style={{ fontSize: 18, color: C.muted }}> 표</Text></Text>
-        <Text style={T.meta}>완벽할 필요는 없습니다. 과반이면 충분합니다.</Text>
-      </View>
-      <HabitLines />
-      <Text style={T.section}>마음의 흐름</Text>
-      <Text style={T.sectionDesc}>최근 30일</Text>
-      <View style={T.groupPad}>
-        <MoodChart S={S} />
-        <Insight />
-      </View>
-      <Text style={T.section}>최근 12주</Text>
-      <View style={T.groupPad}><Heat S={S} /></View>
-      <Cats />
-      <Hubs />
-      <Badges />
+      {rest ? (
+        <>
+        <View style={{ paddingTop: 28 }}>
+          <Text style={{ color: C.text2, fontSize: 14 }}>{S.profile.identity ? `${S.profile.identity} 사람` : '되고 싶은 나'}에게 던진 표</Text>
+          <Text style={[st.big, num]}>{totalChecks(S)}<Text style={{ fontSize: 18, color: C.muted }}> 표</Text></Text>
+          <Text style={T.meta}>완벽할 필요는 없습니다. 과반이면 충분합니다.</Text>
+        </View>
+        <HabitLines />
+        <Text style={T.section}>마음의 흐름</Text>
+        <Text style={T.sectionDesc}>최근 30일</Text>
+        <View style={T.groupPad}>
+          <MoodChart S={S} />
+          <Insight />
+        </View>
+        <Text style={T.section}>최근 12주</Text>
+        <View style={T.groupPad}><Heat S={S} /></View>
+        <Cats />
+        <Hubs />
+        <Badges />
+        </>
+      ) : <View style={{ height: 600 }} />}
     </Screen>
   );
 }
 
 function Stock() {
-  const { S } = useStore();
+  const S = useS();
   const [period, setPeriod] = useState<PeriodId>('1m');
   const [scrub, setScrub] = useState<IndexPoint | null>(null);
   const all = indexSeries(S);
@@ -69,7 +74,7 @@ function Stock() {
   const ch = change(first.v, p.v);
   const animated = useCountUp(last.v);
   const hiAll = Math.max(...all.map((q) => q.v));
-  const ath = !scrub && last.g > 0 && last.v >= hiAll - 0.001;
+  const ath = !scrub && all.length >= 8 && last.g > 0 && last.v >= hiAll - 0.001;
   const label = scrub ? `${fmtDate(scrub.d)}${scrub.g ? ` · +${scrub.g} XP` : ''}` : per.id === 'all' ? '처음부터' : `지난 ${per.name}`;
   let run = 0;
   for (let i = all.length - 1; i > 0 && all[i].g > 0; i--) run++;
@@ -103,7 +108,7 @@ function Stock() {
 }
 
 function Level() {
-  const { S } = useStore();
+  const S = useS();
   const lv = level(S);
   return (
     <View style={{ marginTop: 32 }}>
@@ -119,7 +124,8 @@ function Level() {
 }
 
 function HabitLines() {
-  const { S, openSheet } = useStore();
+  const S = useS();
+  const { openSheet } = useAct();
   const hs = activeHabits(S);
   return (
     <>
@@ -146,7 +152,7 @@ function HabitLines() {
 
 // 인사이트: 이 습관을 한 날 마음이 더 좋았어요
 function Insight() {
-  const { S } = useStore();
+  const S = useS();
   let best: { name: string; diff: number } | null = null;
   for (const h of activeHabits(S)) {
     const on: number[] = [];
@@ -169,7 +175,7 @@ function Insight() {
 }
 
 function Cats() {
-  const { S } = useStore();
+  const S = useS();
   const ids = (cat: string) => new Set(S.habits.filter((h) => h.cat === cat).map((h) => h.id));
   const counts = CATS.map((c) => {
     const hs = ids(c.id);
@@ -195,7 +201,8 @@ function Cats() {
 }
 
 function Hubs() {
-  const { S, openSheet } = useStore();
+  const S = useS();
+  const { openSheet } = useAct();
   const deg = degreeMap(S);
   const hubs = [...S.dots].filter((d) => deg[d.id] > 0).sort((a, b) => deg[b.id] - deg[a.id]).slice(0, 5);
   return (
@@ -217,7 +224,8 @@ function Hubs() {
 }
 
 function Badges() {
-  const { S, openSheet } = useStore();
+  const S = useS();
+  const { openSheet } = useAct();
   const got = BADGES.filter((b) => S.badges[b.id]).length;
   return (
     <>

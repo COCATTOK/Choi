@@ -140,8 +140,21 @@ export function normalize(raw: unknown): State {
   } as State;
 }
 
+// ---------- 계산 캐시 ----------
+// 기록(State)은 저장된 뒤 바꾸지 않고 새 객체로 교체합니다. 그래서 같은 기록 객체와
+// 같은 날짜라면 결과가 같으니, 한 번만 계산해 둡니다 (1년치 기록도 탭 한 번에 가볍게).
+const cache = new WeakMap<State, Map<string, unknown>>();
+function memo<T>(S: State, name: string, f: () => T): T {
+  let m = cache.get(S);
+  if (!m) cache.set(S, (m = new Map()));
+  const key = name + '@' + today();
+  if (!m.has(key)) m.set(key, f());
+  return m.get(key) as T;
+}
+
 // ---------- 습관 ----------
-export const activeHabits = (S: State) => S.habits.filter((h) => !h.archived);
+const activeHabits_ = (S: State) => S.habits.filter((h) => !h.archived);
+export const activeHabits = (S: State): ReturnType<typeof activeHabits_> => memo(S, 'activeHabits', () => activeHabits_(S));
 export const isDone = (S: State, h: Habit, day: string) => (S.checks[day] ?? []).includes(h.id);
 export const scheduled = (h: Habit, day: string) => h.days.includes(parse(day).getDay()) && day >= h.start;
 export const habitsFor = (S: State, day: string) => activeHabits(S).filter((h) => scheduled(h, day));
@@ -203,13 +216,14 @@ export function trail(S: State, h: Habit, n: number, endDay = today()) {
 
 // ---------- 기록한 날 · 연속 ----------
 export const didSomething = (S: State, d: string) => (S.checks[d] ?? []).length > 0 || S.dots.some((x) => x.date === d);
-export function activeDays(S: State) {
+function activeDays_(S: State) {
   const set = new Set(S.dots.map((d) => d.date));
   for (const d in S.checks) if (S.checks[d].length) set.add(d);
   for (const d of S.frozen) set.add(d); // 보호권으로 지킨 날
   return set;
 }
-export function streak(S: State) {
+export const activeDays = (S: State): ReturnType<typeof activeDays_> => memo(S, 'activeDays', () => activeDays_(S));
+function streak_(S: State) {
   const days = activeDays(S);
   let d = today();
   if (!days.has(d)) d = shift(d, -1);
@@ -220,7 +234,8 @@ export function streak(S: State) {
   }
   return n;
 }
-export function bestStreak(S: State) {
+export const streak = (S: State): ReturnType<typeof streak_> => memo(S, 'streak', () => streak_(S));
+function bestStreak_(S: State) {
   const days = [...activeDays(S)].sort();
   let best = 0;
   let cur = 0;
@@ -232,8 +247,10 @@ export function bestStreak(S: State) {
   }
   return best;
 }
-export const totalChecks = (S: State) => Object.values(S.checks).reduce((a, l) => a + l.length, 0);
-export function perfectDays(S: State) {
+export const bestStreak = (S: State): ReturnType<typeof bestStreak_> => memo(S, 'bestStreak', () => bestStreak_(S));
+const totalChecks_ = (S: State) => Object.values(S.checks).reduce((a, l) => a + l.length, 0);
+export const totalChecks = (S: State): ReturnType<typeof totalChecks_> => memo(S, 'totalChecks', () => totalChecks_(S));
+function perfectDays_(S: State) {
   let n = 0;
   for (const d in S.checks) {
     const p = dayProgress(S, d);
@@ -241,18 +258,21 @@ export function perfectDays(S: State) {
   }
   return n;
 }
+export const perfectDays = (S: State): ReturnType<typeof perfectDays_> => memo(S, 'perfectDays', () => perfectDays_(S));
 
 // ---------- 점 · 선 ----------
-export const sortedDots = (S: State) =>
-  [...S.dots].sort((a, b) => (a.date === b.date ? a.createdAt - b.createdAt : a.date < b.date ? -1 : 1));
+// 주의: 캐시된 배열이니 받은 쪽에서 직접 고치지 말고 복사해서 쓰세요
+export const sortedDots = (S: State): readonly Dot[] =>
+  memo(S, 'sortedDots', () => [...S.dots].sort((a, b) => (a.date === b.date ? a.createdAt - b.createdAt : a.date < b.date ? -1 : 1)));
 export const dotById = (S: State, id: string) => S.dots.find((d) => d.id === id);
-export function edges(S: State) {
+function edges_(S: State) {
   const ids = new Set(S.dots.map((d) => d.id));
   const list: [string, string][] = [];
   for (const d of S.dots) for (const to of d.links) if (ids.has(to)) list.push([d.id, to]);
   return list;
 }
-export function degreeMap(S: State) {
+export const edges = (S: State): ReturnType<typeof edges_> => memo(S, 'edges', () => edges_(S));
+function degreeMap_(S: State) {
   const m: Record<string, number> = Object.fromEntries(S.dots.map((d) => [d.id, 0]));
   for (const [a, b] of edges(S)) {
     m[a]++;
@@ -260,6 +280,7 @@ export function degreeMap(S: State) {
   }
   return m;
 }
+export const degreeMap = (S: State): ReturnType<typeof degreeMap_> => memo(S, 'degreeMap', () => degreeMap_(S));
 export function neighbors(S: State, id: string) {
   const self = dotById(S, id);
   const out: { dot: Dot; dir: 'past' | 'future' }[] = [];
@@ -272,9 +293,10 @@ export function neighbors(S: State, id: string) {
 }
 
 // ---------- 레벨 ----------
-export const xp = (S: State) =>
+const xp_ = (S: State) =>
   totalChecks(S) * XP.check + S.dots.length * XP.moment + edges(S).length * XP.link + Object.keys(S.moods).length * XP.mood;
-export function level(S: State) {
+export const xp = (S: State): ReturnType<typeof xp_> => memo(S, 'xp', () => xp_(S));
+function level_(S: State) {
   const x = xp(S);
   let i = 0;
   while (i + 1 < LEVELS.length && x >= LEVELS[i + 1].xp) i++;
@@ -282,11 +304,12 @@ export function level(S: State) {
   const next = LEVELS[i + 1];
   return { i, x, cur, next, pct: next ? (x - cur.xp) / (next.xp - cur.xp) : 1 };
 }
+export const level = (S: State): ReturnType<typeof level_> => memo(S, 'level', () => level_(S));
 
 // ---------- 성장 지수 ----------
 // 100에서 시작. 기록한 날은 그날의 XP만큼 오르고, 아무것도 안 한 날은
 // 쌓인 성장분이 1.5%씩 내려갑니다. 오늘은 끝나지 않았으니 내리지 않습니다.
-export function dailyXP(S: State) {
+function dailyXP_(S: State) {
   const m: Record<string, number> = {};
   const add = (d: string, v: number) => (m[d] = (m[d] ?? 0) + v);
   const ids = new Set(S.dots.map((d) => d.id));
@@ -295,8 +318,9 @@ export function dailyXP(S: State) {
   for (const d in S.moods) add(d, XP.mood);
   return m;
 }
+export const dailyXP = (S: State): ReturnType<typeof dailyXP_> => memo(S, 'dailyXP', () => dailyXP_(S));
 export type IndexPoint = { d: string; v: number; g: number };
-export function indexSeries(S: State): IndexPoint[] {
+function indexSeries_(S: State): IndexPoint[] {
   const xpByDay = dailyXP(S);
   const days = Object.keys(xpByDay).sort();
   const now = today();
@@ -310,8 +334,12 @@ export function indexSeries(S: State): IndexPoint[] {
   }
   return out;
 }
-export const fmtIdx = (v: number) =>
-  v.toLocaleString('ko-KR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const indexSeries = (S: State): ReturnType<typeof indexSeries_> => memo(S, 'indexSeries', () => indexSeries_(S));
+// 1,234.56 — 애니메이션 중 매 프레임 불리므로 toLocaleString(느림) 대신 직접 만듭니다
+export const fmtIdx = (v: number) => {
+  const [i, d] = Math.abs(v).toFixed(2).split('.');
+  return (v < 0 ? '-' : '') + i.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + d;
+};
 export function change(from: number, to: number) {
   const diff = to - from;
   const pct = from ? (diff / from) * 100 : 0;
@@ -320,7 +348,7 @@ export function change(from: number, to: number) {
   return { dir, diff, abs: `${arrow}${fmtIdx(Math.abs(diff))}`, text: `${arrow}${fmtIdx(Math.abs(diff))} (${diff >= 0 ? '+' : '-'}${Math.abs(pct).toFixed(2)}%)` };
 }
 // 오늘의 전망: 하면 얼마나 오르고, 안 하면 얼마나 내려가는지
-export function forecast(S: State) {
+function forecast_(S: State) {
   const ser = indexSeries(S);
   const last = ser[ser.length - 1];
   const p = dayProgress(S, today());
@@ -334,6 +362,7 @@ export function forecast(S: State) {
   if (left > 0) return { dir: 'up' as const, text: `남은 습관 ${left}개를 하면 +${left * XP.check} 더 오릅니다`, drop: 0, left };
   return { dir: 'up' as const, text: `오늘 +${last.g} 상승 마감`, drop: 0, left };
 }
+export const forecast = (S: State): ReturnType<typeof forecast_> => memo(S, 'forecast', () => forecast_(S));
 
 // ---------- 배지 ----------
 // 한 번이라도 N일을 채웠으면 달성, 아니면 지금 연속 기록이 진행도
@@ -358,7 +387,7 @@ export const badgeEarned = (S: State, b: Badge) => {
   return cur >= target;
 };
 // 목표에 가장 가까운 배지
-export function nextGoal(S: State) {
+function nextGoal_(S: State) {
   let best: { b: Badge; cur: number; target: number; r: number } | null = null;
   for (const b of BADGES) {
     if (S.badges[b.id]) continue;
@@ -369,6 +398,7 @@ export function nextGoal(S: State) {
   }
   return best;
 }
+export const nextGoal = (S: State): ReturnType<typeof nextGoal_> => memo(S, 'nextGoal', () => nextGoal_(S));
 
 // ---------- 보호권 ----------
 // 어제(또는 그 전 며칠)를 놓쳤고 보호권이 충분하면 그 날들을 지켜줍니다
@@ -391,16 +421,17 @@ export const earnsFreeze = (S: State) => {
 // 역대 최고(신고가) — 하루 한 번
 export function isNewHigh(S: State) {
   const ser = indexSeries(S);
-  if (ser.length < 2) return false;
+  if (ser.length < 8) return false; // 첫 주에는 매일이 신고가라 의미가 없음
   const last = ser[ser.length - 1];
   const prevMax = Math.max(...ser.slice(0, -1).map((p) => p.v));
   return last.g > 0 && last.v > prevMax + 0.001 && S.athDay !== today();
 }
 // 쉬었다 돌아온 날 수 (오늘 아직 기록이 없을 때만)
-export function comebackGap(S: State) {
+function comebackGap_(S: State) {
   const days = [...activeDays(S)].filter((d) => d < today()).sort();
   const last = days[days.length - 1];
   const gap = last ? dayDiff(last, today()) : 0;
   return last && gap >= 3 && !didSomething(S, today()) ? gap : 0;
 }
+export const comebackGap = (S: State): ReturnType<typeof comebackGap_> => memo(S, 'comebackGap', () => comebackGap_(S));
 export const nowSlot = (h = new Date().getHours()): TimeId => (h < 11 ? 'morning' : h < 17 ? 'afternoon' : 'evening');

@@ -1,21 +1,23 @@
 // 오늘: 열자마자 3초 안에 기록
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Animated, StyleSheet, Text, TextInput, View, type GestureResponderEvent } from 'react-native';
 import { DOW, agoText, dayDiff, fmtLong, hash, parse, shift, today, uid } from '../lib/dates';
 import {
   MOODS, PROMPTS, QUOTES, TIMES, activeHabits, bestStreak, catOf, change, comebackGap, dayProgress, degreeMap, fmtIdx,
-  forecast, habitStreak, indexSeries, isDone, nextGoal, nowSlot, scheduled, sortedDots, streak, type Habit,
+  forecast, habitStreak, indexSeries, isDone, nextGoal, nowSlot, scheduled, sortedDots, streak, trail, type Habit,
 } from '../lib/model';
-import { useStore } from '../store/Store';
+import { useAct, useDay, useS } from '../store/Store';
 import { Sparkline } from '../ui/charts';
 import { success, tap, tick } from '../ui/feel';
-import { Icon, Medal, Ring, Sep, Sw, Tap, Trail, useCountUp } from '../ui/kit';
+import { Icon, Medal, Ring, Sep, Sw, Tap, TrailSvg, useCountUp } from '../ui/kit';
 import { Screen } from '../ui/shell';
 import { C, R, S as T, num } from '../ui/theme';
 
 export default function Today() {
-  const { S, selDay, setSelDay, openSheet, toast } = useStore();
+  const S = useS();
+  const selDay = useDay();
+  const { setSelDay, openSheet, toast } = useAct();
   const h = new Date().getHours();
   const hello = h < 5 ? '늦은 밤입니다' : h < 11 ? '좋은 아침입니다' : h < 17 ? '좋은 오후입니다' : '좋은 저녁입니다';
   const days = streak(S);
@@ -63,12 +65,12 @@ export default function Today() {
         <Animated.View style={{ transform: [{ translateX: slide }] }}>
           <Hero />
         </Animated.View>
-        <Ticker />
-        <Goal />
         <Habits />
         <Tap onPress={() => openSheet({ kind: 'habit' })} style={{ alignSelf: 'center', padding: 10 }}>
           <Text style={{ color: C.muted, fontSize: 14 }}>습관 추가</Text>
         </Tap>
+        <Ticker />
+        <Goal />
         <Moods />
         <Moments />
         <Lookback />
@@ -79,7 +81,7 @@ export default function Today() {
 }
 
 function Comeback() {
-  const { S } = useStore();
+  const S = useS();
   const gap = comebackGap(S);
   if (!gap) return null;
   return (
@@ -92,7 +94,9 @@ function Comeback() {
 }
 
 function Week() {
-  const { S, selDay, setSelDay } = useStore();
+  const S = useS();
+  const selDay = useDay();
+  const { setSelDay } = useAct();
   const days = Array.from({ length: 7 }, (_, i) => shift(today(), i - 6));
   return (
     <View style={st.week}>
@@ -121,7 +125,8 @@ function Week() {
 
 // 오늘의 진행: 완료한 만큼 점이 채워지고, 채워진 점끼리 선으로
 function Hero() {
-  const { S, selDay } = useStore();
+  const S = useS();
+  const selDay = useDay();
   const p = dayProgress(S, selDay);
   const isToday = selDay === today();
   const fill = useState(() => new Animated.Value(0))[0];
@@ -164,7 +169,7 @@ function Hero() {
 
 // 오늘 탭의 작은 시세판
 function Ticker() {
-  const { S } = useStore();
+  const S = useS();
   const ser = indexSeries(S);
   const last = ser[ser.length - 1];
   const prev = ser.length > 1 ? ser[ser.length - 2] : last;
@@ -195,7 +200,8 @@ function Ticker() {
 
 // 다음 목표: 가장 가까운 배지까지
 function Goal() {
-  const { S, openSheet } = useStore();
+  const S = useS();
+  const { openSheet } = useAct();
   const g = nextGoal(S);
   if (!g) return null;
   return (
@@ -215,9 +221,11 @@ function Goal() {
 }
 
 function Habits() {
-  const { S } = useStore();
+  const S = useS();
   const list = activeHabits(S);
-  const { selDay } = useStore();
+  const selDay = useDay();
+  const p = dayProgress(S, selDay);
+  const left = p.total - p.done;
   if (!list.length) {
     return (
       <>
@@ -239,7 +247,13 @@ function Habits() {
               <Text style={[T.section, now && { color: C.text }]}>{now ? `지금 · ${t.name}` : t.name}</Text>
             </View>
             <View style={T.group}>
-              {hs.map((h, i) => <HabitRow key={h.id} h={h} first={i === 0} />)}
+              {hs.map((h, i) => {
+                const done = isDone(S, h, selDay);
+                return (
+                  <HabitRow key={h.id} h={h} first={i === 0} day={selDay} done={done} sch={scheduled(h, selDay)}
+                    streak={habitStreak(S, h)} last={!done && left === 1} points={trail(S, h, 7, selDay)} />
+                );
+              })}
             </View>
           </View>
         );
@@ -258,27 +272,25 @@ function Breathe() {
   return <Animated.View style={[st.breathe, { opacity: a }]} />;
 }
 
-function HabitRow({ h, first }: { h: Habit; first: boolean }) {
-  const { S, selDay, update, toast, openSheet } = useStore();
-  const done = isDone(S, h, selDay);
-  const sch = scheduled(h, selDay);
-  const s = habitStreak(S, h);
+type RowProps = { h: Habit; first: boolean; day: string; done: boolean; sch: boolean; streak: number; last: boolean; points: ReturnType<typeof trail> };
+const trailKey = (ps: RowProps['points']) => ps.map((p) => (p.on ? 1 : 0) + (p.sch ? 2 : 0) + (p.joined ? 4 : 0)).join('');
+// 체크한 줄만 다시 그립니다 (나머지 습관 줄은 그대로)
+const HabitRow = memo(function HabitRow({ h, first, day, done, sch, streak: s, last, points }: RowProps) {
+  const { update, toast, openSheet } = useAct();
   const pop = useState(() => new Animated.Value(1))[0];
   const toggle = () => {
-    const wasDone = done;
     update((x) => {
-      const l = x.checks[selDay] ?? [];
-      x.checks[selDay] = wasDone ? l.filter((id) => id !== h.id) : [...l, h.id];
-      if (!x.checks[selDay].length) delete x.checks[selDay];
+      const l = x.checks[day] ?? [];
+      x.checks[day] = done ? l.filter((id) => id !== h.id) : [...l, h.id];
+      if (!x.checks[day].length) delete x.checks[day];
     });
-    if (!wasDone) {
+    if (!done) {
       tap();
       pop.setValue(0.7);
       Animated.spring(pop, { toValue: 1, useNativeDriver: true, damping: 8, stiffness: 260 }).start();
-      const p = dayProgress(S, selDay);
-      if (p.total && p.done + 1 === p.total) {
+      if (last) {
         success();
-        toast(selDay === today() ? '오늘의 점이 모두 이어졌습니다' : '이 날의 점이 모두 이어졌습니다');
+        toast(day === today() ? '오늘의 습관을 모두 해냈습니다' : '이 날의 습관을 모두 해냈습니다', { label: '한 줄 남기기', run: () => openSheet({ kind: 'dot', date: day, prompt: '오늘 특별했던 한 가지는?' }) });
       }
     }
   };
@@ -297,13 +309,16 @@ function HabitRow({ h, first }: { h: Habit; first: boolean }) {
           <Text style={{ color: C.muted, fontSize: 12 }}>{!sch ? '쉬는 날' : s ? `${s}일 연속` : catOf(h.cat).name}</Text>
         </View>
       </Tap>
-      <Trail S={S} habit={h} n={7} w={70} end={selDay} />
+      <TrailSvg points={points} w={70} hgt={10} />
     </View>
   );
-}
+}, (a, b) => a.h.id === b.h.id && a.h.name === b.h.name && a.h.cat === b.h.cat && a.first === b.first && a.day === b.day && a.done === b.done
+  && a.sch === b.sch && a.streak === b.streak && a.last === b.last && trailKey(a.points) === trailKey(b.points));
 
 function Moods() {
-  const { S, selDay, update } = useStore();
+  const S = useS();
+  const selDay = useDay();
+  const { update } = useAct();
   const cur = S.moods[selDay];
   return (
     <>
@@ -326,7 +341,9 @@ function Moods() {
 
 // 오늘의 점 + 빠른 기록 (쓰고 엔터)
 function Moments() {
-  const { S, selDay, update, openSheet, toast, setJustAdded } = useStore();
+  const S = useS();
+  const selDay = useDay();
+  const { update, openSheet, toast, setJustAdded } = useAct();
   const [text, setText] = useState('');
   const list = sortedDots(S).filter((d) => d.date === selDay);
   const deg = degreeMap(S);
@@ -347,6 +364,7 @@ function Moments() {
         <Text style={T.section}>오늘의 점</Text>
         <Text style={T.meta}>{list.length || ''}</Text>
       </View>
+      <Text style={T.sectionDesc}>습관 말고, 오늘 배우거나 해낸 경험 한 줄. 나중에 뒤돌아보며 서로 이어집니다.</Text>
       <View style={T.group}>
         {list.map((d, i) => (
           <Tap key={d.id} scale={0.985} style={T.row} onPress={() => openSheet({ kind: 'dotDetail', id: d.id })}>
@@ -384,7 +402,8 @@ function Moments() {
 
 // 돌아보기: 과거의 점 하나를 꺼내 “오늘과 이어지나요?”
 function Lookback() {
-  const { S, update, openSheet, toast, setJustAdded } = useStore();
+  const S = useS();
+  const { update, openSheet, toast, setJustAdded } = useAct();
   const past = S.dots.filter((d) => dayDiff(d.date, today()) >= 3);
   if (!past.length) return null;
   const pick = past[hash(today()) % past.length];
@@ -422,7 +441,7 @@ const st = StyleSheet.create({
   dayNum: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   dayText: { color: C.text2, fontSize: 14, fontWeight: '500' },
   mark: { width: 3, height: 3, borderRadius: 2 },
-  hero: { paddingTop: 28, paddingBottom: 8 },
+  hero: { paddingTop: 20, paddingBottom: 0 },
   count: { color: C.text, fontSize: 56, fontWeight: '200', letterSpacing: -2 },
   countSmall: { color: C.muted, fontSize: 22, fontWeight: '300' },
   caption: { color: C.text2, fontSize: 14, marginTop: 10 },
@@ -431,7 +450,7 @@ const st = StyleSheet.create({
   trackFill: { position: 'absolute', left: 0, height: 1.5, backgroundColor: C.text },
   tDot: { position: 'absolute', width: 7, height: 7, marginLeft: -3.5, borderRadius: 4, backgroundColor: C.bg, borderWidth: 1, borderColor: C.hair2 },
   tDotOn: { width: 9, height: 9, marginLeft: -4.5, borderRadius: 5, backgroundColor: C.text, borderColor: C.text },
-  ticker: { marginTop: 28, padding: 16, borderRadius: R, backgroundColor: C.surface },
+  ticker: { marginTop: 24, padding: 16, borderRadius: R, backgroundColor: C.surface },
   cast: { marginTop: 12, paddingTop: 10, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.hair2 },
   goal: { marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, paddingHorizontal: 16, borderRadius: R, backgroundColor: C.surface },
   gBar: { height: 2, borderRadius: 1, backgroundColor: C.hair },

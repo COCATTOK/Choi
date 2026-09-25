@@ -1,7 +1,7 @@
 // 공통 부품: 눌리는 버튼, 아이콘, 링, 점-선, 칩, 배지 메달
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { memo, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
-import Svg, { Circle, Line, Path, SvgXml } from 'react-native-svg';
+import Svg, { Circle, Line, Path } from 'react-native-svg';
 import { trail, type Habit, type State } from '../lib/model';
 import { tick } from './feel';
 import { C, S as T } from './theme';
@@ -147,19 +147,30 @@ const G: Record<string, string> = {
   mood7: '<path d="M4 14 C7 8 10 8 12 12 C14 16 17 16 20 10"/>',
   constellation: '<path d="M5 17 L9 9 L15 12 L19 5"/><circle class="f" cx="5" cy="17" r="1.8"/><circle class="f" cx="9" cy="9" r="1.8"/><circle class="f" cx="15" cy="12" r="1.8"/><circle class="f" cx="19" cy="5" r="1.8"/>',
 };
-export function Medal({ id, got, size = 52 }: { id: string; got: boolean; size?: number }) {
+// 아이콘 문자열은 앱 시작 때 한 번만 해석해 둡니다 (그릴 때마다 해석하면 느림)
+type Shape = { kind: 'path'; d: string } | { kind: 'circle'; cx: number; cy: number; r: number; fill: boolean };
+const SHAPES: Record<string, Shape[]> = Object.fromEntries(
+  Object.entries(G).map(([id, xml]) => [id, [...xml.matchAll(/<(path|circle)([^>]*)\/>/g)].map(([, tag, attrs]) => {
+    const a = (k: string) => (attrs.match(new RegExp(`${k}="([^"]*)"`)) ?? [])[1] ?? '';
+    return tag === 'path' ? { kind: 'path' as const, d: a('d') } : { kind: 'circle' as const, cx: +a('cx'), cy: +a('cy'), r: +a('r'), fill: attrs.includes('class="f"') };
+  })]),
+);
+export const Medal = memo(function Medal({ id, got, size = 52 }: { id: string; got: boolean; size?: number }) {
   const color = got ? C.warm : C.muted;
-  const inner = (G[id] ?? G.first_dot).replace(/class="f"/g, `fill="${color}" stroke="none"`);
-  const xml = `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+  const s = size * 0.46;
   return (
     <View style={[st.medal, { width: size, height: size, borderRadius: size / 2, borderColor: got ? C.warm : C.hair2, opacity: got ? 1 : 0.45 }]}>
-      <SvgXml xml={xml} width={size * 0.46} height={size * 0.46} />
+      <Svg width={s} height={s} viewBox="0 0 24 24">
+        {(SHAPES[id] ?? SHAPES.first_dot).map((sh, k) => sh.kind === 'path'
+          ? <Path key={k} d={sh.d} stroke={color} strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          : <Circle key={k} cx={sh.cx} cy={sh.cy} r={sh.r} fill={sh.fill ? color : 'none'} stroke={sh.fill ? 'none' : color} strokeWidth={1.4} />)}
+      </Svg>
     </View>
   );
-}
+});
 
 // 숫자가 차르르 올라가는 값
-export function useCountUp(target: number, ms = 900) {
+export function useCountUp(target: number, ms = 600) {
   const [v, setV] = useState(target);
   const from = useRef(target);
   useEffect(() => {
@@ -178,6 +189,16 @@ export function useCountUp(target: number, ms = 900) {
     return () => cancelAnimationFrame(raf);
   }, [target, ms]);
   return v;
+}
+
+// 첫 프레임을 먼저 보여주고, 무거운 부분은 다음 프레임에 그리기
+export function useAfterFirstFrame() {
+  const [ok, setOk] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setOk(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+  return ok;
 }
 
 export const Sep = () => <View style={T.sep} />;

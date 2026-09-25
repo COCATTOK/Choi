@@ -7,7 +7,7 @@ import { today, uid } from '../lib/dates';
 import { IDENTITIES, TEMPLATES, catOf, timeOf } from '../lib/model';
 import { sampleState } from '../lib/sample';
 import { askPermission } from '../notify';
-import { useStore } from '../store/Store';
+import { useAct } from '../store/Store';
 import { success, tick } from '../ui/feel';
 import { Icon, Sep, Tap } from '../ui/kit';
 import { C, PAD, S as T } from '../ui/theme';
@@ -16,7 +16,7 @@ const APath = Animated.createAnimatedComponent(Path);
 const ACircle = Animated.createAnimatedComponent(Circle);
 
 export default function Onboarding() {
-  const { update, replace, toast } = useStore();
+  const { update, replace, toast } = useAct();
   const insets = useSafeAreaInsets();
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');

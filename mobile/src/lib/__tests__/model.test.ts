@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import { shift } from '../dates';
 import {
   blank, bestStreak, comebackGap, dayProgress, earnsFreeze, forecast, freezeCandidates, habitStreak,
-  indexSeries, isNewHigh, level, nextGoal, normalize, streak, trail, type State,
+  fmtIdx, indexSeries, isNewHigh, level, nextGoal, normalize, streak, trail, type State,
 } from '../model';
 import { sampleState } from '../sample';
 
@@ -80,13 +80,21 @@ describe('성장 지수', () => {
     assert.equal(f.left, 1);
   });
   it('신고가는 하루 한 번', () => {
-    const S = withHabits([0, 1]);
+    const S = withHabits([0, 1, 2, 3, 4, 5, 6, 7, 8]);
     assert.equal(isNewHigh(S), true);
     assert.equal(isNewHigh({ ...S, athDay: NOW }), false);
+  });
+  it('첫 주에는 신고가를 축하하지 않습니다', () => {
+    assert.equal(isNewHigh(withHabits([0, 1])), false);
   });
 });
 
 describe('그 밖', () => {
+  it('지수 표기', () => {
+    assert.equal(fmtIdx(1234567.891), '1,234,567.89');
+    assert.equal(fmtIdx(100), '100.00');
+    assert.equal(fmtIdx(-0.5), '-0.50');
+  });
   it('진행률', () => assert.deepEqual(dayProgress(withHabits([0]), NOW), { done: 1, total: 2, pct: 0.5 }));
   it('레벨', () => assert.equal(level(withHabits([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])).cur.name, '선'));
   it('다음 목표는 가장 가까운 배지', () => {

@@ -23,29 +23,38 @@ export type SheetReq =
 export type ToastAction = { label: string; run: () => void };
 export type Toast = { id: number; msg: string; action?: ToastAction };
 
-type Ctx = {
-  S: State;
-  ready: boolean;
-  selDay: string;
-  setSelDay: (d: string) => void;
+// 자주 바뀌는 것과 거의 안 바뀌는 것을 나눠서, 필요한 화면만 다시 그립니다.
+//  · DataCtx: 기록(S) — 기록할 때만 바뀜
+//  · ActCtx: 동작 함수들 — 절대 바뀌지 않음 (이것만 쓰는 화면은 다시 그리지 않음)
+//  · 선택한 날짜, 시트, 토스트, 방금 추가한 점 — 각자 따로
+export type Actions = {
   update: (fn: (s: State) => void, opts?: { quiet?: boolean }) => void;
   replace: (s: State) => void;
   undoable: (msg: string, fn: (s: State) => void) => void;
   toast: (msg: string, action?: ToastAction) => void;
-  toasts: Toast[];
   dropToast: (id: number) => void;
-  sheet: SheetReq | null;
   openSheet: (r: SheetReq) => void;
   closeSheet: () => void;
-  justAdded: string | null;
+  setSelDay: (d: string) => void;
   setJustAdded: (id: string | null) => void;
 };
-const StoreCtx = createContext<Ctx | null>(null);
-export const useStore = () => {
-  const c = useContext(StoreCtx);
-  if (!c) throw new Error('StoreProvider 밖에서 사용');
-  return c;
+const DataCtx = createContext<{ S: State; ready: boolean } | null>(null);
+const ActCtx = createContext<Actions | null>(null);
+const DayCtx = createContext<string>('');
+const SheetReqCtx = createContext<SheetReq | null>(null);
+const ToastCtx = createContext<Toast[]>([]);
+const FreshCtx = createContext<string | null>(null);
+const need = <T,>(v: T | null, name: string): T => {
+  if (v === null) throw new Error(`${name}: StoreProvider 밖에서 사용`);
+  return v;
 };
+export const useS = () => need(useContext(DataCtx), 'useS').S;
+export const useReady = () => need(useContext(DataCtx), 'useReady').ready;
+export const useAct = () => need(useContext(ActCtx), 'useAct');
+export const useDay = () => useContext(DayCtx);
+export const useSheetReq = () => useContext(SheetReqCtx);
+export const useToasts = () => useContext(ToastCtx);
+export const useJustAdded = () => useContext(FreshCtx);
 
 const clone = (s: State): State => JSON.parse(JSON.stringify(s));
 
@@ -84,12 +93,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
   const dropToast = useCallback((id: number) => setToasts((t) => t.filter((x) => x.id !== id)), []);
 
+  // 저장과 알림 예약은 무거우니 손가락 반응이 끝난 뒤(250ms) 한 번에
+  const saveT = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flush = useCallback(() => {
+    if (saveT.current) clearTimeout(saveT.current);
+    saveT.current = null;
+    const cur = ref.current;
+    AsyncStorage.setItem(KEY, JSON.stringify(cur)).catch(() => toast('저장하지 못했습니다'));
+    syncNotifications(cur);
+  }, [toast]);
   const commit = useCallback((next: State) => {
     ref.current = next;
     setS(next);
-    AsyncStorage.setItem(KEY, JSON.stringify(next)).catch(() => toast('저장하지 못했습니다'));
-    syncNotifications(next);
-  }, [toast]);
+    if (saveT.current) clearTimeout(saveT.current);
+    saveT.current = setTimeout(flush, 250);
+  }, [flush]);
 
   const update = useCallback((fn: (s: State) => void, opts?: { quiet?: boolean }) => {
     const prev = ref.current;
@@ -139,14 +157,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setReady(true);
         wake();
       });
-    const sub = AppState.addEventListener('change', (st) => st === 'active' && wake());
+    const sub = AppState.addEventListener('change', (st) => {
+      if (st === 'active') wake();
+      else if (saveT.current) flush(); // 앱을 떠날 때 남은 저장을 바로
+    });
     return () => sub.remove();
-  }, [wake]);
+  }, [wake, flush]);
 
-  const value = useMemo<Ctx>(() => ({
-    S, ready, selDay, setSelDay, update, replace, undoable, toast, toasts, dropToast,
-    sheet, openSheet: setSheet, closeSheet: () => setSheet(null), justAdded, setJustAdded,
-  }), [S, ready, selDay, update, replace, undoable, toast, toasts, dropToast, sheet, justAdded]);
+  const closeSheet = useCallback(() => setSheet(null), []);
+  const actions = useMemo<Actions>(() => ({
+    update, replace, undoable, toast, dropToast, openSheet: setSheet, closeSheet, setSelDay, setJustAdded,
+  }), [update, replace, undoable, toast, dropToast, closeSheet]);
+  const data = useMemo(() => ({ S, ready }), [S, ready]);
 
-  return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;
+  return (
+    <ActCtx.Provider value={actions}>
+      <DataCtx.Provider value={data}>
+        <DayCtx.Provider value={selDay}>
+          <FreshCtx.Provider value={justAdded}>
+            <SheetReqCtx.Provider value={sheet}>
+              <ToastCtx.Provider value={toasts}>{children}</ToastCtx.Provider>
+            </SheetReqCtx.Provider>
+          </FreshCtx.Provider>
+        </DayCtx.Provider>
+      </DataCtx.Provider>
+    </ActCtx.Provider>
+  );
 }

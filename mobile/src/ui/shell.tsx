@@ -7,7 +7,7 @@ import {
   type GestureResponderEvent, type ScrollViewProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useStore } from '../store/Store';
+import { useAct, useToasts } from '../store/Store';
 import { tick } from './feel';
 import { Icon } from './kit';
 import { C, PAD } from './theme';
@@ -123,7 +123,8 @@ export function SheetBar({ title, onDone, doneLabel = '완료' }: { title: strin
 
 // ── 토스트: 탭바 바로 위, 되돌리기 버튼 ──
 export function ToastHost() {
-  const { toasts, dropToast } = useStore();
+  const toasts = useToasts();
+  const { dropToast } = useAct();
   const insets = useSafeAreaInsets();
   const cur = toasts[0];
   const a = useState(() => new Animated.Value(0))[0];

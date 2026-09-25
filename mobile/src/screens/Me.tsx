@@ -4,7 +4,7 @@ import { Alert, Platform, Share, StyleSheet, Switch, Text, TextInput, View } fro
 import { DOW } from '../lib/dates';
 import { activeHabits, blank, catOf, timeOf } from '../lib/model';
 import { askPermission } from '../notify';
-import { useStore } from '../store/Store';
+import { useAct, useS } from '../store/Store';
 import { Chips, Icon, Sep, Sw, Tap } from '../ui/kit';
 import { Screen } from '../ui/shell';
 import { C, S as T } from '../ui/theme';
@@ -16,7 +16,8 @@ const REMIND_TIMES = [7 * 60, 8 * 60 + 30, 12 * 60, 19 * 60].map((m) => ({ id: S
 const NUDGE_TIMES = [20 * 60, 21 * 60, 22 * 60].map((m) => ({ id: String(m), name: hm(m) }));
 
 export default function Me() {
-  const { S, update, replace, openSheet, toast } = useStore();
+  const S = useS();
+  const { update, replace, openSheet, toast } = useAct();
   const set = (k: 'remind' | 'nudge', v: boolean) => {
     if (v) askPermission().then((ok) => !ok && Platform.OS !== 'web' && toast('설정에서 알림을 허용해주세요'));
     update((x) => { x.settings[k] = v; }, { quiet: true });
@@ -87,7 +88,8 @@ export default function Me() {
 }
 
 function Profile() {
-  const { S, update, toast } = useStore();
+  const S = useS();
+  const { update, toast } = useAct();
   const [name, setName] = useState(S.profile.name);
   const [identity, setIdentity] = useState(S.profile.identity);
   return (

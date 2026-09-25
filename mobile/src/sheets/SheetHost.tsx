@@ -8,14 +8,15 @@ import {
   BADGES, CATS, TEMPLATES, TIMES, catOf, dotById, habitBest, habitRate, habitStreak, isDone, neighbors, normalize,
   scheduled, sortedDots, timeOf, type CatId, type TimeId,
 } from '../lib/model';
-import { useStore, type SheetReq } from '../store/Store';
+import { useAct, useS, useSheetReq, type SheetReq } from '../store/Store';
 import { tap } from '../ui/feel';
 import { Chips, Medal, Segment, Sep, Sw, Tap } from '../ui/kit';
 import { SheetBar, SheetFrame, useSheet } from '../ui/shell';
 import { C, S as T, num } from '../ui/theme';
 
 export default function SheetHost() {
-  const { sheet, closeSheet } = useStore();
+  const sheet = useSheetReq();
+  const { closeSheet } = useAct();
   if (!sheet) return null;
   const key = JSON.stringify(sheet);
   return (
@@ -38,7 +39,8 @@ function Body({ req }: { req: SheetReq }) {
 
 // ── 오늘의 점: 과거의 점과만 이을 수 있습니다 ──
 function DotForm({ req }: { req: Extract<SheetReq, { kind: 'dot' }> }) {
-  const { S, update, toast, setJustAdded } = useStore();
+  const S = useS();
+  const { update, toast, setJustAdded } = useAct();
   const { dismiss } = useSheet();
   const editing = req.id ? dotById(S, req.id) : undefined;
   const [title, setTitle] = useState(editing?.title ?? req.title ?? '');
@@ -47,7 +49,14 @@ function DotForm({ req }: { req: Extract<SheetReq, { kind: 'dot' }> }) {
   const [date, setDate] = useState(editing?.date ?? req.date ?? today());
   const [links, setLinks] = useState<Set<string>>(new Set(editing?.links ?? req.links ?? []));
   const [q, setQ] = useState('');
-  const cands = sortedDots(S).reverse().filter((d) => d.id !== editing?.id && d.date <= date && (!q || d.title.includes(q)));
+  const past = [...sortedDots(S)].reverse().filter((d) => d.id !== editing?.id && d.date <= date);
+  const cands = q ? past.filter((d) => d.title.includes(q) || (d.note ?? '').includes(q)) : past;
+  // 잇는 수고를 덜기: 지금 쓰는 제목과 비슷한 과거의 점을 위에 추천
+  const words = (t: string) => new Set(t.split(/[\s,.·()~!?]+/).filter((w) => w.length >= 2));
+  const mine = words(title);
+  const score = (d: (typeof past)[number]) => (d.cat === cat ? 1 : 0) + [...words(d.title)].filter((w) => mine.has(w) || [...mine].some((m) => m.length >= 2 && (w.startsWith(m) || m.startsWith(w)))).length * 3;
+  const suggested = !q && title.trim() ? past.map((d) => ({ d, s: score(d) })).filter((x) => x.s >= 3).sort((a, b) => b.s - a.s).slice(0, 3).map((x) => x.d.id) : [];
+  const ordered = [...cands.filter((d) => suggested.includes(d.id)), ...cands.filter((d) => !suggested.includes(d.id))];
   const save = () => {
     const t = title.trim();
     if (!t) return;
@@ -69,8 +78,8 @@ function DotForm({ req }: { req: Extract<SheetReq, { kind: 'dot' }> }) {
     dismiss();
   };
   // 날짜는 최근 7일에서 고릅니다
-  const days = Array.from({ length: 7 }, (_, i) => shift(today(), i - 6)).map((d) => ({ id: d, name: d === today() ? '오늘' : `${DOW[parse(d).getDay()]} ${fmtShort(d)}` }));
-  if (!days.some((d) => d.id === date)) days.unshift({ id: date, name: fmtShort(date) });
+  const days = Array.from({ length: 7 }, (_, i) => shift(today(), -i)).map((d) => ({ id: d, name: d === today() ? '오늘' : d === shift(today(), -1) ? '어제' : `${DOW[parse(d).getDay()]} ${fmtShort(d)}` }));
+  if (!days.some((d) => d.id === date)) days.push({ id: date, name: fmtShort(date) });
   return (
     <>
       <SheetBar title={editing ? '점 다듬기' : '오늘의 점'} onDone={save} />
@@ -90,7 +99,7 @@ function DotForm({ req }: { req: Extract<SheetReq, { kind: 'dot' }> }) {
             <Text style={T.sectionDesc}>뒤돌아보니, 이 경험과 이어지는 점이 있나요?</Text>
             <View style={T.group}>
               <TextInput value={q} onChangeText={setQ} placeholder="검색" placeholderTextColor={C.muted} style={st.search} />
-              {cands.slice(0, 40).map((d) => {
+              {ordered.slice(0, 40).map((d) => {
                 const on = links.has(d.id);
                 return (
                   <Tap key={d.id} scale={0.99} style={T.row} onPress={() => { const n = new Set(links); if (on) n.delete(d.id); else n.add(d.id); setLinks(n); tap(); }}>
@@ -98,6 +107,7 @@ function DotForm({ req }: { req: Extract<SheetReq, { kind: 'dot' }> }) {
                     <View style={[st.tick, on && { backgroundColor: C.text, borderColor: C.text }]}>{on ? <View style={st.tickDot} /> : null}</View>
                     <Sw color={catOf(d.cat).color} />
                     <Text numberOfLines={1} style={[T.body, { flex: 1 }]}>{d.title}</Text>
+                    {suggested.includes(d.id) ? <Text style={{ color: C.warm, fontSize: 11, fontWeight: '600' }}>비슷함</Text> : null}
                     <Text style={[T.meta, num]}>{fmtShort(d.date)}</Text>
                   </Tap>
                 );
@@ -112,7 +122,8 @@ function DotForm({ req }: { req: Extract<SheetReq, { kind: 'dot' }> }) {
 
 // ── 습관 ──
 function HabitForm({ id }: { id?: string }) {
-  const { S, update, undoable, toast } = useStore();
+  const S = useS();
+  const { update, undoable, toast } = useAct();
   const { dismiss } = useSheet();
   const h = id ? S.habits.find((x) => x.id === id) : undefined;
   const [name, setName] = useState(h?.name ?? '');
@@ -189,7 +200,8 @@ function HabitForm({ id }: { id?: string }) {
 
 // ── 점 상세 ──
 function DotDetail({ id }: { id: string }) {
-  const { S, openSheet, undoable } = useStore();
+  const S = useS();
+  const { openSheet, undoable } = useAct();
   const { dismiss } = useSheet();
   const d = dotById(S, id);
   if (!d) return null;
@@ -228,7 +240,8 @@ function DotDetail({ id }: { id: string }) {
 
 // ── 습관 상세: 최근 12주, 체크한 날은 점, 연달아 한 날은 선 ──
 function HabitDetail({ id }: { id: string }) {
-  const { S, openSheet } = useStore();
+  const S = useS();
+  const { openSheet } = useAct();
   const { dismiss } = useSheet();
   const h = S.habits.find((x) => x.id === id);
   const [w, setW] = useState(320);
@@ -280,7 +293,7 @@ function HabitDetail({ id }: { id: string }) {
 }
 
 function BadgeSheet({ id }: { id: string }) {
-  const { S } = useStore();
+  const S = useS();
   const { dismiss } = useSheet();
   const b = BADGES.find((x) => x.id === id);
   if (!b) return null;
@@ -299,7 +312,7 @@ function BadgeSheet({ id }: { id: string }) {
 
 // 웹 버전에서 옮기기: 웹의 '백업 내보내기' 파일 내용을 붙여넣기
 function ImportSheet() {
-  const { replace, toast } = useStore();
+  const { replace, toast } = useAct();
   const { dismiss } = useSheet();
   const [text, setText] = useState('');
   const go = () => {
