@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>딸깍 황금 키워드</title>
+  <style>
+    :root {
+      --bg: #faf8f3; --card: #ffffff; --text: #1f1d1a; --muted: #6b665d;
+      --line: #e6e1d6; --gold: #b8860b; --gold-bg: #fff4d6; --accent: #1f6feb;
+      --good: #2f7d32; --good-bg: #e7f4e8; --mid-bg: #f0eee8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #16150f; --card: #211f19; --text: #ece8de; --muted: #a39d90;
+        --line: #37342b; --gold: #f2c14e; --gold-bg: #3a2f12; --accent: #6ea8ff;
+        --good: #7fcf83; --good-bg: #1d3320; --mid-bg: #2a2821;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text);
+      font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif; line-height: 1.5; }
+    main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+    h1 { font-size: 1.7rem; margin: 0 0 4px; }
+    h1 a { color: inherit; text-decoration: none; }
+    .sub { color: var(--muted); margin: 0 0 20px; }
+    .search { display: flex; gap: 8px; flex-wrap: wrap; }
+    .search input { flex: 1 1 220px; font-size: 1.05rem; padding: 12px 14px; border: 1px solid var(--line);
+      border-radius: 10px; background: var(--card); color: var(--text); }
+    button { font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid var(--line);
+      background: var(--card); color: var(--text); padding: 10px 14px; }
+    button.primary { background: var(--gold); border-color: var(--gold); color: #1f1d1a; font-weight: 700; padding: 12px 20px; }
+    button:disabled { opacity: .5; cursor: wait; }
+    .chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 0; }
+    .chips button { padding: 4px 10px; font-size: .9rem; border-radius: 999px; }
+    #status { margin: 18px 0 8px; color: var(--muted); min-height: 1.5em; }
+    .toolbar { display: none; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: .85rem; color: var(--muted); font-weight: 600; }
+    tr:last-child td { border-bottom: 0; }
+    .kw { font-weight: 600; word-break: keep-all; }
+    .why { font-size: .8rem; color: var(--muted); }
+    .badge { display: inline-block; font-size: .8rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+    .g1 { background: var(--gold-bg); color: var(--gold); }
+    .g2 { background: var(--good-bg); color: var(--good); }
+    .g3 { background: var(--mid-bg); color: var(--muted); }
+    .links a { font-size: .8rem; color: var(--accent); margin-right: 8px; white-space: nowrap; }
+    .note { margin-top: 28px; padding: 14px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; font-size: .9rem; color: var(--muted); }
+    .note b { color: var(--text); }
+    @media (max-width: 600px) {
+      th.hide, td.hide { display: none; }
+      th, td { padding: 8px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1><a href="index.html">💎 딸깍 황금 키워드</a></h1>
+  <p class="sub">키워드 하나 넣고 딸깍 → 네이버·구글 자동완성을 긁어서 돈 되는 롱테일 키워드를 점수순으로 뽑아줘요.</p>
+
+  <div class="search">
+    <input id="seed" placeholder="예: 임플란트, 자동차보험, 전세대출 (비워두면 랜덤)" autocomplete="off">
+    <button id="go" class="primary">⚡ 딸깍</button>
+  </div>
+  <div class="chips" id="chips"></div>
+
+  <div id="status"></div>
+  <div class="toolbar" id="toolbar">
+    <button id="copy">📋 전체 복사</button>
+    <button id="csv">⬇️ CSV 저장</button>
+    <button id="onlyGold">💎 황금만 보기</button>
+  </div>
+  <div id="result"></div>
+
+  <div class="note">
+    <b>점수는 이렇게 매겨요</b><br>
+    ① 단가(CPC) 높은 업종 단어(보험·대출·변호사·치과 등) ② 구매/신청 의도 단어(비용·추천·비교·신청 등)
+    ③ 3단어 이상 롱테일(경쟁 적음) ④ 네이버·구글 둘 다 자동완성에 뜸(실제 검색됨) ⑤ 올해 연도 포함(시즌성).<br><br>
+    <b>꼭 확인하세요:</b> 정확한 월간 검색량·클릭단가는
+    <a href="https://searchad.naver.com/" target="_blank" rel="noopener">네이버 검색광고 키워드도구</a>에서만 나와요.
+    여기서 💎 뜬 키워드를 키워드도구에 넣어보고, <b>블로그 발행량</b> 링크로 경쟁 글 수를 확인한 뒤 글을 쓰면 됩니다.
+  </div>
+</main>
+
+<script>
+// ── 돈 되는 업종 단어 (광고 단가 높은 순으로 대략 3단계) ──
+const MONEY = {
+  3: ['대출', '보험', '변호사', '소송', '이혼', '임플란트', '교정', '성형', '라식', '라섹', '탈모', '카드', '담보', '개인회생', '파산', '법무사', '세무사', '상속', '증여', '보험금', '실비', '암보험', '치아보험', '운전자보험'],
+  2: ['적금', '예금', '금리', '투자', '주식', '코인', 'ETF', '연금', '부동산', '청약', '전세', '월세', '이사', '인테리어', '렌탈', '정수기', '에어컨', '중고차', '신차', '렌트카', '장기렌트', '리스', '치과', '피부과', '한의원', '병원', '다이어트', '학원', '자격증', '요양', '창업', '프랜차이즈', '웨딩', '스드메', '결혼', '호텔', '항공권', '보청기'],
+  1: ['세금', '연말정산', '환급', '지원금', '보조금', '청년', '실업급여', '영양제', '유산균', '노트북', '휴대폰', '인터넷', '요금제', '여행', '캠핑', '가전', '청소기', '공기청정기']
+};
+const INTENT = ['비용', '가격', '추천', '비교', '순위', '후기', '신청', '조건', '방법', '견적', '상담', '한도', '싼곳', '저렴', '할인', '최저가', '수수료', '종류', '장단점', '자격', '서류', '기간'];
+const SUFFIXES = ['', ' 비용', ' 추천', ' 비교', ' 후기', ' 신청', ' 방법', ' 가격', ' 조건'];
+const RANDOM_SEEDS = ['임플란트', '자동차보험', '전세대출', '개인회생', '치아보험', '정수기 렌탈', '장기렌트', '라식', '실비보험', '청년 지원금', '이사 견적', '스드메', '탈모 치료', '신용대출', '연금저축'];
+const YEAR = new Date().getFullYear();
+
+const $ = (id) => document.getElementById(id);
+let rows = [];
+let goldOnly = false;
+
+// ── JSONP (브라우저에서 서버 없이 자동완성 가져오기) ──
+let cbSeq = 0;
+function jsonp(url, cbParam, timeout = 5000) {
+  return new Promise((resolve) => {
+    const name = '__kw' + (cbSeq++);
+    const s = document.createElement('script');
+    const done = (data) => { clearTimeout(t); delete window[name]; s.remove(); resolve(data); };
+    const t = setTimeout(() => done(null), timeout);
+    window[name] = (data) => done(data);
+    s.onerror = () => done(null);
+    s.src = url + (url.includes('?') ? '&' : '?') + cbParam + '=' + name;
+    document.head.appendChild(s);
+  });
+}
+
+function flattenStrings(x, out = []) {
+  if (typeof x === 'string') out.push(x);
+  else if (Array.isArray(x)) x.forEach((v) => flattenStrings(v, out));
+  return out;
+}
+
+async function naver(q) {
+  const d = await jsonp('https://ac.search.naver.com/nx/ac?q_enc=UTF-8&st=100&r_format=json&r_enc=UTF-8&frm=nv&ans=2&q=' + encodeURIComponent(q), '_callback');
+  if (!d || !d.items) return [];
+  // items[0] 은 [["키워드", ...], ...] 형태 — 각 항목의 첫 문자열만 사용
+  return (d.items[0] || []).map((it) => flattenStrings(it)[0]).filter(Boolean);
+}
+
+async function google(q) {
+  const d = await jsonp('https://suggestqueries.google.com/complete/search?client=youtube&hl=ko&gl=kr&q=' + encodeURIComponent(q), 'jsonp');
+  if (!d || !Array.isArray(d[1])) return [];
+  return d[1].map((it) => (Array.isArray(it) ? it[0] : it)).filter((v) => typeof v === 'string');
+}
+
+// ── 점수 계산 ──
+function score(kw, sources) {
+  let s = 0; const why = [];
+  let money = 0, moneyWord = '';
+  for (const tier of [3, 2, 1]) {
+    const w = MONEY[tier].find((m) => kw.includes(m));
+    if (w) { money = tier; moneyWord = w; break; }
+  }
+  if (money) { s += money * 15; why.push('💰' + moneyWord); }
+  const intents = INTENT.filter((w) => kw.includes(w));
+  if (intents.length) { s += Math.min(intents.length, 2) * 12; why.push('🛒' + intents.join('·')); }
+  const words = kw.trim().split(/\s+/).length;
+  if (words >= 3) { s += 15; why.push('🎯롱테일'); } else if (words === 2) s += 7;
+  if (sources.size >= 2) { s += 15; why.push('🔥양쪽 검색'); } else s += 5;
+  if (kw.includes(String(YEAR)) || kw.includes(String(YEAR + 1))) { s += 8; why.push('📅시즌'); }
+  if (kw.length > 25) s -= 10;
+  return { score: Math.max(0, Math.min(100, s)), why };
+}
+
+function grade(sc) {
+  if (sc >= 60) return ['💎 황금', 'g1'];
+  if (sc >= 40) return ['🥇 좋음', 'g2'];
+  return ['보통', 'g3'];
+}
+
+// ── 딸깍 ──
+async function run(seedArg) {
+  let seed = (seedArg ?? $('seed').value).trim();
+  if (!seed) seed = RANDOM_SEEDS[Math.floor(Math.random() * RANDOM_SEEDS.length)];
+  $('seed').value = seed;
+  $('go').disabled = true;
+  $('toolbar').style.display = 'none';
+  $('result').innerHTML = '';
+
+  const found = new Map(); // keyword -> Set(sources)
+  const add = (kw, src) => {
+    kw = kw.trim().replace(/\s+/g, ' ');
+    if (!kw || kw.length < 2) return;
+    if (!found.has(kw)) found.set(kw, new Set());
+    found.get(kw).add(src);
+  };
+
+  let doneCount = 0, ok = 0;
+  const total = SUFFIXES.length * 2;
+  const show = () => { $('status').textContent = `🔎 "${seed}" 조사 중… (${doneCount}/${total})`; };
+  const tick = () => { doneCount++; show(); };
+  show();
+
+  await Promise.all(SUFFIXES.flatMap((suf) => {
+    const q = seed + suf;
+    return [
+      naver(q).then((list) => { if (list.length) ok++; list.forEach((k) => add(k, 'N')); tick(); }),
+      google(q).then((list) => { if (list.length) ok++; list.forEach((k) => add(k, 'G')); tick(); })
+    ];
+  }));
+
+  // 자동완성을 못 가져오면 조합으로라도 후보 생성
+  if (!ok) {
+    INTENT.slice(0, 12).forEach((w) => add(`${seed} ${w}`, '조합'));
+    INTENT.slice(0, 6).forEach((w) => add(`${YEAR} ${seed} ${w}`, '조합'));
+  }
+
+  rows = [...found.entries()].map(([kw, src]) => ({ kw, src, ...score(kw, src) }))
+    .sort((a, b) => b.score - a.score);
+
+  const gold = rows.filter((r) => r.score >= 60).length;
+  $('status').textContent = ok
+    ? `✅ 키워드 ${rows.length}개 찾음 · 💎 황금 ${gold}개`
+    : `⚠️ 자동완성 서버에 연결을 못 해서 조합 키워드로만 보여줘요 (인터넷/광고차단 확인).`;
+  $('go').disabled = false;
+  $('toolbar').style.display = rows.length ? 'flex' : 'none';
+  render();
+}
+
+function esc(s) { return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+function render() {
+  const list = goldOnly ? rows.filter((r) => r.score >= 60) : rows;
+  if (!list.length) { $('result').innerHTML = ''; return; }
+  const srcLabel = (s) => [...s].map((x) => ({ N: '네이버', G: '구글' }[x] || x)).join('+');
+  $('result').innerHTML = `<table>
+    <thead><tr><th>키워드</th><th>등급</th><th class="hide">출처</th><th>경쟁 확인</th></tr></thead>
+    <tbody>${list.map((r) => {
+      const [g, cls] = grade(r.score); const q = encodeURIComponent(r.kw);
+      return `<tr>
+        <td><div class="kw">${esc(r.kw)}</div><div class="why">${r.score}점 ${r.why.join(' ')}</div></td>
+        <td><span class="badge ${cls}">${g}</span></td>
+        <td class="hide why">${srcLabel(r.src)}</td>
+        <td class="links">
+          <a href="https://search.naver.com/search.naver?where=blog&query=${q}" target="_blank" rel="noopener">블로그 발행량</a>
+          <a href="https://datalab.naver.com/keyword/trendSearch.naver" target="_blank" rel="noopener">트렌드</a>
+        </td></tr>`;
+    }).join('')}</tbody></table>`;
+}
+
+$('go').onclick = () => run();
+$('seed').addEventListener('keydown', (e) => { if (e.key === 'Enter') run(); });
+$('onlyGold').onclick = () => { goldOnly = !goldOnly; $('onlyGold').textContent = goldOnly ? '📃 전체 보기' : '💎 황금만 보기'; render(); };
+$('copy').onclick = async () => {
+  const text = rows.map((r) => r.kw).join('\n');
+  try { await navigator.clipboard.writeText(text); $('copy').textContent = '✅ 복사됨'; }
+  catch { prompt('복사해서 쓰세요', text); }
+  setTimeout(() => ($('copy').textContent = '📋 전체 복사'), 1500);
+};
+$('csv').onclick = () => {
+  const csv = '﻿키워드,점수,이유,출처\n' + rows.map((r) =>
+    [r.kw, r.score, r.why.join(' '), [...r.src].join('+')].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = `황금키워드_${$('seed').value}.csv`;
+  a.click();
+};
+['임플란트', '자동차보험', '전세대출', '개인회생', '정수기 렌탈', '청년 지원금'].forEach((w) => {
+  const b = document.createElement('button'); b.textContent = w; b.onclick = () => run(w); $('chips').appendChild(b);
+});
+</script>
+</body>
+</html>
