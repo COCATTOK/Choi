@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0b1020">
+  <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>점과 선</title>
@@ -13,61 +13,75 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- 얇은 선 아이콘 -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-today" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.2" class="fill"/></symbol>
+    <symbol id="i-sky" viewBox="0 0 24 24"><path d="M5 17 L10 9 L15 13 L19 6"/><circle cx="5" cy="17" r="1.8" class="fill"/><circle cx="10" cy="9" r="1.8" class="fill"/><circle cx="15" cy="13" r="1.8" class="fill"/><circle cx="19" cy="6" r="1.8" class="fill"/></symbol>
+    <symbol id="i-growth" viewBox="0 0 24 24"><path d="M4 19 H20"/><path d="M6 15 L10 11 L13 13 L18 7"/><path d="M14.5 7 H18 V10.5"/></symbol>
+    <symbol id="i-me" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5 C6.5 15.5 9 14.5 12 14.5 C15 14.5 17.5 15.5 19 19.5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5 V19 M5 12 H19"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5 L16 12 L9 19"/></symbol>
+  </svg>
+
   <div id="app">
     <!-- 1. 오늘 -->
     <main class="view active" id="view-today">
       <header class="top">
         <div>
           <p class="eyebrow" id="today-date"></p>
-          <h1 id="greeting">안녕하세요</h1>
+          <h1 id="greeting">오늘</h1>
         </div>
-        <button class="streak-pill" id="streak-pill" aria-label="연속 기록"></button>
+        <div class="top-actions">
+          <button class="streak" id="streak-pill" aria-label="연속 기록"></button>
+          <button class="icon-btn" data-action="add" aria-label="오늘의 점 찍기"><svg><use href="#i-plus"/></svg></button>
+        </div>
       </header>
 
       <div class="week" id="week"></div>
 
-      <section class="card progress-card" id="progress-card"></section>
+      <section class="hero" id="progress-card"></section>
 
       <div id="habit-groups"></div>
-      <button class="add-habit" id="add-habit-inline">+ 습관 추가</button>
+      <button class="text-btn" id="add-habit-inline">습관 추가</button>
 
-      <section class="card" id="mood-card">
-        <h2>오늘의 마음</h2>
-        <div class="moods" id="moods"></div>
-      </section>
+      <h2 class="section">마음</h2>
+      <div class="moods" id="moods"></div>
 
-      <section class="card moment-card">
-        <div class="card-head">
-          <h2>오늘의 점</h2>
-          <span class="muted small-inline" id="moment-count"></span>
-        </div>
-        <ul class="moment-list" id="moment-list"></ul>
-        <button class="prompt" id="prompt-btn">
+      <div class="section-row">
+        <h2 class="section">오늘의 점</h2>
+        <span class="section-meta" id="moment-count"></span>
+      </div>
+      <div class="group">
+        <ul class="list" id="moment-list"></ul>
+        <button class="row-btn prompt" id="prompt-btn">
           <span class="prompt-q" id="prompt-q"></span>
-          <span class="prompt-cta">점 찍기 →</span>
+          <svg class="chev"><use href="#i-chev"/></svg>
         </button>
-      </section>
+      </div>
 
-      <section class="card lookback" id="lookback" hidden></section>
+      <section class="lookback" id="lookback" hidden></section>
     </main>
 
     <!-- 2. 별자리 -->
     <main class="view" id="view-sky">
       <header class="top">
         <div>
-          <p class="eyebrow">나의 별자리</p>
-          <h1 id="sky-summary">점과 선</h1>
+          <p class="eyebrow" id="sky-summary"></p>
+          <h1>별자리</h1>
+        </div>
+        <div class="top-actions">
+          <button class="icon-btn" data-action="add" aria-label="오늘의 점 찍기"><svg><use href="#i-plus"/></svg></button>
         </div>
       </header>
       <div class="sky-wrap">
         <svg id="sky" aria-label="나의 점들이 이어진 별자리"></svg>
         <div class="empty" id="sky-empty">
-          <p>특별한 경험을 <b>오늘의 점</b>으로 찍으면<br>이곳에 별이 생겨요.</p>
+          <p>특별한 경험을 점으로 찍으면<br>이곳에 별이 생깁니다.</p>
           <button class="btn primary" data-action="add">첫 번째 점 찍기</button>
         </div>
       </div>
       <div class="legend" id="legend"></div>
-      <p class="quote-small">“뒤돌아볼 때만 점을 이을 수 있다” — 스티브 잡스</p>
+      <p class="footnote">뒤돌아볼 때만 점을 이을 수 있다.</p>
     </main>
 
     <!-- 3. 성장 -->
@@ -79,47 +93,35 @@
         </div>
       </header>
 
-      <section class="card level-card" id="level-card"></section>
-      <section class="tiles" id="tiles"></section>
-      <section class="card identity-card" id="identity-card"></section>
+      <section class="level" id="level-card"></section>
+      <section class="stats" id="tiles"></section>
+      <section class="identity" id="identity-card"></section>
 
-      <section class="card">
-        <h2>습관의 선</h2>
-        <p class="muted small">매일 이어가면 점이 선이 되고, 빠진 날은 선이 끊겨요 · 최근 21일</p>
-        <div id="habit-lines"></div>
-      </section>
+      <h2 class="section">습관의 선</h2>
+      <p class="section-desc">이어간 날은 선이 되고, 빠진 날은 끊깁니다. 최근 21일.</p>
+      <div class="group pad" id="habit-lines"></div>
 
-      <section class="card">
-        <h2>마음의 흐름</h2>
-        <p class="muted small">최근 30일 기분</p>
+      <h2 class="section">마음의 흐름</h2>
+      <p class="section-desc">최근 30일</p>
+      <div class="group pad">
         <div class="chart" id="mood-chart"></div>
-        <div class="insight" id="insight" hidden></div>
-      </section>
+        <p class="insight" id="insight" hidden></p>
+      </div>
 
-      <section class="card">
-        <h2>최근 12주</h2>
-        <p class="muted small">습관 체크와 오늘의 점을 합친 하루 기록</p>
-        <div id="heat"></div>
-      </section>
+      <h2 class="section">최근 12주</h2>
+      <div class="group pad"><div id="heat"></div></div>
 
-      <section class="card">
-        <h2>분야별 점</h2>
-        <div id="cat-bars"></div>
-      </section>
+      <h2 class="section">분야</h2>
+      <div class="group pad" id="cat-bars"></div>
 
-      <section class="card">
-        <h2>가장 많이 이어진 점</h2>
-        <p class="muted small">돌아보니, 이 경험들이 가장 많은 선을 만들었어요</p>
-        <ol class="hubs" id="hubs"></ol>
-      </section>
+      <h2 class="section">가장 많이 이어진 점</h2>
+      <div class="group"><ol class="list" id="hubs"></ol></div>
 
-      <section class="card">
-        <div class="card-head">
-          <h2>배지</h2>
-          <span class="muted small-inline" id="badge-count"></span>
-        </div>
-        <div class="badges" id="badges"></div>
-      </section>
+      <div class="section-row">
+        <h2 class="section">배지</h2>
+        <span class="section-meta" id="badge-count"></span>
+      </div>
+      <div class="badges" id="badges"></div>
     </main>
 
     <!-- 4. 나 -->
@@ -131,52 +133,37 @@
         </div>
       </header>
 
-      <section class="card">
-        <h2>되고 싶은 나</h2>
-        <p class="muted small">습관을 체크할 때마다 이 모습에 한 표를 던져요</p>
-        <form id="profile-form" class="stack">
-          <label class="field">
-            <span>이름</span>
-            <input name="name" maxlength="12" placeholder="이름 또는 닉네임">
-          </label>
-          <label class="field">
-            <span>나는 … 사람이 된다</span>
-            <input name="identity" maxlength="20" placeholder="예) 매일 성장하는">
-          </label>
-          <button class="btn primary" type="submit">저장</button>
-        </form>
-      </section>
+      <h2 class="section">되고 싶은 나</h2>
+      <form id="profile-form" class="group form-group">
+        <label class="frow"><span>이름</span><input name="name" maxlength="12" placeholder="이름"></label>
+        <label class="frow"><span>나는</span><input name="identity" maxlength="20" placeholder="매일 성장하는"><em>사람</em></label>
+        <button class="row-btn accent" type="submit">저장</button>
+      </form>
+      <p class="section-desc">습관을 체크할 때마다 이 모습에 한 표를 던집니다.</p>
 
-      <section class="card">
-        <div class="card-head">
-          <h2>습관</h2>
-          <button class="btn small ghost" id="add-habit">+ 추가</button>
-        </div>
-        <ul class="manage" id="habit-manage"></ul>
-      </section>
+      <div class="section-row">
+        <h2 class="section">습관</h2>
+        <button class="text-btn inline" id="add-habit">추가</button>
+      </div>
+      <div class="group"><ul class="list" id="habit-manage"></ul></div>
 
-      <section class="card data">
-        <h2>데이터</h2>
-        <p class="muted small">기록은 이 기기에만 저장돼요. 기기를 바꾸기 전에 백업하세요.</p>
-        <div class="row">
-          <button class="btn ghost" id="export">백업 내보내기</button>
-          <label class="btn ghost">백업 불러오기<input type="file" id="import" accept="application/json" hidden></label>
-        </div>
-        <button class="btn danger-ghost" id="reset">모든 기록 지우기</button>
-      </section>
+      <h2 class="section">데이터</h2>
+      <div class="group">
+        <button class="row-btn" id="export">백업 내보내기</button>
+        <label class="row-btn">백업 불러오기<input type="file" id="import" accept="application/json" hidden></label>
+        <button class="row-btn danger" id="reset">모든 기록 지우기</button>
+      </div>
+      <p class="section-desc">기록은 이 기기에만 저장됩니다.</p>
 
-      <p class="quote-small center">
-        “앞을 내다보며 점을 이을 수는 없습니다.<br>오직 뒤를 돌아볼 때만 이을 수 있죠.”<br>— 스티브 잡스, 2005
-      </p>
+      <p class="signature">“Stay hungry. Stay foolish.”</p>
     </main>
 
     <!-- 하단 탭 -->
     <nav class="tabbar">
-      <button class="tab active" data-view="today"><span class="ico">◉</span>오늘</button>
-      <button class="tab" data-view="sky"><span class="ico">✦</span>별자리</button>
-      <button class="fab" data-action="add" aria-label="오늘의 점 찍기">+</button>
-      <button class="tab" data-view="growth"><span class="ico">↗</span>성장</button>
-      <button class="tab" data-view="me"><span class="ico">☺</span>나</button>
+      <button class="tab active" data-view="today"><svg><use href="#i-today"/></svg>오늘</button>
+      <button class="tab" data-view="sky"><svg><use href="#i-sky"/></svg>별자리</button>
+      <button class="tab" data-view="growth"><svg><use href="#i-growth"/></svg>성장</button>
+      <button class="tab" data-view="me"><svg><use href="#i-me"/></svg>나</button>
     </nav>
   </div>
 
@@ -184,116 +171,104 @@
   <div class="onboard" id="onboard" hidden>
     <div class="ob-step active" data-step="0">
       <div class="ob-art" aria-hidden="true">
-        <svg viewBox="0 0 200 120"><path d="M20 95 L70 55 L120 75 L180 20" stroke="#eef1ff" stroke-opacity=".5" stroke-width="2" fill="none" class="ob-line"/>
-          <circle cx="20" cy="95" r="7" fill="#3987e5"/><circle cx="70" cy="55" r="7" fill="#199e70"/><circle cx="120" cy="75" r="7" fill="#d55181"/><circle cx="180" cy="20" r="9" fill="#c98500"/></svg>
+        <svg viewBox="0 0 240 90">
+          <path class="ob-line" d="M20 70 L85 38 L150 56 L220 16"/>
+          <circle class="ob-dot" style="animation-delay:.1s" cx="20" cy="70" r="3.5"/>
+          <circle class="ob-dot" style="animation-delay:.5s" cx="85" cy="38" r="3.5"/>
+          <circle class="ob-dot" style="animation-delay:.9s" cx="150" cy="56" r="3.5"/>
+          <circle class="ob-dot" style="animation-delay:1.3s" cx="220" cy="16" r="4.5"/>
+        </svg>
       </div>
       <blockquote>
-        “앞을 내다보며 점을 이을 수는 없습니다.<br>
-        오직 뒤를 돌아볼 때만 이을 수 있죠.<br>
-        그러니 지금의 점들이 미래에<br>어떻게든 이어질 거라 믿어야 합니다.”
-        <cite>— 스티브 잡스, 2005 스탠퍼드 졸업 연설</cite>
+        앞을 내다보며<br>점을 이을 수는 없습니다.<br>
+        오직 뒤를 돌아볼 때만<br>이을 수 있죠.
       </blockquote>
-      <p class="ob-desc">매일의 작은 습관과 경험을 점으로 찍으세요.<br>점이 모여 선이 되고, 선이 모여 나만의 별자리가 됩니다.</p>
-      <button class="btn primary wide" data-next>시작하기</button>
-      <button class="btn link" id="ob-sample">예시 데이터로 둘러보기</button>
+      <cite>Steve Jobs, Stanford, 2005</cite>
+      <div class="ob-bottom">
+        <button class="btn primary wide" data-next>시작하기</button>
+        <button class="btn plain" id="ob-sample">예시로 둘러보기</button>
+      </div>
     </div>
 
     <div class="ob-step" data-step="1">
       <p class="ob-num">1 / 2</p>
-      <h2>어떤 사람이 되고 싶나요?</h2>
-      <p class="ob-desc left">습관은 되고 싶은 나에게 던지는 한 표예요.</p>
-      <label class="field">
-        <span>이름</span>
-        <input id="ob-name" maxlength="12" placeholder="이름 또는 닉네임">
-      </label>
-      <label class="field">
-        <span>나는 … 사람이 된다</span>
-        <input id="ob-identity" maxlength="20" placeholder="예) 매일 성장하는">
-      </label>
+      <h2>어떤 사람이<br>되고 싶나요?</h2>
+      <p class="ob-desc">습관은 되고 싶은 나에게 던지는 한 표입니다.</p>
+      <div class="group form-group">
+        <label class="frow"><span>이름</span><input id="ob-name" maxlength="12" placeholder="이름"></label>
+        <label class="frow"><span>나는</span><input id="ob-identity" maxlength="20" placeholder="매일 성장하는"><em>사람</em></label>
+      </div>
       <div class="chips" id="ob-identity-chips"></div>
-      <button class="btn primary wide" data-next>다음</button>
+      <div class="ob-bottom"><button class="btn primary wide" data-next>다음</button></div>
     </div>
 
     <div class="ob-step" data-step="2">
       <p class="ob-num">2 / 2</p>
-      <h2>첫 습관을 골라보세요</h2>
-      <p class="ob-desc left">작게 시작할수록 오래 이어져요. 2~3개를 추천해요.</p>
-      <div class="templates" id="ob-templates"></div>
-      <button class="btn primary wide" id="ob-finish">나의 첫 점 찍으러 가기</button>
+      <h2>작게 시작하세요.</h2>
+      <p class="ob-desc">두세 개면 충분합니다.</p>
+      <div class="group"><div class="list" id="ob-templates"></div></div>
+      <div class="ob-bottom sticky"><button class="btn primary wide" id="ob-finish">시작</button></div>
     </div>
   </div>
 
-  <!-- 오늘의 점 추가/수정 시트 -->
+  <!-- 오늘의 점 시트 -->
   <div class="sheet-backdrop" id="add-sheet" hidden>
     <form class="sheet" id="add-form" autocomplete="off">
-      <div class="grip"></div>
-      <h2>오늘의 점</h2>
-      <label class="field">
-        <span id="title-label">무엇을 했나요?</span>
-        <input name="title" maxlength="60" placeholder="예) 서체 수업을 들었다" required>
-      </label>
-      <label class="field">
-        <span>메모 <em>(선택)</em></span>
-        <textarea name="note" rows="3" maxlength="500" placeholder="느낀 점, 배운 점을 적어두면 나중에 이을 때 도움이 돼요"></textarea>
-      </label>
-      <div class="field">
-        <span>분야</span>
-        <div class="chips" id="cat-chips"></div>
+      <div class="sheet-bar">
+        <button type="button" class="text-btn" data-close>취소</button>
+        <h2>오늘의 점</h2>
+        <button type="submit" class="text-btn strong">완료</button>
       </div>
-      <label class="field">
-        <span>날짜</span>
-        <input type="date" name="date" required>
-      </label>
-      <div class="field" id="link-field">
-        <span>과거의 점과 잇기 <em>(선택)</em></span>
-        <p class="hint">뒤돌아보니 이 경험과 이어지는 점이 있나요?</p>
-        <input type="search" id="link-search" placeholder="과거의 점 검색">
-        <div class="link-list" id="link-list"></div>
+      <p class="sheet-q" id="title-label">무엇을 했나요?</p>
+      <div class="group form-group">
+        <input class="bare big" name="title" maxlength="60" placeholder="예) 서체 수업을 들었다" required>
+        <textarea class="bare" name="note" rows="3" maxlength="500" placeholder="메모"></textarea>
       </div>
-      <div class="row end">
-        <button type="button" class="btn ghost" data-close>취소</button>
-        <button type="submit" class="btn primary">점 찍기</button>
+      <h3 class="section">분야</h3>
+      <div class="chips" id="cat-chips"></div>
+      <div class="group form-group" style="margin-top:20px">
+        <label class="frow"><span>날짜</span><input type="date" name="date" required></label>
+      </div>
+      <div id="link-field">
+        <h3 class="section">과거의 점과 잇기</h3>
+        <p class="section-desc top">뒤돌아보니, 이 경험과 이어지는 점이 있나요?</p>
+        <div class="group">
+          <input type="search" class="bare search" id="link-search" placeholder="검색">
+          <div class="list" id="link-list"></div>
+        </div>
       </div>
     </form>
   </div>
 
-  <!-- 습관 추가/수정 시트 -->
+  <!-- 습관 시트 -->
   <div class="sheet-backdrop" id="habit-sheet" hidden>
     <form class="sheet" id="habit-form" autocomplete="off">
-      <div class="grip"></div>
-      <h2>새 습관</h2>
-      <div class="field">
-        <span>추천 습관</span>
+      <div class="sheet-bar">
+        <button type="button" class="text-btn" data-close>취소</button>
+        <h2>새 습관</h2>
+        <button type="submit" class="text-btn strong">완료</button>
+      </div>
+      <input type="hidden" name="emoji" value="">
+      <div class="group form-group">
+        <input class="bare big" name="name" maxlength="30" placeholder="습관 이름" required>
+      </div>
+      <div id="habit-templates-wrap">
+        <h3 class="section">추천</h3>
         <div class="chips scroll" id="habit-templates"></div>
       </div>
-      <div class="habit-name-row">
-        <input name="emoji" class="emoji-input" maxlength="2" aria-label="아이콘" value="✨">
-        <label class="field grow">
-          <span>습관 이름</span>
-          <input name="name" maxlength="30" placeholder="예) 책 10쪽 읽기" required>
-        </label>
-      </div>
-      <div class="field">
-        <span>분야</span>
-        <div class="chips" id="habit-cat-chips"></div>
-      </div>
-      <div class="field">
-        <span>언제</span>
-        <div class="chips" id="habit-time-chips"></div>
-      </div>
-      <div class="field">
-        <span>요일</span>
-        <div class="days" id="habit-days"></div>
-      </div>
-      <div class="row end">
-        <button type="button" class="btn danger-ghost" id="habit-delete" style="margin-right:auto">삭제</button>
-        <button type="button" class="btn ghost" data-close>취소</button>
-        <button type="submit" class="btn primary">저장</button>
+      <h3 class="section">분야</h3>
+      <div class="chips" id="habit-cat-chips"></div>
+      <h3 class="section">시간</h3>
+      <div class="segment" id="habit-time-chips"></div>
+      <h3 class="section">요일</h3>
+      <div class="days" id="habit-days"></div>
+      <div class="group" style="margin-top:28px">
+        <button type="button" class="row-btn danger" id="habit-delete">습관 삭제</button>
       </div>
     </form>
   </div>
 
-  <!-- 상세 시트 (점 / 습관 / 배지 공용) -->
+  <!-- 상세 시트 -->
   <div class="sheet-backdrop" id="detail-sheet" hidden>
     <div class="sheet" id="detail"></div>
   </div>

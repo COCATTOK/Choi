@@ -257,19 +257,34 @@
     }
     return n;
   }
+  // 배지 아이콘은 모두 “점과 선”으로 그립니다 (24×24)
+  const G = {
+    dot: '<circle class="f" cx="12" cy="12" r="3"/>',
+    link: '<path d="M6 17 L18 7"/><circle class="f" cx="6" cy="17" r="2.2"/><circle class="f" cx="18" cy="7" r="2.2"/>',
+    check: '<path d="M6 12.5 L10 16.5 L18 8"/>',
+    perfect: '<circle cx="12" cy="12" r="8"/><circle class="f" cx="12" cy="12" r="3"/>',
+    s3: '<path d="M5 12 H19"/><circle class="f" cx="5" cy="12" r="2"/><circle class="f" cx="12" cy="12" r="2"/><circle class="f" cx="19" cy="12" r="2"/>',
+    s7: '<path d="M4 15 L8 11 L12 13 L16 8 L20 10"/><circle class="f" cx="20" cy="10" r="2"/>',
+    s30: '<circle cx="12" cy="12" r="8"/><path d="M12 4 V12 L17 15"/>',
+    votes: '<path d="M5 19 H19 M7 19 V11 M12 19 V6 M17 19 V9"/>',
+    dots10: '<circle class="f" cx="6" cy="8" r="1.6"/><circle class="f" cx="12" cy="6" r="1.6"/><circle class="f" cx="18" cy="9" r="1.6"/><circle class="f" cx="8" cy="15" r="1.6"/><circle class="f" cx="15" cy="17" r="1.6"/>',
+    hub: '<path d="M12 12 L5 6 M12 12 L19 6 M12 12 L4 15 M12 12 L20 16 M12 12 L12 20"/><circle class="f" cx="12" cy="12" r="2.6"/>',
+    mood: '<path d="M4 14 C7 8 10 8 12 12 C14 16 17 16 20 10"/>',
+    sky: '<path d="M5 17 L9 9 L15 12 L19 5"/><circle class="f" cx="5" cy="17" r="1.8"/><circle class="f" cx="9" cy="9" r="1.8"/><circle class="f" cx="15" cy="12" r="1.8"/><circle class="f" cx="19" cy="5" r="1.8"/>',
+  };
   const BADGES = [
-    { id: 'first_dot', icon: '•', name: '첫 점', desc: '처음으로 오늘의 점을 찍었어요', test: () => S.dots.length >= 1 },
-    { id: 'first_link', icon: '⟋', name: '첫 연결', desc: '처음으로 과거의 점과 선을 이었어요', test: () => edges().length >= 1 },
-    { id: 'first_check', icon: '✓', name: '첫 표', desc: '처음으로 습관을 체크했어요', test: () => totalChecks() >= 1 },
-    { id: 'perfect', icon: '◎', name: '완벽한 하루', desc: '하루 습관을 모두 해냈어요', test: () => perfectDays() >= 1 },
-    { id: 'streak3', icon: '🔥', name: '3일 연속', desc: '3일 연속으로 기록했어요', test: () => bestStreak() >= 3 },
-    { id: 'streak7', icon: '🌟', name: '일주일', desc: '7일 연속으로 기록했어요', test: () => bestStreak() >= 7 },
-    { id: 'streak30', icon: '🏆', name: '한 달', desc: '30일 연속으로 기록했어요', test: () => bestStreak() >= 30 },
-    { id: 'votes100', icon: '🗳️', name: '100표', desc: '되고 싶은 나에게 100표를 던졌어요', test: () => totalChecks() >= 100 },
-    { id: 'dots10', icon: '✦', name: '점 10개', desc: '오늘의 점을 10개 찍었어요', test: () => S.dots.length >= 10 },
-    { id: 'hub', icon: '✺', name: '허브', desc: '한 점에서 선이 5개 이상 뻗어나갔어요', test: () => Object.values(degreeMap()).some((n) => n >= 5) },
-    { id: 'mood7', icon: '💜', name: '마음 일기', desc: '기분을 7일 기록했어요', test: () => Object.keys(S.moods).length >= 7 },
-    { id: 'constellation', icon: '🌌', name: '별자리', desc: '레벨 "별자리"에 도달했어요', test: () => level().i >= 5 },
+    { id: 'first_dot', icon: G.dot, name: '첫 점', desc: '처음으로 오늘의 점을 찍었습니다.', test: () => S.dots.length >= 1 },
+    { id: 'first_link', icon: G.link, name: '첫 연결', desc: '처음으로 과거의 점과 선을 이었습니다.', test: () => edges().length >= 1 },
+    { id: 'first_check', icon: G.check, name: '첫 표', desc: '처음으로 습관을 체크했습니다.', test: () => totalChecks() >= 1 },
+    { id: 'perfect', icon: G.perfect, name: '완벽한 하루', desc: '하루의 습관을 모두 해냈습니다.', test: () => perfectDays() >= 1 },
+    { id: 'streak3', icon: G.s3, name: '3일', desc: '3일 연속으로 기록했습니다.', test: () => bestStreak() >= 3 },
+    { id: 'streak7', icon: G.s7, name: '7일', desc: '7일 연속으로 기록했습니다.', test: () => bestStreak() >= 7 },
+    { id: 'streak30', icon: G.s30, name: '30일', desc: '30일 연속으로 기록했습니다.', test: () => bestStreak() >= 30 },
+    { id: 'votes100', icon: G.votes, name: '100표', desc: '되고 싶은 나에게 100표를 던졌습니다.', test: () => totalChecks() >= 100 },
+    { id: 'dots10', icon: G.dots10, name: '점 10개', desc: '오늘의 점을 10개 찍었습니다.', test: () => S.dots.length >= 10 },
+    { id: 'hub', icon: G.hub, name: '허브', desc: '한 점에서 선이 다섯 개 이상 뻗어나갔습니다.', test: () => Object.values(degreeMap()).some((n) => n >= 5) },
+    { id: 'mood7', icon: G.mood, name: '마음', desc: '기분을 7일 기록했습니다.', test: () => Object.keys(S.moods).length >= 7 },
+    { id: 'constellation', icon: G.sky, name: '별자리', desc: '레벨 “별자리”에 도달했습니다.', test: () => level().i >= 5 },
   ];
   // 새로 얻은 배지가 있으면 축하
   function checkBadges(celebrate = true) {
@@ -284,8 +299,7 @@
       save();
       if (celebrate) {
         setTimeout(() => {
-          toast(`${got[0].icon} 배지 획득: ${got[0].name}${got.length > 1 ? ` 외 ${got.length - 1}개` : ''}`);
-          confetti(window.innerWidth / 2, window.innerHeight / 3, 40);
+          toast(`배지 · ${got[0].name}${got.length > 1 ? ` 외 ${got.length - 1}개` : ''}`);
         }, 500);
       }
     }
@@ -295,8 +309,7 @@
     const lv = level().i;
     if (lastLevel !== null && lv > lastLevel) {
       setTimeout(() => {
-        toast(`레벨 업! 이제 당신은 "${LEVELS[lv].name}" ✦`);
-        confetti(window.innerWidth / 2, window.innerHeight / 2, 60);
+        toast(`이제 당신은 ${LEVELS[lv].name}입니다`);
       }, 300);
     }
     lastLevel = lv;
@@ -326,14 +339,13 @@
   // =========================================================
   function renderToday() {
     const h = new Date().getHours();
-    const hello = h < 5 ? '늦은 밤이에요' : h < 11 ? '좋은 아침이에요' : h < 17 ? '좋은 오후예요' : '좋은 저녁이에요';
-    $('#greeting').textContent = S.profile.name ? `${hello}, ${S.profile.name}님` : hello;
-    $('#today-date').textContent = fmtLong(today());
+    const hello = h < 5 ? '늦은 밤입니다' : h < 11 ? '좋은 아침입니다' : h < 17 ? '좋은 오후입니다' : '좋은 저녁입니다';
+    $('#greeting').textContent = '오늘';
+    $('#today-date').textContent = S.profile.name ? `${hello}, ${S.profile.name}님` : fmtLong(today());
     const st = streak();
     const pill = $('#streak-pill');
-    pill.textContent = `🔥 ${st}`;
-    pill.className = 'streak-pill ' + (st >= 3 ? 'hot' : st === 0 ? 'cold' : '');
-    pill.onclick = () => toast(st ? `${st}일 연속 기록 중! 최고 기록은 ${bestStreak()}일이에요` : '오늘 습관 하나를 체크해서 연속 기록을 시작해보세요');
+    pill.innerHTML = st ? `<b>${st}</b>일 연속` : '';
+    pill.onclick = () => toast(`최고 기록 ${bestStreak()}일`);
 
     renderWeek();
     renderProgress();
@@ -343,7 +355,7 @@
     renderLookback();
   }
 
-  function ringSVG(pct, size, stroke, color, track = 'var(--line)') {
+  function ringSVG(pct, size, stroke, color, track = 'var(--hair)') {
     const r = (size - stroke) / 2;
     const c = 2 * Math.PI * r;
     return `<svg viewBox="0 0 ${size} ${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${track}" stroke-width="${stroke}"/>` +
@@ -359,9 +371,9 @@
       const b = document.createElement('button');
       b.className = 'day' + (d === selDay ? ' sel' : '') + (d === today() ? ' today' : '');
       const moment = S.dots.some((x) => x.date === d);
-      b.innerHTML = `<span>${d === today() ? '오늘' : DOW[parse(d).getDay()]}</span>` +
-        `<span class="ring">${ringSVG(p.pct, 34, 3.5, p.pct === 1 ? 'var(--good)' : 'var(--accent)')}<b>${parse(d).getDate()}</b></span>` +
-        `<i class="sw" style="width:5px;height:5px;background:${moment ? 'var(--text-2)' : 'transparent'}"></i>`;
+      b.innerHTML = `<span>${DOW[parse(d).getDay()]}</span>` +
+        `<span class="ring">${ringSVG(p.pct, 36, 1.5, 'var(--text)', 'var(--hair)')}<b>${parse(d).getDate()}</b></span>` +
+        `<i class="mark${moment ? ' on' : ''}"></i>`;
       b.setAttribute('aria-label', `${fmtLong(d)} 습관 ${p.done}/${p.total}`);
       b.onclick = () => {
         selDay = d;
@@ -371,47 +383,52 @@
     }
   }
 
+  // 오늘의 진행: 완료한 습관 수만큼 점이 차오르고, 이어진 점은 선이 됩니다
+  // 오늘의 진행: 완료한 습관만큼 점이 채워지고, 채워진 점끼리 선으로 이어집니다
   function renderProgress() {
     const p = dayProgress(selDay);
     const card = $('#progress-card');
     const isToday = selDay === today();
-    const title = !p.total
-      ? '습관을 추가해보세요'
-      : p.done === p.total
-        ? (isToday ? '오늘의 선을 모두 이었어요!' : '이 날의 선을 모두 이었어요')
-        : `${isToday ? '오늘' : fmtShort(selDay)} ${p.done} / ${p.total}`;
-    const who = S.profile.identity ? `<span class="vote">“${esc(S.profile.identity)} 사람”</span>에게` : '되고 싶은 나에게';
-    const sub = p.total
-      ? `${who} ${p.done}표를 던졌어요.${!isToday ? `<br><span class="muted">${fmtLong(selDay)}</span>` : ''}`
-      : '작은 습관 하나가 첫 번째 점이 돼요.';
-    card.innerHTML = `<div class="big-ring">${ringSVG(p.pct, 84, 8, p.pct === 1 ? 'var(--good)' : 'var(--accent)', 'var(--bg-2)')}<span class="pct">${Math.round(p.pct * 100)}%</span></div>` +
-      `<div><h2>${title}</h2><p>${sub}</p></div>`;
+    if (!p.total) {
+      card.innerHTML = `<div class="count">0</div><p class="caption">작은 습관 하나가 첫 번째 점이 됩니다.</p>`;
+      return;
+    }
+    const who = S.profile.identity ? `<b>${esc(S.profile.identity)} 사람</b>에게` : '되고 싶은 나에게';
+    const caption = p.done === p.total
+      ? `${isToday ? '오늘의' : '이 날의'} 점이 모두 이어졌습니다.`
+      : `${isToday ? '' : `${fmtLong(selDay)} · `}${who} ${p.done}표.`;
+    const n = p.total;
+    const x = (i) => (n === 1 ? 50 : (i / (n - 1)) * 100);
+    let dots = '';
+    for (let i = 0; i < n; i++) dots += `<i class="${i < p.done ? 'on' : ''}" style="left:${x(i)}%"></i>`;
+    const fill = p.done > 1 ? `<span class="fill" style="width:${x(p.done - 1)}%"></span>` : '';
+    card.innerHTML = `<div class="count">${p.done}<small>/ ${p.total}</small></div><p class="caption">${caption}</p>` +
+      `<div class="track" aria-hidden="true"><span class="base"></span>${fill}${dots}</div>`;
   }
 
   // 습관별 최근 n일 점-선 (체크한 날이 이어지면 선이 됨)
-  function dotLineSVG(h, n, w, hgt, endDay = today()) {
+  // 습관별 최근 n일 점-선 (체크한 날이 이어지면 선이 됨)
+  function dotLineSVG(h, n, w, hgt, endDay = today(), cls = '') {
     const days = [];
     for (let i = n - 1; i >= 0; i--) days.push(shift(endDay, -i));
     const step = w / n;
     const cy = hgt / 2;
-    const color = catOf(h.cat).color;
     let lines = '', circles = '';
     days.forEach((d, i) => {
       const x = step * i + step / 2;
       const on = isDone(h, d);
-      const sch = scheduled(h, d);
       if (i > 0 && on) {
-        // 이전 체크한 날까지(쉬는 요일은 건너뛰고) 선을 이어요
+        // 이전 체크한 날까지(쉬는 요일은 건너뛰고) 선을 잇습니다
         let j = i - 1;
         while (j >= 0 && !scheduled(h, days[j]) && !isDone(h, days[j])) j--;
-        if (j >= 0 && isDone(h, days[j])) lines += `<line x1="${step * j + step / 2}" y1="${cy}" x2="${x}" y2="${cy}" stroke="${color}" stroke-width="${hgt * 0.22}" stroke-linecap="round"/>`;
+        if (j >= 0 && isDone(h, days[j])) lines += `<line x1="${step * j + step / 2}" y1="${cy}" x2="${x}" y2="${cy}" stroke="var(--text)" stroke-opacity=".55" stroke-width="1"/>`;
       }
-      const r = hgt * 0.32;
-      if (on) circles += `<circle cx="${x}" cy="${cy}" r="${r}" fill="${color}"/>`;
-      else if (sch && d < today()) circles += `<circle cx="${x}" cy="${cy}" r="${r * 0.8}" fill="none" stroke="var(--line)" stroke-width="${hgt * 0.1}"/>`;
-      else circles += `<circle cx="${x}" cy="${cy}" r="${r * 0.35}" fill="var(--line)"/>`;
+      const r = Math.min(step * 0.22, hgt * 0.26);
+      if (on) circles += `<circle cx="${x}" cy="${cy}" r="${r}" fill="var(--text)"/>`;
+      else if (scheduled(h, d) && d <= today()) circles += `<circle cx="${x}" cy="${cy}" r="${r * 0.75}" fill="none" stroke="var(--hair-2)" stroke-width="1"/>`;
+      else circles += `<circle cx="${x}" cy="${cy}" r="${r * 0.3}" fill="var(--hair-2)"/>`;
     });
-    return `<svg viewBox="0 0 ${w} ${hgt}" aria-hidden="true">${lines}${circles}</svg>`;
+    return `<svg class="${cls}" viewBox="0 0 ${w} ${hgt}" aria-hidden="true">${lines}${circles}</svg>`;
   }
 
   function renderHabits() {
@@ -419,17 +436,22 @@
     box.innerHTML = '';
     const list = activeHabits();
     if (!list.length) {
-      box.innerHTML = '<div class="empty-habits">아직 습관이 없어요.<br>작은 습관 하나로 첫 점을 찍어보세요.</div>';
+      box.innerHTML = '<h2 class="section">습관</h2><div class="group"><div class="empty-note">아직 습관이 없습니다.</div></div>';
       return;
     }
     for (const t of TIMES) {
       const hs = list.filter((h) => h.time === t.id);
       if (!hs.length) continue;
-      const title = document.createElement('div');
-      title.className = 'group-title';
-      title.textContent = `${t.icon} ${t.name}`;
-      box.appendChild(title);
-      for (const h of hs) box.appendChild(habitRow(h));
+      const title = document.createElement('h2');
+      title.className = 'section';
+      title.textContent = t.name;
+      const group = document.createElement('div');
+      group.className = 'group';
+      const ul = document.createElement('div');
+      ul.className = 'list';
+      for (const h of hs) ul.appendChild(habitRow(h));
+      group.appendChild(ul);
+      box.append(title, group);
     }
   }
 
@@ -438,41 +460,34 @@
     const done = isDone(h, selDay);
     const el = document.createElement('div');
     el.className = 'habit' + (done ? ' done' : '') + (!sch ? ' off' : '');
-    el.style.setProperty('--c', catOf(h.cat).color);
+    el.dataset.id = h.id;
     const s = habitStreak(h);
-    el.innerHTML = `<div class="emo">${esc(h.emoji || '✨')}</div>` +
+    el.innerHTML = `<button class="check" aria-label="${esc(h.name)}" aria-pressed="${done}"><svg viewBox="0 0 16 16"><path d="M3.5 8.5 L6.5 11.5 L12.5 4.5"/></svg></button>` +
       `<div class="body"><div class="name">${esc(h.name)}</div>` +
-      `<div class="sub">${dotLineSVG(h, 7, 76, 12, selDay)}<span>${!sch ? '쉬는 날' : s ? `🔥 ${s}일` : catOf(h.cat).name}</span></div></div>` +
-      `<button class="check" aria-label="${esc(h.name)} ${done ? '체크 해제' : '완료'}" aria-pressed="${done}">✓</button>`;
+      `<div class="sub"><i class="sw" style="background:${catOf(h.cat).color}"></i>${!sch ? '쉬는 날' : s ? `${s}일 연속` : catOf(h.cat).name}</div></div>` +
+      dotLineSVG(h, 7, 70, 10, selDay, 'trail');
     el.querySelector('.body').onclick = () => openHabitDetail(h.id);
-    el.querySelector('.check').onclick = (e) => toggleHabit(h, e.currentTarget);
+    el.querySelector('.check').onclick = () => toggleHabit(h);
     return el;
   }
 
-  function toggleHabit(h, btn) {
+  function toggleHabit(h) {
     const list = S.checks[selDay] || (S.checks[selDay] = []);
     const was = list.includes(h.id);
     if (was) S.checks[selDay] = list.filter((x) => x !== h.id);
     else list.push(h.id);
     if (!S.checks[selDay].length) delete S.checks[selDay];
     save();
-    if (!was) {
-      haptic(12);
-      const r = btn.getBoundingClientRect();
-      confetti(r.left + r.width / 2, r.top + r.height / 2, 14, [catOf(h.cat).color]);
-      const p = dayProgress(selDay);
-      if (p.total && p.done === p.total) {
-        setTimeout(() => {
-          haptic([20, 60, 20]);
-          confetti(window.innerWidth / 2, window.innerHeight / 3, 70);
-          toast(selDay === today() ? '오늘의 선을 모두 이었어요! ✦' : '이 날의 선을 모두 이었어요 ✦');
-        }, 250);
-      }
-    }
     renderToday();
     if (!was) {
-      const row = [...$$('.habit .check')].find((b) => b.getAttribute('aria-label').startsWith(h.name));
-      if (row) row.classList.add('pop');
+      haptic(10);
+      const row = document.querySelector(`.habit[data-id="${h.id}"]`);
+      if (row) row.classList.add('pulse');
+      const p = dayProgress(selDay);
+      if (p.total && p.done === p.total) {
+        haptic([15, 80, 15]);
+        toast(selDay === today() ? '오늘의 점이 모두 이어졌습니다' : '이 날의 점이 모두 이어졌습니다');
+      }
     }
     checkLevel();
     checkBadges();
@@ -485,7 +500,8 @@
     for (const m of MOODS) {
       const b = document.createElement('button');
       b.className = 'mood' + (cur === m.v ? ' on' : '');
-      b.innerHTML = `<span class="e">${m.e}</span>${m.name}`;
+      const size = 6 + m.v * 2.4; // 좋을수록 큰 점
+      b.innerHTML = `<i style="width:${size}px;height:${size}px;margin-top:${(18 - size) / 2}px;margin-bottom:${(18 - size) / 2}px"></i>${m.name}`;
       b.setAttribute('aria-pressed', cur === m.v);
       b.onclick = () => {
         if (S.moods[selDay] === m.v) delete S.moods[selDay];
@@ -505,19 +521,21 @@
     const deg = degreeMap();
     const ul = $('#moment-list');
     ul.innerHTML = '';
-    $('#moment-count').textContent = list.length ? `${list.length}개` : '';
+    $('#moment-count').textContent = list.length ? `${list.length}` : '';
     for (const d of list) {
       const li = document.createElement('li');
-      li.innerHTML = `<i class="sw" style="background:${catOf(d.cat).color}"></i><span>${esc(d.title)}</span>` +
-        (deg[d.id] ? `<span class="links">선 ${deg[d.id]}개</span>` : '');
+      li.className = 'li';
+      li.innerHTML = `<i class="sw" style="background:${catOf(d.cat).color}"></i><span class="grow">${esc(d.title)}</span>` +
+        (deg[d.id] ? `<span class="meta">선 ${deg[d.id]}</span>` : '') + '<svg class="chev"><use href="#i-chev"/></svg>';
       li.onclick = () => openDetail(d.id);
       ul.appendChild(li);
     }
     const q = PROMPTS[(parse(selDay).getDate() + parse(selDay).getMonth()) % PROMPTS.length];
-    $('#prompt-q').textContent = list.length ? '또 다른 점이 있었나요?' : q;
+    $('#prompt-q').textContent = list.length ? '또 다른 점 찍기' : q;
     $('#prompt-btn').onclick = () => openForm(null, { date: selDay, prompt: list.length ? null : q });
   }
 
+  // 돌아보기: 과거의 점 하나를 꺼내 “오늘과 이어지나요?” 묻기
   // 돌아보기: 과거의 점 하나를 꺼내 “오늘과 이어지나요?” 묻기
   function renderLookback() {
     const box = $('#lookback');
@@ -526,13 +544,12 @@
       box.hidden = true;
       return;
     }
-    // 날마다 바뀌지만 하루 동안은 같은 점
-    const pick = past[hash(today()) % past.length];
+    const pick = past[hash(today()) % past.length]; // 하루 동안은 같은 점
     box.hidden = false;
-    box.innerHTML = `<p class="lb-when">돌아보기 · ${agoText(pick.date)}의 점</p>` +
-      `<h3>${esc(pick.title)}</h3>` + (pick.note ? `<p class="lb-note">${esc(pick.note)}</p>` : '') +
-      `<p class="lb-note">이 경험이 지금의 나와 이어져 있나요?</p>` +
-      `<div class="row"><button class="btn primary small" data-lb-link>오늘의 점과 잇기</button><button class="btn ghost small" data-lb-view>자세히</button></div>`;
+    box.innerHTML = `<p class="lb-when">돌아보기 · ${agoText(pick.date)}</p>` +
+      `<h3>${esc(pick.title)}</h3>` +
+      `<p class="lb-note">이 점은 지금의 나와 이어져 있나요?</p>` +
+      `<div class="actions"><button class="btn primary" data-lb-link>오늘과 잇기</button><button class="btn" data-lb-view>보기</button></div>`;
     box.querySelector('[data-lb-link]').onclick = () => {
       const todays = sortedDots().filter((d) => d.date === today());
       if (todays.length) {
@@ -541,10 +558,10 @@
           t.links = [...(t.links || []), pick.id];
           save();
           justAdded = t.id;
-          toast(`“${t.title}”와 이었어요 ✦`);
+          toast('두 점을 이었습니다');
           checkLevel();
           checkBadges();
-        } else toast('이미 이어져 있어요');
+        } else toast('이미 이어져 있습니다');
         show('sky');
       } else {
         openForm(null, { links: [pick.id], prompt: `“${pick.title}”에서 이어진 오늘의 경험은?` });
@@ -584,7 +601,7 @@
 
   function renderSky() {
     const e = edges().length;
-    $('#sky-summary').textContent = S.dots.length ? `${S.dots.length}개의 점 · ${e}개의 선` : '아직 비어 있어요';
+    $('#sky-summary').textContent = S.dots.length ? `${S.dots.length}개의 점 · ${e}개의 선` : '';
     const svg = $('#sky');
     svg.innerHTML = '';
     $('#sky-empty').hidden = S.dots.length > 0;
@@ -593,18 +610,18 @@
     const { list, pos } = layout();
     let R = 60;
     for (const id in pos) R = Math.max(R, Math.hypot(pos[id].x, pos[id].y) + 16);
-    const W = R * 2, H = W * 1.15;
+    const W = R * 2, H = W * 1.1;
     svg.setAttribute('viewBox', `${-R} ${-H / 2} ${W} ${H}`);
     const defs = el('defs', {}, svg);
     const glow = el('filter', { id: 'glow', x: '-100%', y: '-100%', width: '300%', height: '300%' }, defs);
-    el('feGaussianBlur', { stdDeviation: 3 }, glow);
+    el('feGaussianBlur', { stdDeviation: 2.5 }, glow);
 
     const bg = el('g', {}, svg);
-    for (let i = 0; i < 70; i++) {
+    for (let i = 0; i < 45; i++) {
       const h = hash('bg' + i);
       el('circle', {
         class: 'bgstar', cx: ((h % 1000) / 1000 - 0.5) * W, cy: (((h >>> 10) % 1000) / 1000 - 0.5) * H,
-        r: (W / 400) * (0.4 + ((h >>> 20) % 10) / 12), opacity: 0.25 + ((h >>> 4) % 10) / 25, style: `animation-delay:${(h % 40) / 10}s`,
+        r: (W / 400) * (0.4 + ((h >>> 20) % 10) / 12), opacity: 0.12 + ((h >>> 4) % 10) / 40, style: `animation-delay:${(h % 40) / 10}s`,
       }, bg);
     }
     if (!list.length) return;
@@ -613,14 +630,14 @@
     const deg = degreeMap();
     if (list.length > 1) {
       const d = list.map((p, i) => `${i ? 'L' : 'M'}${pos[p.id].x.toFixed(1)} ${pos[p.id].y.toFixed(1)}`).join(' ');
-      el('path', { d, class: 'link', stroke: '#8a95c4', 'stroke-opacity': 0.18, 'stroke-width': scale, 'stroke-dasharray': `${2 * scale} ${3 * scale}` }, svg);
+      el('path', { d, class: 'link', stroke: '#fff', 'stroke-opacity': 0.08, 'stroke-width': 0.6 * scale, 'stroke-dasharray': `${2 * scale} ${3 * scale}` }, svg);
     }
     const linkG = el('g', {}, svg);
     for (const [from, to] of edges()) {
       const p = pos[from], q = pos[to];
       const path = el('path', {
         d: `M${p.x} ${p.y} Q${((p.x + q.x) / 2) * 0.8} ${((p.y + q.y) / 2) * 0.8} ${q.x} ${q.y}`,
-        class: 'link', stroke: catOf(byId(from).cat).color, 'stroke-opacity': 0.5, 'stroke-width': 1.2 * scale,
+        class: 'link', stroke: '#fff', 'stroke-opacity': 0.3, 'stroke-width': 0.7 * scale,
       }, linkG);
       if (from === justAdded) {
         path.classList.add('draw');
@@ -630,11 +647,12 @@
     const dotG = el('g', {}, svg);
     for (const d of list) {
       const p = pos[d.id];
-      const r = (3.2 + Math.min(deg[d.id], 6) * 1.1) * scale;
+      const r = (2.2 + Math.min(deg[d.id], 6) * 0.65) * scale;
       const g = el('g', { class: 'dot' + (d.id === justAdded ? ' new' : ''), tabindex: 0, role: 'button', 'aria-label': `${d.title}, ${fmtDate(d.date)}` }, dotG);
       g.dataset.id = d.id;
-      el('circle', { cx: p.x, cy: p.y, r: r * 2.2, fill: catOf(d.cat).color, opacity: 0.35, filter: 'url(#glow)' }, g);
-      el('circle', { class: 'core', cx: p.x, cy: p.y, r, fill: catOf(d.cat).color, 'stroke-width': 1.2 * scale }, g);
+      el('circle', { cx: p.x, cy: p.y, r: r * 2.4, fill: catOf(d.cat).color, opacity: 0.22, filter: 'url(#glow)' }, g);
+      el('circle', { class: 'ring', cx: p.x, cy: p.y, r: r + 2.5 * scale, fill: 'none', stroke: '#fff', 'stroke-opacity': 0, 'stroke-width': 0.6 * scale }, g);
+      el('circle', { class: 'core', cx: p.x, cy: p.y, r, fill: catOf(d.cat).color }, g);
       el('circle', { cx: p.x, cy: p.y, r: Math.max(r, 11 * scale), fill: 'transparent' }, g);
     }
     const labelIds = new Set([list[list.length - 1].id]);
@@ -642,10 +660,10 @@
     const placed = [];
     for (const id of labelIds) {
       const p = pos[id];
-      const ly = p.y - (8 + Math.min(deg[id], 6) * 1.1) * scale;
+      const ly = p.y - (8 + Math.min(deg[id], 6) * 0.65) * scale;
       if (placed.some((q) => Math.abs(q.x - p.x) < 60 * scale && Math.abs(q.y - ly) < 12 * scale)) continue;
       placed.push({ x: p.x, y: ly });
-      const t = el('text', { class: 'label', x: p.x, y: ly, 'text-anchor': 'middle', 'font-size': 8 * scale, 'stroke-width': 3 * scale }, svg);
+      const t = el('text', { class: 'label', x: p.x, y: ly, 'text-anchor': 'middle', 'font-size': 7 * scale }, svg);
       const title = byId(id).title;
       t.textContent = title.length > 10 ? title.slice(0, 9) + '…' : title;
     }
@@ -680,35 +698,18 @@
   // =========================================================
   // 3) 성장
   // =========================================================
-  function levelIcon(i) {
-    // 레벨이 오를수록 점이 늘고 선으로 이어지는 아이콘
-    const pts = [[19, 30], [9, 20], [19, 8], [29, 20], [19, 19], [30, 31], [8, 31], [30, 8], [8, 8]];
-    const n = Math.min(i + 1, pts.length);
-    let s = '';
-    for (let k = 1; k < n; k++) s += `<line x1="${pts[k - 1][0]}" y1="${pts[k - 1][1]}" x2="${pts[k][0]}" y2="${pts[k][1]}" stroke="#f3c969" stroke-opacity=".6" stroke-width="1.5"/>`;
-    for (let k = 0; k < n; k++) s += `<circle cx="${pts[k][0]}" cy="${pts[k][1]}" r="${k === n - 1 ? 3.5 : 2.5}" fill="#f3c969"/>`;
-    return `<svg viewBox="0 0 38 38">${s}</svg>`;
-  }
-
   function renderGrowth() {
     const lv = level();
-    $('#level-card').innerHTML = `<div class="level-top"><div class="level-badge">${levelIcon(lv.i)}</div>` +
-      `<div><div class="lv">LV. ${lv.i + 1}</div><h2>${lv.cur.name}</h2></div></div>` +
-      `<div class="xp-bar"><i style="width:${Math.round(lv.pct * 100)}%"></i></div>` +
-      `<div class="xp-text"><span>${lv.x} XP</span><span>${lv.next ? `다음 “${lv.next.name}”까지 ${lv.next.xp - lv.x} XP` : '최고 레벨'}</span></div>`;
+    $('#level-card').innerHTML = `<div class="lv">LEVEL ${lv.i + 1}</div><h2>${lv.cur.name}</h2>` +
+      `<div class="bar"><i style="width:${Math.round(lv.pct * 100)}%"></i></div>` +
+      `<div class="xp"><span>${lv.x} XP</span><span>${lv.next ? `${lv.next.name}까지 ${lv.next.xp - lv.x}` : '최고 레벨'}</span></div>`;
 
-    const tiles = [
-      ['연속 기록', streak(), '일'],
-      ['최고 연속', bestStreak(), '일'],
-      ['찍은 점', S.dots.length, '개'],
-      ['이어진 선', edges().length, '개'],
-    ];
-    $('#tiles').innerHTML = tiles.map(([k, v, u]) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}<small>${u}</small></div></div>`).join('');
+    const stats = [['연속', streak()], ['최고', bestStreak()], ['점', S.dots.length], ['선', edges().length]];
+    $('#tiles').innerHTML = stats.map(([k, v]) => `<div class="stat"><b>${v}</b><span>${k}</span></div>`).join('');
 
-    const votes = totalChecks();
-    const who = S.profile.identity ? `<span class="who">“${esc(S.profile.identity)} 사람”</span>` : '<span class="who">되고 싶은 나</span>';
-    $('#identity-card').innerHTML = `<p>${who}이 되기 위해 던진 표</p><div class="big">${votes}표</div>` +
-      `<p class="muted" style="font-size:12px">습관을 한 번 체크할 때마다 한 표. 완벽할 필요는 없어요, 과반이면 충분해요.</p>`;
+    const who = S.profile.identity ? `${esc(S.profile.identity)} 사람` : '되고 싶은 나';
+    $('#identity-card').innerHTML = `<p>${who}에게 던진 표</p><div class="votes">${totalChecks()}<small>표</small></div>` +
+      `<p class="fine">완벽할 필요는 없습니다. 과반이면 충분합니다.</p>`;
 
     renderHabitLines();
     renderMoodChart();
@@ -717,16 +718,16 @@
     const counts = CATS.map((c) => ({ c, n: S.dots.filter((d) => d.cat === c.id).length + totalChecksByCat(c.id) }));
     const max = Math.max(1, ...counts.map((x) => x.n));
     $('#cat-bars').innerHTML = counts.map(({ c, n }) => `<div class="bar-row"><span class="name"><i class="sw" style="background:${c.color}"></i>${c.name}</span>` +
-      `<div class="bar-track"><div class="bar-fill" style="width:${(n / max) * 100}%;background:${c.color}"></div></div><span class="n">${n}</span></div>`).join('') +
-      '<p class="muted" style="font-size:12px;margin:8px 0 0">습관 체크 + 오늘의 점 개수</p>';
+      `<div class="bar-track"><div class="bar-fill" style="width:${(n / max) * 100}%"></div></div><span class="n">${n}</span></div>`).join('');
 
     const deg = degreeMap();
     const hubs = [...S.dots].filter((d) => deg[d.id] > 0).sort((a, b) => deg[b.id] - deg[a.id]).slice(0, 5);
     const ol = $('#hubs');
-    ol.innerHTML = hubs.length ? '' : '<li class="muted" style="cursor:default">오늘의 점을 찍을 때 과거의 점과 이어보세요.</li>';
+    ol.innerHTML = hubs.length ? '' : '<li class="li static">점을 찍을 때 과거의 점과 이어보세요.</li>';
     for (const d of hubs) {
       const li = document.createElement('li');
-      li.innerHTML = `<i class="sw" style="background:${catOf(d.cat).color}"></i><span>${esc(d.title)}</span><span class="cnt">선 ${deg[d.id]}개</span>`;
+      li.className = 'li';
+      li.innerHTML = `<i class="sw" style="background:${catOf(d.cat).color}"></i><span class="grow">${esc(d.title)}</span><span class="meta">선 ${deg[d.id]}</span>`;
       li.onclick = () => openDetail(d.id);
       ol.appendChild(li);
     }
@@ -738,7 +739,7 @@
     for (const b of BADGES) {
       const btn = document.createElement('button');
       btn.className = 'badge' + (S.badges[b.id] ? ' got' : '');
-      btn.innerHTML = `<span class="medal">${b.icon}</span>${b.name}`;
+      btn.innerHTML = `<span class="medal"><svg viewBox="0 0 24 24">${b.icon}</svg></span>${b.name}`;
       btn.onclick = () => openBadge(b);
       bx.appendChild(btn);
     }
@@ -755,14 +756,14 @@
     box.innerHTML = '';
     const hs = activeHabits();
     if (!hs.length) {
-      box.innerHTML = '<p class="muted small">오늘 탭에서 습관을 추가하면 여기에 선이 그려져요.</p>';
+      box.innerHTML = '<p class="section-desc" style="margin:0">습관을 추가하면 여기에 선이 그려집니다.</p>';
       return;
     }
     for (const h of hs) {
       const row = document.createElement('div');
       row.className = 'hl-row';
-      const s = habitStreak(h);
-      row.innerHTML = `<span class="nm">${esc(h.emoji)} ${esc(h.name)}</span><span class="st">${s ? `🔥${s}일 · ` : ''}${habitRate(h)}%</span>${dotLineSVG(h, 21, 336, 18)}`;
+      const st = habitStreak(h);
+      row.innerHTML = `<span class="nm">${esc(h.name)}</span><span class="st">${st ? `${st}일 · ` : ''}${habitRate(h)}%</span>${dotLineSVG(h, 21, 336, 14)}`;
       row.onclick = () => openHabitDetail(h.id);
       box.appendChild(row);
     }
@@ -775,18 +776,18 @@
     for (let i = 29; i >= 0; i--) days.push(shift(today(), -i));
     const pts = days.map((d, i) => ({ d, i, v: S.moods[d] })).filter((p) => p.v);
     if (pts.length < 2) {
-      box.innerHTML = '<p class="muted small">오늘 탭에서 기분을 기록하면 흐름이 보여요.</p>';
+      box.innerHTML = '<p class="section-desc" style="margin:0">오늘 탭에서 마음을 기록하면 흐름이 보입니다.</p>';
       $('#insight').hidden = true;
       return;
     }
-    const W = 320, H = 150, L = 30, Rm = 8, T = 10, B = 20, iw = W - L - Rm, ih = H - T - B;
+    const W = 320, H = 140, L = 34, Rm = 8, T = 10, B = 20, iw = W - L - Rm, ih = H - T - B;
     const x = (i) => L + (i / 29) * iw;
     const y = (v) => T + ih - ((v - 1) / 4) * ih;
     const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '최근 30일 기분 흐름' });
     for (const m of MOODS) {
       el('line', { class: 'grid', x1: L, x2: W - Rm, y1: y(m.v), y2: y(m.v) }, svg);
-      const t = el('text', { x: L - 8, y: y(m.v) + 5, 'text-anchor': 'end', 'font-size': 13 }, svg);
-      t.textContent = m.e;
+      const t = el('text', { class: 'axis', x: L - 8, y: y(m.v) + 3, 'text-anchor': 'end' }, svg);
+      t.textContent = m.name;
     }
     const t1 = el('text', { class: 'axis', x: L, y: H - 4 }, svg);
     t1.textContent = fmtShort(days[0]);
@@ -799,11 +800,11 @@
     });
     el('path', { class: 'ln', d }, svg);
     for (const p of pts) {
-      const c = el('circle', { class: 'pt', cx: x(p.i), cy: y(p.v), r: 4 }, svg);
+      const c = el('circle', { class: 'pt', cx: x(p.i), cy: y(p.v), r: 3 }, svg);
       const hit = el('circle', { cx: x(p.i), cy: y(p.v), r: 10, fill: 'transparent' }, svg);
       const show = () => {
         const b = c.getBoundingClientRect();
-        tip(b.left + b.width / 2, b.top, `${fmtDate(p.d)} · ${MOODS[p.v - 1].e} ${MOODS[p.v - 1].name}`);
+        tip(b.left + b.width / 2, b.top, `${fmtDate(p.d)} · ${MOODS[p.v - 1].name}`);
       };
       hit.addEventListener('pointerenter', show);
       hit.addEventListener('pointerdown', show);
@@ -827,10 +828,11 @@
     const ins = $('#insight');
     if (best) {
       ins.hidden = false;
-      ins.innerHTML = `💡 <b>${esc(best.h.emoji)} ${esc(best.h.name)}</b>을(를) 한 날, 기분이 평균 <b>${best.diff.toFixed(1)}점</b> 더 좋았어요. (${best.on.toFixed(1)} vs ${best.off.toFixed(1)})`;
+      ins.innerHTML = `<b>${esc(best.h.name)}</b>을(를) 한 날, 마음이 평균 <b>${best.diff.toFixed(1)}</b>만큼 더 좋았습니다.`;
     } else ins.hidden = true;
   }
 
+  // 최근 12주: 기록이 많을수록 밝은 점
   function renderHeat() {
     const box = $('#heat');
     box.innerHTML = '';
@@ -840,46 +842,44 @@
     const now = new Date();
     const endSat = addDays(now, 6 - now.getDay());
     const start = addDays(endSat, -12 * 7 + 1);
-    const cell = 20, gap = 4, L = 22, T = 16;
-    const W = L + 12 * (cell + gap), H = T + 7 * (cell + gap);
+    const cell = 22, L = 18, T = 16;
+    const W = L + 12 * cell, H = T + 7 * cell;
     const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': '최근 12주 기록' });
-    ['일', '', '화', '', '목', '', '토'].forEach((n, i) => {
+    ['', '월', '', '수', '', '금', ''].forEach((n, i) => {
       if (!n) return;
-      const t = el('text', { x: 0, y: T + i * (cell + gap) + 14, fill: 'var(--muted)', 'font-size': 10 }, svg);
+      const t = el('text', { x: 0, y: T + i * cell + cell / 2 + 3.5, fill: 'var(--muted)', 'font-size': 9 }, svg);
       t.textContent = n;
     });
-    // 한 가지 색의 밝기로만 양을 표현
     const lvl = (n) => (n === 0 ? 0 : n <= 2 ? 1 : n <= 4 ? 2 : 3);
-    const fills = ['var(--bg-2)', '#5e5030', '#a88a3f', '#f3c969'];
+    const op = [0, 0.3, 0.6, 1];
+    const rad = [1.2, 4, 5.5, 7];
     let lastMonth = -1;
     for (let w = 0; w < 12; w++) {
       for (let dow = 0; dow < 7; dow++) {
         const day = addDays(start, w * 7 + dow);
+        const cx = L + w * cell + cell / 2, cy = T + dow * cell + cell / 2;
         if (dow === 0 && day.getMonth() !== lastMonth) {
           lastMonth = day.getMonth();
-          const t = el('text', { x: L + w * (cell + gap), y: 10, fill: 'var(--muted)', 'font-size': 10 }, svg);
+          const t = el('text', { x: cx - 4, y: 9, fill: 'var(--muted)', 'font-size': 9 }, svg);
           t.textContent = `${day.getMonth() + 1}월`;
         }
         const key = ymd(day);
+        if (key > today()) continue;
         const n = count[key] || 0;
-        const future = key > today();
-        const r = el('rect', {
-          x: L + w * (cell + gap), y: T + dow * (cell + gap), width: cell, height: cell, rx: 4,
-          fill: future ? 'transparent' : fills[lvl(n)], stroke: future ? 'var(--line)' : 'none', 'stroke-dasharray': future ? '2 2' : '',
-        }, svg);
-        if (!future) {
-          r.addEventListener('pointerenter', () => {
-            const b = r.getBoundingClientRect();
-            tip(b.left + b.width / 2, b.top, `${fmtDate(key)} · 기록 ${n}개`);
-          });
-          r.addEventListener('pointerleave', hideTip);
-        }
+        const k = lvl(n);
+        el('circle', { cx, cy, r: rad[k], fill: k ? 'var(--text)' : 'var(--hair-2)', 'fill-opacity': k ? op[k] : 1 }, svg);
+        const hit = el('rect', { x: cx - cell / 2, y: cy - cell / 2, width: cell, height: cell, fill: 'transparent' }, svg);
+        hit.addEventListener('pointerenter', () => {
+          const b = hit.getBoundingClientRect();
+          tip(b.left + b.width / 2, b.top, `${fmtDate(key)} · ${n}`);
+        });
+        hit.addEventListener('pointerleave', hideTip);
       }
     }
     box.appendChild(svg);
     const legend = document.createElement('div');
-    legend.className = 'legend';
-    legend.innerHTML = ['0', '1–2', '3–4', '5+'].map((t, i) => `<span><i class="sw" style="border-radius:3px;background:${fills[i]}"></i>${t}</span>`).join('');
+    legend.className = 'heat-legend';
+    legend.innerHTML = '적음 ' + [1, 2, 3].map((k) => `<svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="${rad[k] * 0.85}" fill="var(--text)" fill-opacity="${op[k]}"/></svg>`).join('') + ' 많음';
     box.appendChild(legend);
   }
 
@@ -892,12 +892,12 @@
     f.name.value = S.profile.name || '';
     f.identity.value = S.profile.identity || '';
     const ul = $('#habit-manage');
-    ul.innerHTML = '';
-    if (!activeHabits().length) ul.innerHTML = '<li class="muted" style="cursor:default">아직 습관이 없어요.</li>';
+    ul.innerHTML = activeHabits().length ? '' : '<li class="li static">아직 습관이 없습니다.</li>';
     for (const h of activeHabits()) {
       const li = document.createElement('li');
-      const days = h.days.length === 7 ? '매일' : h.days.map((d) => DOW[d]).join('·');
-      li.innerHTML = `<span class="emo">${esc(h.emoji)}</span><div><div>${esc(h.name)}</div><div class="meta">${timeOf(h.time).name} · ${days} · ${catOf(h.cat).name}</div></div><span class="go">›</span>`;
+      li.className = 'li';
+      const days = h.days.length === 7 ? '매일' : h.days.map((d) => DOW[d]).join(' ');
+      li.innerHTML = `<i class="sw" style="background:${catOf(h.cat).color}"></i><span class="grow">${esc(h.name)}<span class="sub">${timeOf(h.time).name} · ${days}</span></span><svg class="chev"><use href="#i-chev"/></svg>`;
       li.onclick = () => openHabitForm(h.id);
       ul.appendChild(li);
     }
@@ -908,7 +908,7 @@
     S.profile.identity = e.target.identity.value.trim();
     save();
     renderMe();
-    toast('저장했어요');
+    toast('저장했습니다');
   });
   $('#add-habit').onclick = () => openHabitForm();
   $('#add-habit-inline').onclick = () => openHabitForm();
@@ -933,7 +933,7 @@
     selLinks = new Set(d ? d.links || [] : opts.links || []);
     form.querySelector('h2').textContent = d ? '점 다듬기' : '오늘의 점';
     $('#title-label').textContent = opts.prompt || '무엇을 했나요?';
-    form.querySelector('[type=submit]').textContent = d ? '저장' : '점 찍기';
+    
     $('#link-search').value = '';
     renderChips($('#cat-chips'), CATS, () => selCat, (v) => (selCat = v), true);
     renderLinkList();
@@ -947,7 +947,7 @@
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'chip' + (get() === c.id ? ' on' : '');
-      b.innerHTML = (withColor ? `<i class="sw" style="background:${c.color}"></i>` : c.icon ? `${c.icon} ` : '') + esc(c.name);
+      b.innerHTML = (withColor ? `<i class="sw" style="background:${c.color}"></i>` : '') + esc(c.name);
       b.onclick = () => {
         set(c.id);
         renderChips(box, items, get, set, withColor);
@@ -975,7 +975,7 @@
     for (const d of cands.slice(0, 50)) {
       const label = document.createElement('label');
       label.className = 'link-item';
-      label.innerHTML = `<input type="checkbox" ${selLinks.has(d.id) ? 'checked' : ''}><i class="sw" style="background:${catOf(d.cat).color}"></i><span>${esc(d.title)}</span><span class="d">${fmtShort(d.date)}</span>`;
+      label.innerHTML = `<input type="checkbox" ${selLinks.has(d.id) ? 'checked' : ''}><span class="tick"></span><i class="sw" style="background:${catOf(d.cat).color}"></i><span class="grow">${esc(d.title)}</span><span class="d">${fmtShort(d.date)}</span>`;
       label.querySelector('input').onchange = (e) => (e.target.checked ? selLinks.add(d.id) : selLinks.delete(d.id));
       box.appendChild(label);
     }
@@ -990,13 +990,13 @@
     const data = { title, note: form.note.value.trim(), cat: selCat, date: form.date.value || today(), links: [...selLinks] };
     if (editingId) {
       Object.assign(byId(editingId), data);
-      toast('점을 다듬었어요');
+      toast('저장했습니다');
     } else {
       const dot = { id: uid(), createdAt: Date.now(), ...data };
       S.dots.push(dot);
       justAdded = dot.id;
       haptic(15);
-      toast(data.links.length ? `점을 찍고 ${data.links.length}개의 선을 이었어요 ✦` : '새로운 점을 찍었어요 ✦');
+      toast(data.links.length ? `점 하나, 선 ${data.links.length}개` : '새로운 점');
     }
     save();
     closeSheets();
@@ -1017,13 +1017,13 @@
     const h = id ? S.habits.find((x) => x.id === id) : null;
     hform.reset();
     hform.name.value = h ? h.name : '';
-    hform.emoji.value = h ? h.emoji : '✨';
+    hform.emoji.value = h ? h.emoji || '' : '';
     hCat = h ? h.cat : 'learn';
     hTime = h ? h.time : 'morning';
     hDays = new Set(h ? h.days : [0, 1, 2, 3, 4, 5, 6]);
-    hform.querySelector('h2').textContent = h ? '습관 다듬기' : '새 습관';
-    $('#habit-delete').hidden = !h;
-    hform.querySelector('#habit-templates').parentElement.hidden = !!h;
+    hform.querySelector('h2').textContent = h ? '습관' : '새 습관';
+    $('#habit-delete').parentElement.hidden = !h;
+    $('#habit-templates-wrap').hidden = !!h;
     const tbox = $('#habit-templates');
     tbox.innerHTML = '';
     const have = new Set(S.habits.map((x) => x.name));
@@ -1031,7 +1031,7 @@
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'chip';
-      b.textContent = `${t.emoji} ${t.name}`;
+      b.textContent = t.name;
       b.onclick = () => {
         hform.name.value = t.name;
         hform.emoji.value = t.emoji;
@@ -1066,16 +1066,16 @@
     e.preventDefault();
     const name = hform.name.value.trim();
     if (!name) return;
-    const data = { name, emoji: hform.emoji.value.trim() || '✨', cat: hCat, time: hTime, days: [...hDays].sort() };
+    const data = { name, emoji: hform.emoji.value.trim(), cat: hCat, time: hTime, days: [...hDays].sort() };
     if (editingHabit) Object.assign(S.habits.find((x) => x.id === editingHabit), data);
     else S.habits.push({ id: uid(), start: today(), ...data });
     save();
     closeSheets();
-    toast(editingHabit ? '습관을 다듬었어요' : '새 습관을 추가했어요');
+    toast(editingHabit ? '저장했습니다' : '새 습관');
     render();
   });
   $('#habit-delete').onclick = () => {
-    if (!confirm('이 습관을 지울까요? 지금까지의 체크 기록도 함께 사라져요.')) return;
+    if (!confirm('이 습관과 체크 기록을 삭제할까요?')) return;
     S.habits = S.habits.filter((x) => x.id !== editingHabit);
     for (const d in S.checks) {
       S.checks[d] = S.checks[d].filter((x) => x !== editingHabit);
@@ -1084,7 +1084,7 @@
     save();
     closeSheets();
     render();
-    toast('습관을 지웠어요');
+    toast('삭제했습니다');
   };
 
   // =========================================================
@@ -1099,33 +1099,31 @@
     box.className = 'sheet detail';
     const nb = neighbors(id);
     box.innerHTML = `<div class="grip"></div>
-      <span class="detail-cat"><i class="sw" style="background:${c.color}"></i>${c.name}</span>
-      <h2 style="margin:8px 0 0">${esc(d.title)}</h2>
-      <div class="detail-date">${fmtDate(d.date)} · ${agoText(d.date)}</div>
-      ${d.note ? `<p class="detail-note">${esc(d.note)}</p>` : ''}
-      <h3>이어진 점</h3>
-      <ul class="conn">${nb.length ? '' : '<li class="muted" style="cursor:default">아직 이어진 점이 없어요. 뒤돌아보면 이어질 점이 보일 거예요.</li>'}</ul>
-      <div class="row end" style="margin-top:20px">
-        <button class="btn danger-ghost" data-del style="margin-right:auto">삭제</button>
-        <button class="btn ghost" data-edit>다듬기 · 잇기</button>
-        <button class="btn primary" data-close>닫기</button>
-      </div>`;
+      <span class="kicker"><i class="sw" style="background:${c.color}"></i>${c.name}</span>
+      <h2>${esc(d.title)}</h2>
+      <div class="date">${fmtDate(d.date)} · ${agoText(d.date)}</div>
+      ${d.note ? `<p class="note">${esc(d.note)}</p>` : ''}
+      <h3 class="section">이어진 점</h3>
+      <div class="group"><ul class="list conn">${nb.length ? '' : '<li class="li static">아직 이어진 점이 없습니다.</li>'}</ul></div>
+      <div class="actions"><button class="btn" data-edit>편집</button><button class="btn primary" data-close>닫기</button></div>
+      <div class="group" style="margin-top:12px"><button class="row-btn danger" data-del>삭제</button></div>`;
     const ul = box.querySelector('.conn');
     for (const { dot, dir } of nb) {
       const li = document.createElement('li');
-      li.innerHTML = `<i class="sw" style="background:${catOf(dot.cat).color}"></i><span>${esc(dot.title)}</span><span class="d">${dir === 'past' ? '← 과거' : '미래 →'} ${fmtShort(dot.date)}</span>`;
+      li.className = 'li';
+      li.innerHTML = `<i class="sw" style="background:${catOf(dot.cat).color}"></i><span class="grow">${esc(dot.title)}</span><span class="meta">${dir === 'past' ? '과거' : '이후'} · ${fmtShort(dot.date)}</span>`;
       li.onclick = () => openDetail(dot.id);
       ul.appendChild(li);
     }
     box.querySelector('[data-edit]').onclick = () => openForm(id);
     box.querySelector('[data-del]').onclick = () => {
-      if (!confirm('이 점을 지울까요? 이어진 선도 함께 사라져요.')) return;
+      if (!confirm('이 점과 이어진 선을 삭제할까요?')) return;
       S.dots = S.dots.filter((x) => x.id !== id);
       for (const x of S.dots) x.links = (x.links || []).filter((l) => l !== id);
       save();
       closeSheets();
       render();
-      toast('점을 지웠어요');
+      toast('삭제했습니다');
     };
     openSheet('#detail-sheet');
   }
@@ -1135,48 +1133,43 @@
     if (!h) return;
     const box = $('#detail');
     box.className = 'sheet detail';
-    // 최근 12주 달력: 체크한 날이 점, 이어진 날은 선
-    const weeks = 12, cell = 22, gap = 4;
+    // 최근 12주: 체크한 날은 점, 연달아 한 날은 선으로 이어집니다
+    const weeks = 12, cell = 24;
     const now = new Date();
     const endSat = addDays(now, 6 - now.getDay());
     const start = addDays(endSat, -weeks * 7 + 1);
-    const color = catOf(h.cat).color;
     let s = '';
     for (let w = 0; w < weeks; w++) {
       for (let dow = 0; dow < 7; dow++) {
         const day = ymd(addDays(start, w * 7 + dow));
-        const cx = w * (cell + gap) + cell / 2, cy = dow * (cell + gap) + cell / 2;
+        const cx = w * cell + cell / 2, cy = dow * cell + cell / 2;
         if (day > today()) continue;
         const on = isDone(h, day);
-        const prev = shift(day, -1);
-        if (on && dow > 0 && isDone(h, prev)) s += `<line x1="${cx}" y1="${cy - cell - gap}" x2="${cx}" y2="${cy}" stroke="${color}" stroke-width="5" stroke-linecap="round"/>`;
-        s += on ? `<circle cx="${cx}" cy="${cy}" r="8" fill="${color}"/>`
-          : scheduled(h, day) ? `<circle cx="${cx}" cy="${cy}" r="6" fill="none" stroke="var(--line)" stroke-width="2"/>`
-            : `<circle cx="${cx}" cy="${cy}" r="2" fill="var(--line)"/>`;
+        if (on && dow > 0 && isDone(h, shift(day, -1))) s += `<line x1="${cx}" y1="${cy - cell}" x2="${cx}" y2="${cy}" stroke="var(--text)" stroke-opacity=".5" stroke-width="1.2"/>`;
+        s += on ? `<circle cx="${cx}" cy="${cy}" r="4.5" fill="var(--text)"/>`
+          : scheduled(h, day) ? `<circle cx="${cx}" cy="${cy}" r="3.5" fill="none" stroke="var(--hair-2)" stroke-width="1"/>`
+            : `<circle cx="${cx}" cy="${cy}" r="1.2" fill="var(--hair-2)"/>`;
       }
     }
-    const W = weeks * (cell + gap) - gap, H = 7 * (cell + gap) - gap;
+    const W = weeks * cell, H = 7 * cell;
     box.innerHTML = `<div class="grip"></div>
-      <span class="detail-cat"><i class="sw" style="background:${color}"></i>${catOf(h.cat).name} · ${timeOf(h.time).name}</span>
-      <h2 style="margin:8px 0 0">${esc(h.emoji)} ${esc(h.name)}</h2>
-      <div class="stat3"><div><b>${habitStreak(h)}</b><span>현재 연속</span></div><div><b>${habitBest(h)}</b><span>최고 연속</span></div><div><b>${habitRate(h)}%</b><span>30일 달성률</span></div></div>
-      <h3>최근 12주 · 이어진 날은 선이 돼요</h3>
-      <div class="cal"><svg viewBox="-2 -2 ${W + 4} ${H + 4}" role="img" aria-label="최근 12주 체크 기록">${s}</svg></div>
-      <div class="row end" style="margin-top:20px">
-        <button class="btn ghost" data-edit>다듬기</button>
-        <button class="btn primary" data-close>닫기</button>
-      </div>`;
+      <span class="kicker"><i class="sw" style="background:${catOf(h.cat).color}"></i>${catOf(h.cat).name} · ${timeOf(h.time).name}</span>
+      <h2>${esc(h.name)}</h2>
+      <div class="stat3"><div><b>${habitStreak(h)}</b><span>현재 연속</span></div><div><b>${habitBest(h)}</b><span>최고 연속</span></div><div><b>${habitRate(h)}<small style="font-size:14px">%</small></b><span>30일</span></div></div>
+      <h3 class="section">최근 12주</h3>
+      <div class="cal"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="최근 12주 체크 기록">${s}</svg></div>
+      <div class="actions"><button class="btn" data-edit>편집</button><button class="btn primary" data-close>닫기</button></div>`;
     box.querySelector('[data-edit]').onclick = () => openHabitForm(id);
     openSheet('#detail-sheet');
   }
 
   function openBadge(b) {
     const box = $('#detail');
-    box.className = 'sheet';
+    box.className = 'sheet detail';
     const got = S.badges[b.id];
-    box.innerHTML = `<div class="grip"></div><div class="badge-hero badge ${got ? 'got' : ''}"><span class="medal">${b.icon}</span>` +
-      `<h2 style="margin:0">${b.name}</h2><p>${b.desc}</p><p class="muted">${got ? `${fmtDate(got)} 획득` : '아직 잠겨 있어요'}</p></div>` +
-      `<div class="row end"><button class="btn primary" data-close>닫기</button></div>`;
+    box.innerHTML = `<div class="grip"></div><div class="badge-hero badge ${got ? 'got' : ''}"><span class="medal"><svg viewBox="0 0 24 24">${b.icon}</svg></span>` +
+      `<h2>${b.name}</h2><p>${b.desc}</p><p class="date">${got ? fmtDate(got) : '아직 잠겨 있습니다'}</p></div>` +
+      `<div class="actions"><button class="btn primary" data-close>닫기</button></div>`;
     openSheet('#detail-sheet');
   }
 
@@ -1220,28 +1213,7 @@
       if (navigator.vibrate) navigator.vibrate(p);
     } catch (e) { /* 지원하지 않는 기기 */ }
   }
-  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function confetti(x, y, n = 30, colors) {
-    if (reduceMotion || !document.body.animate) return;
-    const pal = colors || ['#f3c969', '#3987e5', '#199e70', '#d55181', '#9085e9', '#d95926', '#ffffff'];
-    for (let i = 0; i < n; i++) {
-      const p = document.createElement('i');
-      p.className = 'confetti';
-      p.style.background = pal[i % pal.length];
-      p.style.left = x + 'px';
-      p.style.top = y + 'px';
-      const size = 4 + Math.random() * 6;
-      p.style.width = p.style.height = size + 'px';
-      document.body.appendChild(p);
-      const a = Math.random() * Math.PI * 2;
-      const dist = (n > 20 ? 120 : 50) + Math.random() * (n > 20 ? 160 : 40);
-      const dx = Math.cos(a) * dist, dy = Math.sin(a) * dist;
-      p.animate([
-        { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
-        { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy + 60}px)) scale(.4)`, opacity: 0 },
-      ], { duration: 700 + Math.random() * 500, easing: 'cubic-bezier(.2,.8,.4,1)' }).onfinish = () => p.remove();
-    }
-  }
+
 
   // ---------- 데이터 관리 ----------
   $('#export').onclick = () => {
@@ -1308,7 +1280,7 @@
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'tpl' + (obPicked.has(i) ? ' on' : '');
-      b.innerHTML = `<span class="emo">${t.emoji}</span><span><div class="t">${t.name}</div><div class="m">${timeOf(t.time).name} · ${catOf(t.cat).name}</div></span><span class="ck">✓</span>`;
+      b.innerHTML = `<span class="tick"><svg viewBox="0 0 16 16"><path d="M3.5 8.5 L6.5 11.5 L12.5 4.5"/></svg></span><span class="grow">${t.name}<span class="m">${timeOf(t.time).name} · ${catOf(t.cat).name}</span></span>`;
       b.onclick = () => {
         obPicked.has(i) ? obPicked.delete(i) : obPicked.add(i);
         drawTemplates();
@@ -1332,14 +1304,14 @@
     $('#onboard').hidden = true;
     lastLevel = level().i;
     show('today');
-    toast('환영해요! 오늘의 첫 점을 찍어보세요 ✦');
+    toast('첫 번째 점을 찍어보세요');
   };
   $('#ob-sample').onclick = () => {
     loadSample();
     $('#onboard').hidden = true;
     lastLevel = level().i;
     show('today');
-    toast('예시 기록을 불러왔어요');
+    toast('예시 기록');
   };
 
   // 예시 데이터: 약 3개월 동안의 습관과 경험
