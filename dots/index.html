@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>점과 선</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 상단 -->
+    <header class="top">
+      <div>
+        <h1>점과 선</h1>
+        <p class="sub" id="summary">오늘의 점을 찍어보세요</p>
+      </div>
+    </header>
+
+    <!-- 1. 별자리 화면 -->
+    <main class="view active" id="view-sky">
+      <div class="sky-wrap">
+        <svg id="sky" aria-label="나의 점들이 이어진 별자리"></svg>
+        <div class="empty" id="sky-empty">
+          <blockquote>
+            “앞을 내다보며 점을 이을 수는 없습니다.<br>
+            오직 뒤를 돌아볼 때만 이을 수 있죠.<br>
+            그러니 지금의 점들이 미래에<br>어떻게든 이어질 거라 믿어야 합니다.”
+            <cite>— 스티브 잡스, 2005 스탠퍼드 졸업 연설</cite>
+          </blockquote>
+          <button class="btn primary" data-action="add">첫 번째 점 찍기</button>
+          <button class="btn ghost" id="load-sample">예시로 둘러보기</button>
+        </div>
+      </div>
+      <div class="legend" id="legend"></div>
+    </main>
+
+    <!-- 2. 기록(타임라인) 화면 -->
+    <main class="view" id="view-timeline">
+      <div class="filters" id="timeline-filters"></div>
+      <ol class="timeline" id="timeline"></ol>
+      <p class="muted center" id="timeline-empty">아직 찍은 점이 없어요.</p>
+    </main>
+
+    <!-- 3. 성장 화면 -->
+    <main class="view" id="view-growth">
+      <section class="tiles" id="tiles"></section>
+
+      <section class="card">
+        <h2>점이 모여 선이 되다</h2>
+        <p class="muted small">날마다 쌓인 점의 누적 개수</p>
+        <div class="chart" id="line-chart"></div>
+      </section>
+
+      <section class="card">
+        <h2>최근 12주</h2>
+        <p class="muted small">하루에 찍은 점이 많을수록 밝게 빛나요</p>
+        <div id="heat"></div>
+      </section>
+
+      <section class="card">
+        <h2>분야별 점</h2>
+        <div id="cat-bars"></div>
+      </section>
+
+      <section class="card">
+        <h2>가장 많이 이어진 점</h2>
+        <p class="muted small">돌아보니, 이 경험들이 가장 많은 선을 만들었어요</p>
+        <ol class="hubs" id="hubs"></ol>
+      </section>
+
+      <section class="card data">
+        <h2>데이터</h2>
+        <div class="row">
+          <button class="btn ghost" id="export">백업 내보내기</button>
+          <label class="btn ghost">백업 불러오기<input type="file" id="import" accept="application/json" hidden></label>
+        </div>
+        <button class="btn danger-ghost" id="reset">모든 점 지우기</button>
+      </section>
+    </main>
+
+    <!-- 하단 탭 -->
+    <nav class="tabbar">
+      <button class="tab active" data-view="sky"><span class="ico">✦</span>별자리</button>
+      <button class="tab" data-view="timeline"><span class="ico">⋮</span>기록</button>
+      <button class="fab" data-action="add" aria-label="새 점 찍기">+</button>
+      <button class="tab" data-view="growth"><span class="ico">↗</span>성장</button>
+    </nav>
+  </div>
+
+  <!-- 새 점 추가 시트 -->
+  <div class="sheet-backdrop" id="add-sheet" hidden>
+    <form class="sheet" id="add-form" autocomplete="off">
+      <div class="grip"></div>
+      <h2>오늘의 점</h2>
+      <label class="field">
+        <span>무엇을 했나요?</span>
+        <input name="title" maxlength="60" placeholder="예) 서체 수업을 들었다" required>
+      </label>
+      <label class="field">
+        <span>메모 <em>(선택)</em></span>
+        <textarea name="note" rows="3" maxlength="500" placeholder="느낀 점, 배운 점을 적어두면 나중에 이을 때 도움이 돼요"></textarea>
+      </label>
+      <div class="field">
+        <span>분야</span>
+        <div class="chips" id="cat-chips"></div>
+      </div>
+      <label class="field">
+        <span>날짜</span>
+        <input type="date" name="date" required>
+      </label>
+      <div class="field" id="link-field">
+        <span>과거의 점과 잇기 <em>(선택)</em></span>
+        <p class="hint">뒤돌아보니 이 경험과 이어지는 점이 있나요?</p>
+        <input type="search" id="link-search" placeholder="과거의 점 검색">
+        <div class="link-list" id="link-list"></div>
+      </div>
+      <div class="row end">
+        <button type="button" class="btn ghost" data-close>취소</button>
+        <button type="submit" class="btn primary">점 찍기</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 점 상세 시트 -->
+  <div class="sheet-backdrop" id="detail-sheet" hidden>
+    <div class="sheet" id="detail"></div>
+  </div>
+
+  <div class="tooltip" id="tooltip" hidden></div>
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

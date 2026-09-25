@@ -1,0 +1,15 @@
+{
+  "name": "Connecting the Dots · 점과 선",
+  "short_name": "점과 선",
+  "description": "오늘의 작은 점들이 모여 나만의 선이 되는 자기계발 기록 앱",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "lang": "ko",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
