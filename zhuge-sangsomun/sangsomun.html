@@ -4,158 +4,176 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>제갈량 상소문</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Nanum+Brush+Script&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@700;900&display=swap" rel="stylesheet">
 <style>
+  @font-face { font-family: "Galmuri14"; src: url("fonts/Galmuri14.woff2") format("woff2"); font-display: swap; }
+  @font-face { font-family: "Galmuri11B"; src: url("fonts/Galmuri11-Bold.woff2") format("woff2"); font-display: swap; }
   :root {
-    --ink: #1f1a17;
-    --ink-soft: #4a3f38;
-    --vermilion: #a8261c;
-    --paper: #f1e6cc;
-    --paper-edge: #d9c6a0;
-    --rule: rgba(168, 38, 28, 0.22);
-    --wood-dark: #2a170e;
-    --wood: #5b3620;
-    --gold: #c9a45c;
-    --fs: 19px;
-    --lh: 44px;
-    --body: "Nanum Myeongjo", "Batang", "AppleMyungjo", "Noto Serif KR", serif;
-    --hanja: "Noto Serif KR", "Nanum Myeongjo", "Batang", serif;
-    --brush: "Nanum Brush Script", "Nanum Myeongjo", serif;
+    --win-top: #1c2658;
+    --win-bot: #0c1030;
+    --frame: #e9d9a2;
+    --frame-dark: #5b4a1e;
+    --text: #f4f0e0;
+    --dim: #b9b3a0;
+    --gold: #ffd866;
+    --npc: #b4f07a;
+    --sky: #7fdcff;
+    --red: #d8412f;
+    --body: "Galmuri14", "DungGeunMo", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    --ui: "Galmuri11B", "Galmuri14", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
-  body {
-    background-color: var(--wood-dark);
-    background-image:
-      radial-gradient(ellipse at 50% 40%, rgba(120, 70, 35, 0.35), transparent 70%),
-      repeating-linear-gradient(92deg, rgba(0,0,0,0.18) 0 2px, transparent 2px 9px),
-      repeating-linear-gradient(88deg, rgba(255,210,160,0.035) 0 1px, transparent 1px 23px);
-    color: var(--ink);
-    font-family: var(--body);
-    overflow: hidden;
-  }
+  body { background: #10200f; color: var(--text); font-family: var(--body); overflow: hidden;
+    -webkit-font-smoothing: none; font-smooth: never; user-select: none; }
+  #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; }
 
-  /* ---------- scroll (두루마리) ---------- */
-  .stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 28px 22px 64px; }
-  .scroll { display: flex; width: 100%; height: 100%; max-width: 1280px; filter: drop-shadow(0 18px 30px rgba(0,0,0,0.55)); }
-  .scroll.v { flex-direction: row; }
-  .scroll.h { flex-direction: column; max-width: 900px; }
+  /* ---------- 게임 창 공통 ---------- */
+  .win { position: fixed; background: linear-gradient(180deg, rgba(28,38,88,0.94), rgba(12,16,48,0.94));
+    border: 2px solid var(--frame);
+    box-shadow: 0 0 0 2px #000, inset 0 0 0 2px var(--frame-dark), 5px 5px 0 2px rgba(0,0,0,0.45); }
+  .bar { font-family: var(--ui); font-size: 12px; line-height: 12px; color: #ffeebb; padding: 5px 8px 4px;
+    background: linear-gradient(180deg, #7a5820, #43300f); border-bottom: 2px solid #000; display: flex; gap: 8px; align-items: center; }
+  .bar .x { margin-left: auto; }
+  .pxbtn { font-family: var(--ui); font-size: 12px; line-height: 12px; color: #2a1a06; cursor: pointer;
+    background: #d6bf84; padding: 6px 10px 5px; border: 2px solid; border-color: #fff5cf #5a4318 #5a4318 #fff5cf; box-shadow: 0 0 0 1px #000; }
+  .pxbtn:hover { background: #ecd699; }
+  .pxbtn:active { border-color: #5a4318 #fff5cf #fff5cf #5a4318; }
+  .pxbtn:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
+  .pxbtn[disabled] { opacity: 0.45; cursor: default; }
 
-  .rod { flex: none; position: relative; border-radius: 10px;
-    background: linear-gradient(90deg, #1b0e07, var(--wood) 30%, #8a5a36 50%, var(--wood) 70%, #1b0e07); }
-  .scroll.v .rod { width: 26px; margin: -14px 0; }
-  .scroll.h .rod { height: 26px; margin: 0 -14px;
-    background: linear-gradient(180deg, #1b0e07, var(--wood) 30%, #8a5a36 50%, var(--wood) 70%, #1b0e07); }
-  .rod::before, .rod::after { content: ""; position: absolute; border-radius: 6px;
-    background: radial-gradient(circle at 40% 35%, #f3dca0, var(--gold) 45%, #6d5022); }
-  .scroll.v .rod::before, .scroll.v .rod::after { left: -3px; right: -3px; height: 22px; }
-  .scroll.v .rod::before { top: -12px; } .scroll.v .rod::after { bottom: -12px; }
-  .scroll.h .rod::before, .scroll.h .rod::after { top: -3px; bottom: -3px; width: 22px; }
-  .scroll.h .rod::before { left: -12px; } .scroll.h .rod::after { right: -12px; }
+  /* ---------- 좌상단: 주공 정보 ---------- */
+  #status { top: 14px; left: 14px; width: 232px; font-family: var(--ui); font-size: 12px; line-height: 12px; }
+  #status .rows { padding: 10px 10px 4px; display: grid; grid-template-columns: 56px 1fr; row-gap: 8px; }
+  #status .k { color: var(--dim); }
+  #status .v { color: var(--text); }
+  .gauge { margin: 0 10px 8px; }
+  .gauge .lbl { display: flex; justify-content: space-between; margin-bottom: 3px; color: var(--dim); }
+  .gauge .track { height: 10px; background: #05071a; border: 2px solid #000; box-shadow: inset 0 0 0 1px #3a3f66; }
+  .gauge .fill { height: 100%; }
+  .hp .fill { background: repeating-linear-gradient(90deg, #e2483a 0 6px, #c8321f 6px 8px); width: 100%; }
+  .mp .fill { background: repeating-linear-gradient(90deg, #3d8cf0 0 6px, #2a6bd0 6px 8px); width: 100%; }
+  .xp .fill { background: repeating-linear-gradient(90deg, #ffd866 0 6px, #e0b43a 6px 8px); width: 0; transition: width .3s steps(6); }
 
-  .paper { flex: 1; min-width: 0; min-height: 0; position: relative;
-    background-color: var(--paper);
-    background-image:
-      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,0.35), transparent 55%),
-      radial-gradient(ellipse at 85% 90%, rgba(150,110,50,0.18), transparent 60%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.33 0 0 0 0 0.18 0 0 0 0.13 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    box-shadow: inset 0 0 60px rgba(120, 85, 40, 0.35), inset 0 0 6px rgba(90, 60, 20, 0.4);
-  }
-  .scroll.v .paper { border-top: 1px solid var(--paper-edge); border-bottom: 1px solid var(--paper-edge); }
-  .scroll.h .paper { border-left: 1px solid var(--paper-edge); border-right: 1px solid var(--paper-edge); }
+  /* ---------- 우상단: 상소 목록 ---------- */
+  #quest { top: 14px; right: 14px; width: 272px; }
+  #quest ul { list-style: none; margin: 0; padding: 6px; }
+  #quest li { font-family: var(--ui); font-size: 12px; line-height: 12px; padding: 8px 8px 7px; cursor: pointer; display: flex; gap: 6px; color: var(--text); }
+  #quest li:hover { background: rgba(255,255,255,0.08); }
+  #quest li.on { background: rgba(255, 216, 102, 0.16); color: var(--gold); }
+  #quest li .lab { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  #quest li .cnt { margin-left: auto; color: var(--dim); flex: none; }
+  #quest li.done .cnt { color: var(--npc); }
 
-  /* ---------- document ---------- */
-  #doc { position: absolute; inset: 0; overflow: auto; font-size: var(--fs); line-height: var(--lh);
-    scrollbar-width: thin; scrollbar-color: rgba(120,70,35,0.5) transparent; word-break: keep-all; overflow-wrap: anywhere; }
-  #doc p, #doc h2, #doc h3 { margin: 0; }
+  /* ---------- 좌측: 채팅창 ---------- */
+  #chat { left: 14px; width: min(440px, calc(100% - 28px)); bottom: calc(var(--dlg-h) + 34px); background: rgba(0,0,0,0.45);
+    border: 0; box-shadow: none; padding: 6px 8px; font-family: var(--ui); font-size: 12px; line-height: 18px; text-shadow: 1px 1px 0 #000; }
+  #chat div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .c-notice { color: var(--gold); } .c-sys { color: var(--sky); } .c-whisper { color: #ff9ad5; } .c-guide { color: #d9d4c0; }
 
-  /* 세로쓰기: 오른쪽에서 왼쪽으로, 붉은 계선(界線) */
-  .scroll.v #doc { writing-mode: vertical-rl; padding: 44px var(--lh) 40px var(--lh);
-    background-image: repeating-linear-gradient(to left, transparent 0 calc(var(--lh) - 1px), var(--rule) calc(var(--lh) - 1px) var(--lh));
-    background-attachment: local; background-position: right var(--lh) top 0; background-origin: padding-box;
-    background-size: auto calc(100% - 70px); background-repeat: repeat-x; }
-  .scroll.v #doc p { text-indent: 1em; }
-  .scroll.v .blank { width: var(--lh); }
+  /* ---------- 하단: 대화창 ---------- */
+  :root { --dlg-h: 250px; }
+  #dialog { left: 50%; transform: translateX(-50%); bottom: 14px; width: min(1040px, calc(100% - 28px)); height: var(--dlg-h);
+    display: flex; gap: 14px; padding: 14px; }
+  .portrait { flex: none; width: 132px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .portrait .frame { width: 132px; height: 132px; background: #2a3a2a; border: 2px solid var(--frame); box-shadow: 0 0 0 2px #000, inset 0 0 0 2px var(--frame-dark); }
+  .portrait canvas { width: 128px; height: 128px; image-rendering: pixelated; display: block; }
+  .portrait .who { font-family: var(--ui); font-size: 12px; line-height: 12px; color: var(--npc); text-shadow: 1px 1px 0 #000; }
+  .portrait .rank { font-family: var(--ui); font-size: 12px; line-height: 12px; color: var(--gold); }
+  .dlg-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .dlg-head { display: flex; gap: 10px; align-items: baseline; font-family: var(--ui); font-size: 12px; line-height: 12px; padding-bottom: 8px; border-bottom: 2px dotted rgba(233,217,162,0.35); }
+  .dlg-head .npc { color: var(--npc); }
+  .dlg-head .sec { color: var(--gold); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .dlg-head .pg { margin-left: auto; color: var(--dim); flex: none; }
+  #text { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 4px 4px 0; font-size: 15px; line-height: 27px; word-break: keep-all; overflow-wrap: anywhere; cursor: pointer;
+    scrollbar-width: thin; scrollbar-color: var(--frame-dark) transparent; }
+  #text strong, #book strong { color: var(--gold); font-weight: normal; }
+  #text code, #book code { color: var(--sky); font-family: var(--body); }
+  #text .hanja { display: block; font-size: 30px; line-height: 44px; color: var(--gold); margin: 6px 0; }
+  .dlg-foot { display: flex; gap: 8px; align-items: center; padding-top: 8px; }
+  .dlg-foot .hint { font-family: var(--ui); font-size: 12px; color: var(--dim); margin-left: 4px; }
+  .more { margin-left: auto; color: var(--gold); font-family: var(--ui); font-size: 12px; animation: blink 0.8s steps(2) infinite; }
+  .more.hide { visibility: hidden; }
+  @keyframes blink { 50% { opacity: 0; } }
 
-  /* 가로쓰기 */
-  .scroll.h #doc { padding: 48px clamp(22px, 6vw, 72px) 60px; line-height: 1.95; }
-  .scroll.h #doc p { margin-bottom: 1.1em; text-indent: 0.6em; }
-  .scroll.h .blank { height: 1.4em; }
+  /* 인장 */
+  .seal { display: inline-grid; grid-template-rows: 1fr 1fr; grid-auto-flow: column; grid-auto-columns: 1fr; width: 56px; height: 56px; padding: 5px; margin: 6px 0 0 8px; vertical-align: middle;
+    background: var(--red); color: #fff3dc; font-family: var(--ui); font-size: 12px; line-height: 12px; place-items: center; direction: rtl;
+    box-shadow: 0 0 0 2px #7a1a10, inset 0 0 0 2px #fff3dc; }
+  .seal span { direction: ltr; }
+  .seal.stamp { animation: stamp 0.35s steps(4) both; }
+  @keyframes stamp { from { transform: scale(2.2) rotate(-12deg); opacity: 0; } to { transform: scale(1) rotate(-4deg); opacity: 1; } }
 
-  .title-han { font-family: "Ma Shan Zheng", var(--hanja); font-size: 3.1em; line-height: calc(var(--lh) * 2); color: var(--ink); letter-spacing: 0.12em; }
-  .title-ko { font-family: var(--brush); font-size: 2.1em; line-height: var(--lh); color: var(--vermilion); }
-  .meta { color: var(--ink-soft); font-size: 0.86em; }
-  .meta .han { font-family: var(--hanja); letter-spacing: 0.08em; }
-  .scroll.h .title-han { line-height: 1.2; }
-  .scroll.h .title-ko { line-height: 1.4; }
+  /* ---------- 전체 읽기 ---------- */
+  #book { position: fixed; inset: 0; display: none; background: rgba(0,0,0,0.55); z-index: 10; }
+  #book.open { display: block; }
+  #book .win { top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(880px, calc(100% - 28px)); height: min(86vh, calc(100% - 28px)); display: flex; flex-direction: column; }
+  #book .scrollbody { flex: 1; overflow-y: auto; padding: 18px 26px 26px; font-size: 15px; line-height: 28px; word-break: keep-all; overflow-wrap: anywhere; user-select: text;
+    scrollbar-width: thin; scrollbar-color: var(--frame-dark) transparent; }
+  #book h1 { font-family: var(--body); font-weight: normal; font-size: 30px; line-height: 40px; color: var(--gold); margin: 4px 0 2px; }
+  #book h2 { font-family: var(--ui); font-weight: normal; font-size: 12px; line-height: 12px; color: #1a1206; background: var(--frame); display: inline-block; padding: 6px 8px 5px; margin: 26px 0 10px; }
+  #book p { margin: 0 0 14px; }
+  #book .meta { color: var(--dim); font-family: var(--ui); font-size: 12px; }
 
-  h2.part { font-family: var(--hanja); font-weight: 900; font-size: 1.12em; color: var(--vermilion); letter-spacing: 0.06em; }
-  h2.part small { font-family: var(--body); font-weight: 800; color: var(--ink); letter-spacing: 0; font-size: 0.95em; }
-  .scroll.h h2.part { margin: 0.4em 0 0.9em !important; padding-bottom: 0.4em; border-bottom: 1px solid var(--rule); }
-
-  strong { color: var(--vermilion); font-weight: 800; }
-  #doc strong, #doc code { line-height: 1; }
-  .scroll.v .title-han, .scroll.v .seal, .scroll.v .meta .han, .scroll.v .maxim .hanja, .scroll.v .closing { text-orientation: upright; }
-  code { font-family: ui-monospace, "Consolas", "Menlo", monospace; font-size: 0.86em; background: rgba(120, 80, 30, 0.1); border-radius: 3px; padding: 0 0.2em; }
-
-  .maxim { color: var(--ink); }
-  .maxim .label { font-family: var(--hanja); font-weight: 900; color: var(--vermilion); }
-  .maxim .hanja { font-family: var(--hanja); font-weight: 700; font-size: 1.12em; letter-spacing: 0.1em; }
-  .maxim .gloss { color: var(--ink-soft); }
-  .scroll.h .maxim { border: 1px solid var(--rule); padding: 0.8em 1em; margin: 0.6em 0 1.2em; background: rgba(255,255,255,0.22); }
-
-  .closing { font-family: var(--hanja); font-weight: 700; letter-spacing: 0.2em; }
-  .scroll.v .closing { text-align: end; }
-  .scroll.h .closing { text-align: right; }
-
-  .seal { display: inline-block; vertical-align: middle; width: 2.9em; height: 2.9em; margin: 0.6em;
-    background: var(--vermilion); color: #f6e9d6; border-radius: 4px; transform: rotate(-4deg);
-    font-family: var(--hanja); font-weight: 900; font-size: 1.05em; line-height: 1.3em;
-    writing-mode: vertical-rl; text-orientation: upright; padding: 0.15em 0.12em; text-align: center; opacity: 0.9;
-    box-shadow: inset 0 0 0 2px rgba(246,233,214,0.55), inset 0 0 0 4px var(--vermilion);
-    mix-blend-mode: multiply; }
-  .scroll.h .seal-wrap { text-align: right; }
-
-  .note { color: var(--ink-soft); font-size: 0.8em; }
-
-  /* ---------- toolbar & status ---------- */
-  .toolbar { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; max-width: calc(100% - 32px); }
-  .toolbar button { font-family: var(--body); font-weight: 700; font-size: 14px; color: #f3e4c4; background: rgba(40, 22, 12, 0.85);
-    border: 1px solid rgba(201, 164, 92, 0.55); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
-  .toolbar button:hover { background: rgba(90, 50, 25, 0.95); }
-  .toolbar button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-
-  #status { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 5; display: none;
-    font-size: 14px; font-weight: 700; color: #f6e9d6; background: rgba(168, 38, 28, 0.92); border-radius: 999px; padding: 7px 18px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.4); max-width: calc(100% - 32px); text-align: center; }
-  #status.show { display: block; }
-  #status .dots::after { content: ""; animation: dots 1.6s steps(4) infinite; }
-  @keyframes dots { 0% { content: ""; } 25% { content: "·"; } 50% { content: "··"; } 75% { content: "···"; } }
-  @media (prefers-reduced-motion: reduce) { #status .dots::after { animation: none; content: "···"; } }
-
+  @media (prefers-reduced-motion: reduce) { .more, .seal.stamp { animation: none; } }
+  @media (max-width: 900px) { #status { display: none; } #quest { width: 230px; } }
   @media (max-width: 640px) {
-    :root { --fs: 17px; --lh: 38px; }
-    .stage { padding: 16px 16px 60px; }
-    .toolbar { flex-wrap: nowrap; gap: 4px; }
-    .toolbar button { font-size: 13px; padding: 6px 10px; white-space: nowrap; }
+    :root { --dlg-h: 58vh; }
+    #quest, #chat { display: none; }
+    #dialog { flex-direction: column; gap: 8px; padding: 10px; }
+    .portrait { flex-direction: row; width: auto; }
+    .portrait .frame { width: 52px; height: 52px; }
+    .portrait canvas { width: 48px; height: 48px; }
+    .dlg-foot .hint { display: none; }
   }
 </style>
 </head>
 <body>
-<div id="status" role="status" aria-live="polite"></div>
-<div class="stage">
-  <div class="scroll v" id="scroll">
-    <div class="rod" aria-hidden="true"></div>
-    <div class="paper"><article id="doc" tabindex="0" aria-label="제갈량 상소문"></article></div>
-    <div class="rod" aria-hidden="true"></div>
+<canvas id="scene" aria-hidden="true"></canvas>
+
+<section class="win" id="status" aria-label="주공 정보">
+  <div class="bar">주공 정보</div>
+  <div class="rows">
+    <span class="k">이름</span><span class="v">주공</span>
+    <span class="k">칭호</span><span class="v">초보 군주</span>
+    <span class="k">알현</span><span class="v" id="days">1일째</span>
+    <span class="k">오늘</span><span class="v" id="dateHan"></span>
   </div>
-</div>
-<div class="toolbar">
-  <button type="button" id="btnMode">가로로 읽기</button>
-  <button type="button" id="btnSmaller" aria-label="글자 작게">글자 −</button>
-  <button type="button" id="btnBigger" aria-label="글자 크게">글자 +</button>
+  <div class="gauge hp"><div class="lbl"><span>체력</span><span>100%</span></div><div class="track"><div class="fill"></div></div></div>
+  <div class="gauge mp"><div class="lbl"><span>마력</span><span>100%</span></div><div class="track"><div class="fill"></div></div></div>
+  <div class="gauge xp"><div class="lbl"><span>경험치 (오늘의 상소)</span><span id="xpPct">0%</span></div><div class="track"><div class="fill" id="xpFill"></div></div></div>
+</section>
+
+<section class="win" id="quest" aria-label="상소 목록">
+  <div class="bar">상소 목록 <span class="x" id="qTitle"></span></div>
+  <ul id="questList"></ul>
+</section>
+
+<section class="win" id="chat" aria-live="polite"></section>
+
+<section class="win" id="dialog" aria-label="제갈량의 상소">
+  <div class="portrait">
+    <div class="frame"><canvas id="face" width="32" height="32"></canvas></div>
+    <div class="who">제갈량</div>
+    <div class="rank">[촉한 승상]</div>
+  </div>
+  <div class="dlg-body">
+    <div class="dlg-head"><span class="npc">제갈량</span><span class="sec" id="sec"></span><span class="pg" id="pg"></span></div>
+    <div id="text" tabindex="0" aria-live="polite"></div>
+    <div class="dlg-foot">
+      <button class="pxbtn" id="btnPrev" type="button">◀ 이전</button>
+      <button class="pxbtn" id="btnNext" type="button">다음 ▶</button>
+      <button class="pxbtn" id="btnAll" type="button">전체 읽기</button>
+      <span class="hint">클릭 · Space · Enter 다음 / ← 이전 / A 전체</span>
+      <span class="more" id="more">▼</span>
+    </div>
+  </div>
+</section>
+
+<div id="book" role="dialog" aria-modal="true" aria-label="상소문 전체">
+  <section class="win">
+    <div class="bar"><span id="bookTitle">상소문 전체</span><button class="pxbtn x" id="btnClose" type="button">닫기 ✕</button></div>
+    <div class="scrollbody" id="bookBody"></div>
+  </section>
 </div>
 
 <script>
@@ -239,42 +257,311 @@ function ganji(year) {
 function ymd(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 function inline(s) {
-  return esc(s)
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/`([^`]+)`/g, "<code>$1</code>");
+  return esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>");
 }
 function valid(c) {
   return c && c.part1 && c.part2 && Array.isArray(c.part1.paragraphs) && Array.isArray(c.part2.paragraphs)
     && c.part1.paragraphs.length > 0 && c.part2.paragraphs.length > 0;
 }
+const NOW = new Date();
+const TODAY = ymd(NOW);
+const DATE_HAN = ganji(NOW.getFullYear()) + "年 " + hanNum(NOW.getMonth() + 1) + "月 " + hanNum(NOW.getDate()) + "日";
+const REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* ---------------- render ---------------- */
-function render(content, info) {
-  const now = new Date();
-  const maxim = (content.maxim && content.maxim.hanja) ? content.maxim
-    : MAXIMS[Math.floor(now.getTime() / 86400000) % MAXIMS.length];
-  const dateHan = ganji(now.getFullYear()) + "年 " + hanNum(now.getMonth() + 1) + "月 " + hanNum(now.getDate()) + "日";
-  const dateKo = now.getFullYear() + "년 " + (now.getMonth() + 1) + "월 " + now.getDate() + "일";
-  const paras = (list) => list.map(p => "<p>" + inline(p) + "</p>").join("");
+/* ======================================================================
+   도트 그림 — 궁궐 마당, 제갈량, 주공, 바람에 날리는 잎
+   ====================================================================== */
+const W = 320, H = 180;
+const buf = document.createElement("canvas"); buf.width = W; buf.height = H;
+const bx = buf.getContext("2d");
+const bg = document.createElement("canvas"); bg.width = W; bg.height = H;
+const g = bg.getContext("2d");
 
-  $("doc").innerHTML =
-    '<div class="title-han">上疏文</div>' +
-    '<div class="title-ko">제갈량 상소문 · ' + esc(content.title || "주공께 올리는 글") + '</div>' +
-    '<div class="meta"><span class="han">' + dateHan + '</span> · ' + dateKo + ' · <span class="han">臣 亮 謹上</span></div>' +
-    (info ? '<div class="note">' + esc(info) + '</div>' : '') +
-    '<div class="blank"></div>' +
-    '<h2 class="part">一. <small>' + esc(content.part1.heading || "클로드 코드를 부리는 법") + '</small></h2>' +
-    paras(content.part1.paragraphs) +
-    '<div class="blank"></div>' +
-    '<h2 class="part">二. <small>' + esc(content.part2.heading || "대업과 삶의 방향") + '</small></h2>' +
-    paras(content.part2.paragraphs) +
-    '<div class="blank"></div>' +
-    '<div class="maxim"><span class="label">今日一言</span> 오늘의 한 구절 — <span class="hanja">' + esc(maxim.hanja) + '</span>' +
-      (maxim.reading ? ' <span class="gloss">(' + esc(maxim.reading) + ')</span>' : '') +
-      '<br><span class="gloss">' + esc(maxim.meaning || "") + '</span></div>' +
-    '<div class="blank"></div>' +
-    '<div class="closing seal-wrap">' + dateHan + ' 臣 諸葛亮 頓首再拜 <span class="seal" aria-label="와룡지인 인장">臥龍之印</span></div>';
+let seed = 7;
+function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+function rect(c, x, y, w, h, col) { c.fillStyle = col; c.fillRect(x | 0, y | 0, w | 0, h | 0); }
+
+function drawTree(cx, cy, r) {
+  rect(g, cx - 2, cy + r - 4, 4, 9, "#5e3f22");
+  rect(g, cx - 1, cy + r - 4, 1, 9, "#7a5530");
+  for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
+    const d = x * x + y * y * 1.15;
+    if (d > r * r) continue;
+    let col = "#2e6a2e";
+    if (d > (r - 1.5) * (r - 1.5)) col = "#173f1c";
+    else if (x + y < -r * 0.6) col = "#56a14a";
+    else if (x + y < -r * 0.1) col = "#3f8538";
+    if (col !== "#173f1c" && rnd() < 0.08) col = "#6bb85a";
+    rect(g, cx + x, cy + y, 1, 1, col);
+  }
 }
+
+function drawBackground() {
+  seed = 7;
+  // 잔디
+  rect(g, 0, 0, W, H, "#4a8a3b");
+  for (let i = 0; i < 1400; i++) rect(g, rnd() * W, rnd() * H, 1, 1, rnd() < 0.5 ? "#3e7a32" : "#5b9e48");
+  for (let i = 0; i < 26; i++) {
+    const x = rnd() * W, y = rnd() * H;
+    if (x > 40 && x < 280 && y > 50) continue;
+    rect(g, x, y, 1, 1, ["#f2e36b", "#f59ab8", "#ffffff"][i % 3]);
+  }
+  // 박석 마당
+  rect(g, 40, 52, 240, 128, "#b8ae97");
+  for (let y = 52; y < H; y += 7) {
+    rect(g, 40, y, 240, 1, "#a1977f");
+    const off = ((y / 7) | 0) % 2 ? 0 : 6;
+    for (let x = 40 + off; x < 280; x += 12) rect(g, x, y, 1, 7, "#a1977f");
+  }
+  for (let i = 0; i < 500; i++) rect(g, 40 + rnd() * 240, 52 + rnd() * 128, 1, 1, rnd() < 0.5 ? "#c7bea8" : "#aaa089");
+  rect(g, 39, 52, 1, 128, "#7f7662"); rect(g, 280, 52, 1, 128, "#7f7662");
+  // 기단
+  rect(g, 64, 46, 192, 8, "#9e988a"); rect(g, 64, 46, 192, 1, "#cfcabc"); rect(g, 64, 53, 192, 1, "#6f6a5e");
+  for (let x = 64; x < 256; x += 16) rect(g, x, 47, 1, 6, "#85807a");
+  // 계단
+  for (let i = 0; i < 3; i++) { rect(g, 136 - i * 2, 54 + i * 3, 48 + i * 4, 3, i % 2 ? "#a7a192" : "#c6c0b1"); rect(g, 136 - i * 2, 56 + i * 3, 48 + i * 4, 1, "#7a7568"); }
+  // 벽과 기둥, 창살문
+  rect(g, 74, 30, 172, 16, "#e3d3a4");
+  for (let x = 74; x < 246; x += 3) rect(g, x, 30, 1, 16, "#b89a60");
+  for (let y = 30; y < 46; y += 3) rect(g, 74, y, 172, 1, "#b89a60");
+  for (let x = 74; x <= 242; x += 28) { rect(g, x, 29, 4, 17, "#b2362b"); rect(g, x, 29, 1, 17, "#d65a47"); rect(g, x + 3, 29, 1, 17, "#7d2119"); }
+  // 현판
+  rect(g, 146, 31, 28, 7, "#3a2412"); rect(g, 147, 32, 26, 5, "#5a3a1c"); rect(g, 146, 31, 28, 1, "#d8b45a"); rect(g, 146, 37, 28, 1, "#d8b45a");
+  for (let x = 150; x < 172; x += 6) rect(g, x, 33, 3, 3, "#e8c86a");
+  // 단청
+  rect(g, 70, 26, 180, 4, "#2f8f6f");
+  for (let x = 72; x < 250; x += 6) { rect(g, x, 27, 2, 2, "#d8412f"); rect(g, x + 3, 27, 1, 1, "#f1ead2"); }
+  rect(g, 70, 29, 180, 1, "#1d5a47");
+  // 기와 지붕
+  for (let y = 6; y < 26; y++) {
+    const spread = (y - 6) * 1.55;
+    const x0 = Math.round(98 - spread), x1 = Math.round(222 + spread);
+    for (let x = x0; x < x1; x++) {
+      let col = (x % 4 === 0) ? "#2f3542" : "#4a5264";
+      if ((y - 6) % 5 === 4) col = "#353b49";
+      rect(g, x, y, 1, 1, col);
+    }
+  }
+  rect(g, 66, 25, 188, 2, "#232833");
+  // 처마 끝 올림
+  for (let i = 0; i < 6; i++) { rect(g, 62 + i, 24 - (5 - i), 3, 2, "#232833"); rect(g, 255 - i, 24 - (5 - i), 3, 2, "#232833"); }
+  // 용마루
+  rect(g, 96, 3, 128, 4, "#2a2f3a"); rect(g, 96, 3, 128, 1, "#5d667a");
+  rect(g, 90, 0, 7, 6, "#2a2f3a"); rect(g, 223, 0, 7, 6, "#2a2f3a");
+  // 석등
+  [118, 196].forEach(x => {
+    rect(g, x, 58, 6, 2, "#8d887c"); rect(g, x + 1, 60, 4, 6, "#a8a396"); rect(g, x + 2, 61, 2, 3, "#ffd46a");
+    rect(g, x - 1, 66, 8, 2, "#8d887c"); rect(g, x + 2, 68, 2, 5, "#9a9588"); rect(g, x, 73, 6, 2, "#7d786c");
+  });
+  // 나무
+  [[20, 16, 13], [300, 18, 13], [52, 4, 9], [268, 4, 9], [16, 70, 12], [304, 78, 12], [22, 128, 13], [298, 136, 13], [14, 172, 10], [306, 176, 10]]
+    .forEach(([x, y, r]) => drawTree(x, y, r));
+}
+
+const PAL = { k: "#15110d", h: "#2c2c3c", j: "#6fd0ae", s: "#f1c69c", e: "#1a1410", m: "#3b2a1e", w: "#f5f1e6", g: "#c8c1b0", b: "#3c62b0",
+  o: "#cfc8b4", f: "#fffbea", F: "#8a5a2b", H: "#211b17", c: "#8b6a44", C: "#6e5234", B: "#3a2a1a", P: "#55473a", K: "#2a2018", y: "#ffd866" };
+const ZHUGE = [
+  "......kkkk......", ".....khhhhk.....", "....khhhhhhk....", "....khhjjhhk....", "...kkkkkkkkkk...",
+  "....kssssssk....", "....ksessesk....", "....kssssssk....", "....ksmmmmsk....", ".....kmmmmk.....",
+  "....kwwmmwwk....", "...kwwwbbwwwk...", "..kwwwwbbwwwwk..", "..kwgwwbbwwgwk..", "..ksgwwbbwwgsk..",
+  "..kkgwwbbwwgkk..", "...kgwwbbwwgk...", "...kgwwbbwwgk...", "...kgwwbbwwgk...", "...kbbbbbbbbk...",
+  "...kwwwwwwwwk...", "....kkkkkkkk....", "....kkk..kkk....", "................"];
+const FAN = [".ooo..", "offfo.", "offffo", "offffo", ".offo.", "..oo..", "..F...", "..F..."];
+const LORD = [
+  ".......kk.......", "......kHHk......", ".....kkHHkk.....", "....kHHHHHHk....", "....kHHHHHHk....",
+  "....kHHHHHHk....", "....kHHHHHHk....", ".....kHHHHk.....", "....kksssskk....", "...kcccccccck...",
+  "..kccccccccccck.", "..kcCccccccCck..", "..kcCccccccCck..", "..kkBBBBBBBBkk..", "..ksCccccccCsk..",
+  "...kCccccccCk...", "...kcccccccck...", "...kPPPPPPPPk...", "...kPPPkkPPPk...", "...kPPPkkPPPk...",
+  "...kPPPkkPPPk...", "...kKKKkkKKKk...", "................", "................"];
+const FACE = [
+  "..........kkkkkkkkkkkk..........", ".........khhhhhhhhhhhhk.........", "........khhhhhhhhhhhhhhk........",
+  "........khhhhhjjjjhhhhhk........", "........khhhhhjjjjhhhhhk........", "........khhhhhhhhhhhhhhk........",
+  ".......kkkkkkkkkkkkkkkkkk.......", "........ksssssssssssssssk.......", "........ksssssssssssssssk.......",
+  "........ksskkksssskkksssk.......", "........ksssekssssseksssk.......", "........ksssssssssssssssk.......",
+  "........kssssssskssssssk........", "........ksssssssssssssssk.......", "........ksssmmssssmmssssk.......",
+  "........kssmmmmmmmmmmsssk.......", ".........ksmmmmmmmmmmssk........", ".........kmmmmmmmmmmmmk.........",
+  "..........kmmmmmmmmmmk..........", "...........kmmmmmmmmk......ooo..", "........kkkkwmmmmmmwkkk...offfo.",
+  ".......kwwwwwwmmmmwwwwwk.offfffo", "......kwwwwwwwbbbbwwwwwwkofffffo", ".....kwwwwwwwwbbbbwwwwwwkofffffo",
+  ".....kwwgwwwwwbbbbwwwwwgkkoffffo", ".....kwwgwwwwwbbbbwwwwwgskkoffo.", ".....kwwgwwwwwbbbbwwwwwgsk..FF..",
+  ".....kwwgwwwwwbbbbwwwwwgwk..F...", ".....kwwgwwwwwbbbbwwwwwgwk..F...", ".....kwwgwwwwwbbbbwwwwwgwk......",
+  ".....kwwgwwwwwbbbbwwwwwgwk......", ".....kkkkkkkkkkkkkkkkkkkkk......"];
+function sprite(c, rows, x, y) {
+  for (let r = 0; r < rows.length; r++) for (let i = 0; i < rows[r].length; i++) {
+    const ch = rows[r][i]; if (ch !== ".") rect(c, x + i, y + r, 1, 1, PAL[ch]);
+  }
+}
+
+const leaves = Array.from({ length: 28 }, (_, i) => ({
+  x: Math.random() * W, y: Math.random() * H, v: 0.6 + Math.random() * 0.9, p: Math.random() * 6.3,
+  col: ["#6bb85a", "#9ad06b", "#f5a8c0", "#e9e3c8"][i % 4], big: i % 3 === 0 }));
+
+const scene = $("scene"), sc = scene.getContext("2d");
+let frame = 0, view = { s: 1, ox: 0, oy: 0 };
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  scene.width = Math.round(innerWidth * dpr); scene.height = Math.round(innerHeight * dpr);
+  const s = Math.max(scene.width / W, scene.height / H);
+  view = { s, ox: (scene.width - W * s) / 2, oy: Math.min(0, (scene.height - H * s) * 0.2), dpr };
+  paint();
+}
+function nameTag(text, x, y, color, sub) {
+  const { s, ox, oy, dpr } = view;
+  const px = ox + x * s, py = oy + y * s;
+  sc.font = (12 * dpr) + "px Galmuri11B, sans-serif"; sc.textAlign = "center"; sc.textBaseline = "top";
+  const draw = (t, yy, col) => {
+    sc.fillStyle = "#000";
+    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) sc.fillText(t, px + dx * dpr, yy + dy * dpr);
+    sc.fillStyle = col; sc.fillText(t, px, yy);
+  };
+  if (sub) draw(sub, py, "#ffd866");
+  draw(text, py + (sub ? 16 * dpr : 0), color);
+}
+function paint() {
+  const bob = REDUCED ? 0 : (frame % 2);
+  bx.drawImage(bg, 0, 0);
+  // 그림자
+  bx.fillStyle = "rgba(0,0,0,0.25)"; bx.fillRect(146, 90, 14, 3); bx.fillRect(178, 106, 14, 3);
+  sprite(bx, ZHUGE, 144, 68 - bob);
+  sprite(bx, FAN, 155 + (REDUCED ? 0 : (frame % 4 < 2 ? 0 : 1)), 77 - bob);
+  sprite(bx, LORD, 177, 84);
+  // 퀘스트 느낌표
+  if (!REDUCED) { const t = frame % 6 < 3 ? 0 : 1; rect(bx, 151, 58 - t, 2, 5, "#ffd866"); rect(bx, 151, 64 - t, 2, 2, "#ffd866"); }
+  // 바람
+  for (const l of leaves) {
+    rect(bx, l.x, l.y, l.big ? 2 : 1, 1, l.col);
+    if (!REDUCED) { l.x += l.v; l.y += Math.sin(l.p + frame * 0.25) * 0.6 + 0.25; if (l.x > W + 2) { l.x = -2; l.y = Math.random() * H; } if (l.y > H) l.y = 0; }
+  }
+  sc.imageSmoothingEnabled = false;
+  sc.drawImage(buf, view.ox, view.oy, W * view.s, H * view.s);
+  nameTag("제갈량", 152, 93, "#b4f07a", "[촉한 승상]");
+  nameTag("주공", 185, 109, "#ffffff");
+}
+drawBackground();
+(function drawFace() {
+  const f = $("face").getContext("2d");
+  f.fillStyle = "#35523a"; f.fillRect(0, 0, 32, 32);
+  for (let y = 0; y < 32; y += 4) for (let x = (y / 4) % 2 ? 2 : 0; x < 32; x += 4) { f.fillStyle = "#3d5d42"; f.fillRect(x, y, 2, 2); }
+  sprite(f, FACE, 0, 0);
+})();
+resize();
+addEventListener("resize", resize);
+if (!REDUCED) setInterval(() => { frame++; paint(); }, 160);
+document.fonts && document.fonts.ready.then(paint);
+
+/* ======================================================================
+   상소 넘기기 (게임 대화창)
+   ====================================================================== */
+let pages = [], sections = [], cur = 0, typing = null, content = DEFAULT_CONTENT, readMax = 0;
+
+function segments(p) {
+  const out = []; const re = /\*\*(.+?)\*\*|`([^`]+)`/g; let last = 0, m;
+  while ((m = re.exec(p))) {
+    if (m.index > last) out.push({ t: p.slice(last, m.index), tag: "" });
+    out.push({ t: m[1] || m[2], tag: m[1] ? "strong" : "code" });
+    last = re.lastIndex;
+  }
+  if (last < p.length) out.push({ t: p.slice(last), tag: "" });
+  return out;
+}
+function segHTML(segs, n) {
+  let html = "", left = n;
+  for (const s of segs) {
+    if (left <= 0) break;
+    const t = esc(s.t.slice(0, left)); left -= s.t.length;
+    html += s.tag ? "<" + s.tag + ">" + t + "</" + s.tag + ">" : t;
+  }
+  return html;
+}
+
+function buildPages(c) {
+  const maxim = (c.maxim && c.maxim.hanja) ? c.maxim : MAXIMS[Math.floor(NOW.getTime() / 86400000) % MAXIMS.length];
+  pages = []; sections = [];
+  const add = (sec, key, text, extra) => pages.push({ sec, key, segs: segments(text), extra });
+  sections.push({ key: "open", label: "序. 알현", start: 0 });
+  add("序. 알현", "open", "주공, 신 제갈량이 오늘의 상소를 올리옵니다. 제목은 「" + (c.title || "주공께 올리는 글") + "」이옵니다. 모두 두 편이오니, 대화창을 누르시거나 Space를 누르시어 한 장씩 넘겨 보시옵소서.");
+  sections.push({ key: "p1", label: "一. " + (c.part1.heading || "클로드 코드를 부리는 법"), start: pages.length });
+  c.part1.paragraphs.forEach(p => add("一. " + (c.part1.heading || ""), "p1", p));
+  sections.push({ key: "p2", label: "二. " + (c.part2.heading || "대업과 삶의 방향"), start: pages.length });
+  c.part2.paragraphs.forEach(p => add("二. " + (c.part2.heading || ""), "p2", p));
+  sections.push({ key: "mx", label: "今日一言", start: pages.length });
+  add("今日一言 · 오늘의 한 구절", "mx", (maxim.reading ? "(" + maxim.reading + ") " : "") + (maxim.meaning || ""), { hanja: maxim.hanja });
+  add("結. 맺음", "mx", DATE_HAN + " 臣 諸葛亮 頓首再拜", { seal: true });
+  sections.forEach((s, i) => s.end = (i + 1 < sections.length ? sections[i + 1].start : pages.length));
+  buildBook(c, maxim);
+}
+
+function buildBook(c, maxim) {
+  const ps = list => list.map(p => "<p>" + inline(p) + "</p>").join("");
+  $("bookTitle").textContent = "상소문 전체 — " + (c.title || "");
+  $("bookBody").innerHTML =
+    '<div class="meta">' + DATE_HAN + ' · ' + NOW.getFullYear() + '년 ' + (NOW.getMonth() + 1) + '월 ' + NOW.getDate() + '일 · 臣 亮 謹上</div>' +
+    '<h1>上疏文 · ' + esc(c.title || "") + '</h1>' +
+    '<h2>一. ' + esc(c.part1.heading || "") + '</h2>' + ps(c.part1.paragraphs) +
+    '<h2>二. ' + esc(c.part2.heading || "") + '</h2>' + ps(c.part2.paragraphs) +
+    '<h2>今日一言</h2><p style="font-size:24px;line-height:36px;color:var(--gold)">' + esc(maxim.hanja) + '</p><p>' + esc((maxim.reading ? "(" + maxim.reading + ") " : "") + (maxim.meaning || "")) + '</p>' +
+    '<p style="text-align:right;margin-top:24px">' + DATE_HAN + ' 臣 諸葛亮 頓首再拜 <span class="seal"><span>臥</span><span>龍</span><span>之</span><span>印</span></span></p>';
+}
+
+function renderQuest() {
+  $("questList").innerHTML = sections.map((s, i) => {
+    const total = s.end - s.start, read = Math.max(0, Math.min(total, readMax + 1 - s.start));
+    const on = cur >= s.start && cur < s.end;
+    return '<li data-i="' + i + '" class="' + (on ? "on " : "") + (read >= total ? "done" : "") + '"><span>' + (on ? "▶" : "·") + '</span><span class="lab">' + esc(s.label) + '</span><span class="cnt">' + (read >= total ? "완료" : read + "/" + total) + '</span></li>';
+  }).join("");
+  const pct = Math.round((readMax + 1) / pages.length * 100);
+  $("xpFill").style.width = pct + "%"; $("xpPct").textContent = pct + "%";
+}
+
+function show(i, instant) {
+  cur = Math.max(0, Math.min(pages.length - 1, i));
+  const was = readMax;
+  readMax = Math.max(readMax, cur);
+  store.set("sangsomun-page", JSON.stringify({ date: TODAY, key: contentKey, cur, readMax }));
+  const pg = pages[cur];
+  $("sec").textContent = pg.sec;
+  $("pg").textContent = (cur + 1) + " / " + pages.length;
+  $("btnPrev").disabled = cur === 0;
+  $("btnNext").disabled = cur === pages.length - 1;
+  renderQuest();
+  if (was < pages.length - 1 && readMax === pages.length - 1) chat("c-sys", "[시스템] 오늘의 상소를 모두 읽으셨습니다. 경험치 +100, 지혜 +1");
+  clearInterval(typing); typing = null;
+  const total = pg.segs.reduce((a, s) => a + s.t.length, 0);
+  const head = pg.extra && pg.extra.hanja ? '<span class="hanja">' + esc(pg.extra.hanja) + '</span>' : "";
+  const tail = () => pg.extra && pg.extra.seal ? '<span class="seal stamp"><span>臥</span><span>龍</span><span>之</span><span>印</span></span>' : "";
+  const box = $("text"); box.scrollTop = 0;
+  if (instant || REDUCED) { box.innerHTML = head + segHTML(pg.segs, total) + tail(); $("more").classList.toggle("hide", cur === pages.length - 1); return; }
+  let n = 0; $("more").classList.add("hide");
+  typing = setInterval(() => {
+    n += 3;
+    box.innerHTML = head + segHTML(pg.segs, n);
+    box.scrollTop = box.scrollHeight;
+    if (n >= total) { clearInterval(typing); typing = null; box.innerHTML = head + segHTML(pg.segs, total) + tail(); box.scrollTop = 0; $("more").classList.toggle("hide", cur === pages.length - 1); }
+  }, 30);
+}
+function next() { if (typing) { show(cur, true); return; } if (cur < pages.length - 1) show(cur + 1); }
+function prev() { if (cur > 0) show(cur - 1, true); }
+
+function chat(cls, msg) {
+  const d = document.createElement("div"); d.className = cls; d.textContent = msg; d.title = msg;
+  const box = $("chat"); box.appendChild(d);
+  while (box.children.length > 6) box.removeChild(box.firstChild);
+}
+
+$("text").addEventListener("click", next);
+$("btnNext").onclick = next;
+$("btnPrev").onclick = prev;
+$("btnAll").onclick = () => { $("book").classList.add("open"); $("btnClose").focus(); };
+$("btnClose").onclick = () => $("book").classList.remove("open");
+$("book").addEventListener("click", e => { if (e.target.id === "book") $("book").classList.remove("open"); });
+$("questList").addEventListener("click", e => { const li = e.target.closest("li"); if (li) show(sections[+li.dataset.i].start); });
+addEventListener("keydown", e => {
+  const bookOpen = $("book").classList.contains("open");
+  if (e.key === "Escape") { $("book").classList.remove("open"); return; }
+  if (bookOpen || e.target.tagName === "BUTTON" && (e.key === "Enter" || e.key === " ")) return;
+  if (e.key === " " || e.key === "Enter" || e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); next(); }
+  else if (e.key === "ArrowLeft" || e.key === "Backspace" || e.key === "PageUp") { e.preventDefault(); prev(); }
+  else if (e.key === "a" || e.key === "A" || e.key === "ㅁ") $("btnAll").click();
+});
 
 /* ---------------- data loading ---------------- */
 function loadScript(src) {
@@ -287,85 +574,51 @@ function loadScript(src) {
   });
 }
 
-let pollCount = 0;
-let shownKey = "";
+let contentKey = "", pollCount = 0, writingShown = false;
+function useContent(c, key) {
+  content = c; contentKey = key; buildPages(c);
+  let saved = null; try { saved = JSON.parse(store.get("sangsomun-page") || "null"); } catch (e) {}
+  if (saved && saved.date === TODAY && saved.key === key) { readMax = Math.min(saved.readMax || 0, pages.length - 1); show(saved.cur || 0, true); }
+  else { readMax = 0; show(0); }
+}
+
 async function refresh() {
-  window.SANGSOMUN_TODAY = null;
-  window.SANGSOMUN_STATUS = null;
+  window.SANGSOMUN_TODAY = null; window.SANGSOMUN_STATUS = null;
   await loadScript("data/today.js");
   await loadScript("data/status.js");
-  const today = ymd(new Date());
-  const saved = window.SANGSOMUN_TODAY;
-  const status = window.SANGSOMUN_STATUS;
-  const writing = status && status.state === "writing" && status.date === today;
-
-  let content = DEFAULT_CONTENT, info = "", key = "default";
-  if (saved && valid(saved.content)) {
-    content = saved.content;
-    key = saved.date;
-    if (saved.date !== today) info = "※ " + saved.date + "에 올린 상소이옵니다.";
-  } else {
-    info = "※ 기본 상소이옵니다. 클로드 코드가 설치되어 있으면 매일 주공의 대화를 살펴 새 상소를 올리옵니다.";
+  const saved = window.SANGSOMUN_TODAY, status = window.SANGSOMUN_STATUS;
+  const writing = status && status.state === "writing" && status.date === TODAY;
+  let c = DEFAULT_CONTENT, key = "default", info = "";
+  if (saved && valid(saved.content)) { c = saved.content; key = saved.date + ":" + (saved.content.title || ""); if (saved.date !== TODAY) info = saved.date + "에 올린 상소입니다."; }
+  else info = "기본 상소입니다. 클로드 코드가 설치되어 있으면 매일 새 상소가 올라옵니다.";
+  if (key !== contentKey) {
+    const first = contentKey === "";
+    useContent(c, key);
+    if (!first) chat("c-notice", "[공지] 제갈량의 오늘 상소가 도착했습니다!");
+    if (info) chat("c-sys", "[시스템] " + info);
   }
-  if (status && status.state === "failed" && status.date === today) {
-    const why = {
-      "claude-not-found": "이 컴퓨터에서 클로드 코드(claude)를 찾지 못하였사옵니다",
-      "claude-error": "클로드 코드가 응답하지 않았사옵니다. 로그인 상태를 살펴 주시옵소서",
-      "bad-output": "받은 글의 모양이 어긋났사옵니다. 내일 다시 올리겠사옵니다"
-    }[status.reason] || "원인 미상";
-    info += " (오늘의 새 상소 작성 실패: " + why + ")";
+  if (status && status.state === "failed" && status.date === TODAY && pollCount === 0) {
+    chat("c-sys", "[시스템] 오늘의 새 상소 작성 실패: " + ({
+      "claude-not-found": "클로드 코드(claude)를 찾지 못했습니다",
+      "claude-error": "클로드 코드가 응답하지 않았습니다",
+      "bad-output": "상소 파일을 받지 못했습니다" }[status.reason] || "원인 미상"));
   }
-  if (key + info !== shownKey) { render(content, info); shownKey = key + info; }
-
-  const bar = $("status");
   if (writing && pollCount < 180) {
-    bar.innerHTML = '신이 주공의 지난 대화를 살피며 오늘의 상소를 붓으로 쓰는 중이옵니다<span class="dots"></span>';
-    bar.classList.add("show");
-    pollCount++;
-    setTimeout(refresh, 5000);
-  } else if (saved && saved.date === today && pollCount > 0) {
-    bar.textContent = "오늘의 상소가 도착하였사옵니다.";
-    bar.classList.add("show");
-    setTimeout(() => bar.classList.remove("show"), 4000);
-    pollCount = 0;
-  } else {
-    bar.classList.remove("show");
+    if (!writingShown) { chat("c-whisper", "[귓속말] 제갈량: 주공, 오늘의 상소를 붓으로 쓰는 중이옵니다. 잠시만 기다려 주시옵소서…"); writingShown = true; }
+    pollCount++; setTimeout(refresh, 5000);
   }
 }
 
-/* ---------------- controls ---------------- */
-function setMode(mode) {
-  const scroll = $("scroll");
-  scroll.classList.toggle("v", mode === "v");
-  scroll.classList.toggle("h", mode === "h");
-  $("btnMode").textContent = mode === "v" ? "가로로 읽기" : "세로로 읽기";
-  store.set("sangsomun-mode", mode);
-  $("doc").scrollTo(0, 0);
-}
-function setSize(px) {
-  px = Math.max(14, Math.min(28, px));
-  document.documentElement.style.setProperty("--fs", px + "px");
-  document.documentElement.style.setProperty("--lh", Math.round(px * 2.3) + "px");
-  store.set("sangsomun-fs", String(px));
-}
-$("btnMode").onclick = () => setMode($("scroll").classList.contains("v") ? "h" : "v");
-$("btnBigger").onclick = () => setSize(parseInt(getComputedStyle(document.documentElement).getPropertyValue("--fs")) + 1);
-$("btnSmaller").onclick = () => setSize(parseInt(getComputedStyle(document.documentElement).getPropertyValue("--fs")) - 1);
-
-// 세로쓰기일 때 마우스 휠을 아래로 굴리면 글을 따라 왼쪽으로 펼쳐지도록
-$("doc").addEventListener("wheel", (e) => {
-  if (!$("scroll").classList.contains("v") || e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-  e.preventDefault();
-  $("doc").scrollLeft -= e.deltaY;
-}, { passive: false });
-
-const savedMode = store.get("sangsomun-mode");
-setMode(savedMode === "h" || (!savedMode && window.innerWidth < 640) ? "h" : "v");
-const savedFs = parseInt(store.get("sangsomun-fs"), 10);
-if (savedFs) setSize(savedFs);
-render(DEFAULT_CONTENT, "");
+// 알현 일수
+(function days() {
+  let list = []; try { list = JSON.parse(store.get("sangsomun-days") || "[]"); } catch (e) {}
+  if (!list.includes(TODAY)) { list.push(TODAY); store.set("sangsomun-days", JSON.stringify(list.slice(-2000))); }
+  $("days").textContent = list.length + "일째";
+})();
+$("dateHan").textContent = DATE_HAN;
+chat("c-notice", "[공지] " + DATE_HAN + ", 제갈량이 주공께 상소를 올렸습니다.");
+chat("c-guide", "[안내] 대화창 클릭·Space: 다음 / ←: 이전 / A: 전체 읽기");
 refresh();
-$("doc").focus();
 </script>
 </body>
 </html>
