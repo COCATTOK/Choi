@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>스포츠 한입 쇼츠 편집기</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>스포츠 한입 <span>쇼츠 편집기</span></h1>
+    <div class="topbar-actions">
+      <select id="templateSelect" aria-label="템플릿"></select>
+      <button id="applyTemplate">템플릿 적용</button>
+      <button id="saveProject" class="ghost">프로젝트 저장</button>
+      <label class="ghost button-like">불러오기<input id="loadProject" type="file" accept="application/json" hidden></label>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <h2>장면 순서</h2>
+      <ol id="sceneList" class="scene-list"></ol>
+      <div class="add-row">
+        <select id="addType" aria-label="추가할 장면 종류"></select>
+        <button id="addScene">+ 장면 추가</button>
+      </div>
+      <p class="hint">자막에서 <b>[대괄호]</b>로 감싼 글자는 강조색으로 표시됩니다.</p>
+    </section>
+
+    <section class="panel">
+      <h2>장면 편집</h2>
+      <div id="sceneForm" class="form"></div>
+
+      <h2>채널 설정</h2>
+      <div class="form">
+        <label>채널 이름<input id="setChannel" type="text"></label>
+        <label>강조색<input id="setAccent" type="color"></label>
+        <label class="check"><input id="setWatermark" type="checkbox"> 상단 채널 워터마크</label>
+        <label class="check"><input id="setProgress" type="checkbox"> 상단 진행 바</label>
+        <label>배경음악 (BGM)<input id="bgmFile" type="file" accept="audio/*"></label>
+        <label>BGM 볼륨 <input id="bgmVolume" type="range" min="0" max="1" step="0.05"></label>
+        <label>내레이션 (녹음 파일)<input id="narrationFile" type="file" accept="audio/*"></label>
+        <label>내레이션 볼륨 <input id="narrationVolume" type="range" min="0" max="1.5" step="0.05"></label>
+      </div>
+
+      <h2>업로드 문구</h2>
+      <div class="form">
+        <label>제목<input id="setTitle" type="text" placeholder="예: 9회말 끝내기! LG 3연승"></label>
+        <label>해시태그<input id="setTags" type="text" placeholder="#KBO #LG트윈스 #스포츠한입"></label>
+        <button id="copyCaption" class="ghost">제목 + 해시태그 복사</button>
+      </div>
+    </section>
+
+    <section class="panel preview-panel">
+      <div class="stage">
+        <canvas id="canvas" width="1080" height="1920"></canvas>
+        <div id="safeZone" class="safe-zone" aria-hidden="true">
+          <div class="sz-top">상단 UI</div>
+          <div class="sz-right">버튼</div>
+          <div class="sz-bottom">제목 · 설명 영역</div>
+        </div>
+      </div>
+      <div class="controls">
+        <button id="playBtn" class="round" aria-label="재생">▶</button>
+        <input id="seek" type="range" min="0" max="1" step="0.01" value="0" aria-label="재생 위치">
+        <span id="timeLabel" class="time">0.0 / 0.0초</span>
+      </div>
+      <label class="check"><input id="safeToggle" type="checkbox" checked> 가림 영역 표시 (영상에는 안 들어감)</label>
+      <button id="exportBtn" class="primary">영상 내보내기</button>
+      <p id="exportStatus" class="hint"></p>
+    </section>
+  </main>
+
+  <div id="exportOverlay" class="overlay" hidden>
+    <div class="overlay-box">
+      <p><b>영상을 만드는 중입니다</b></p>
+      <p id="exportProgress">0%</p>
+      <p class="hint">실제 길이만큼 재생하며 녹화합니다. 이 탭을 벗어나지 마세요.</p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
