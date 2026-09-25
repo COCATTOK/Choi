@@ -114,7 +114,7 @@
   };
 
   // ---------- 저장소 ----------
-  const blank = () => ({ v: 2, profile: { name: '', identity: '', onboarded: false }, habits: [], checks: {}, moods: {}, dots: [], badges: {} });
+  const blank = () => ({ v: 2, profile: { name: '', identity: '', onboarded: false }, habits: [], checks: {}, moods: {}, dots: [], badges: {}, freezes: 0, frozen: [], freezeLog: [], athDay: '', welcomeDay: '' });
   let S = load();
   let justAdded = null;
   let selDay = today();
@@ -190,8 +190,10 @@
   const activeDays = () => {
     const set = new Set(S.dots.map((d) => d.date));
     for (const d in S.checks) if (S.checks[d].length) set.add(d);
+    for (const d of S.frozen || []) set.add(d); // 보호권으로 지킨 날
     return set;
   };
+  const didSomething = (d) => (S.checks[d] || []).length > 0 || S.dots.some((x) => x.date === d);
   function streak() {
     const days = activeDays();
     let d = today();
@@ -270,7 +272,8 @@
     let v = INDEX_BASE;
     for (let d = first; d <= today(); d = shift(d, 1)) {
       const g = xpByDay[d] || 0;
-      if (d !== first) v = g ? v + g : INDEX_BASE + (v - INDEX_BASE) * (1 - INDEX_DECAY);
+      // 오늘은 아직 끝나지 않았으니 기록이 없어도 내리지 않습니다 (전망으로만 경고)
+      if (d !== first) v = g ? v + g : d === today() ? v : INDEX_BASE + (v - INDEX_BASE) * (1 - INDEX_DECAY);
       out.push({ d, v, g });
     }
     return out;
@@ -321,18 +324,18 @@
     sky: '<path d="M5 17 L9 9 L15 12 L19 5"/><circle class="f" cx="5" cy="17" r="1.8"/><circle class="f" cx="9" cy="9" r="1.8"/><circle class="f" cx="15" cy="12" r="1.8"/><circle class="f" cx="19" cy="5" r="1.8"/>',
   };
   const BADGES = [
-    { id: 'first_dot', icon: G.dot, name: '첫 점', desc: '처음으로 오늘의 점을 찍었습니다.', test: () => S.dots.length >= 1 },
-    { id: 'first_link', icon: G.link, name: '첫 연결', desc: '처음으로 과거의 점과 선을 이었습니다.', test: () => edges().length >= 1 },
-    { id: 'first_check', icon: G.check, name: '첫 표', desc: '처음으로 습관을 체크했습니다.', test: () => totalChecks() >= 1 },
-    { id: 'perfect', icon: G.perfect, name: '완벽한 하루', desc: '하루의 습관을 모두 해냈습니다.', test: () => perfectDays() >= 1 },
-    { id: 'streak3', icon: G.s3, name: '3일', desc: '3일 연속으로 기록했습니다.', test: () => bestStreak() >= 3 },
-    { id: 'streak7', icon: G.s7, name: '7일', desc: '7일 연속으로 기록했습니다.', test: () => bestStreak() >= 7 },
-    { id: 'streak30', icon: G.s30, name: '30일', desc: '30일 연속으로 기록했습니다.', test: () => bestStreak() >= 30 },
-    { id: 'votes100', icon: G.votes, name: '100표', desc: '되고 싶은 나에게 100표를 던졌습니다.', test: () => totalChecks() >= 100 },
-    { id: 'dots10', icon: G.dots10, name: '점 10개', desc: '오늘의 점을 10개 찍었습니다.', test: () => S.dots.length >= 10 },
-    { id: 'hub', icon: G.hub, name: '허브', desc: '한 점에서 선이 다섯 개 이상 뻗어나갔습니다.', test: () => Object.values(degreeMap()).some((n) => n >= 5) },
-    { id: 'mood7', icon: G.mood, name: '마음', desc: '기분을 7일 기록했습니다.', test: () => Object.keys(S.moods).length >= 7 },
-    { id: 'constellation', icon: G.sky, name: '별자리', desc: '레벨 “별자리”에 도달했습니다.', test: () => level().i >= 5 },
+    { id: 'first_dot', prog: () => [S.dots.length, 1], icon: G.dot, name: '첫 점', desc: '처음으로 오늘의 점을 찍었습니다.', test: () => S.dots.length >= 1 },
+    { id: 'first_link', prog: () => [edges().length, 1], icon: G.link, name: '첫 연결', desc: '처음으로 과거의 점과 선을 이었습니다.', test: () => edges().length >= 1 },
+    { id: 'first_check', prog: () => [totalChecks(), 1], icon: G.check, name: '첫 표', desc: '처음으로 습관을 체크했습니다.', test: () => totalChecks() >= 1 },
+    { id: 'perfect', prog: () => [dayProgress(today()).done, Math.max(1, dayProgress(today()).total)], icon: G.perfect, name: '완벽한 하루', desc: '하루의 습관을 모두 해냈습니다.', test: () => perfectDays() >= 1 },
+    { id: 'streak3', prog: () => [streak(), 3], icon: G.s3, name: '3일', desc: '3일 연속으로 기록했습니다.', test: () => bestStreak() >= 3 },
+    { id: 'streak7', prog: () => [streak(), 7], icon: G.s7, name: '7일', desc: '7일 연속으로 기록했습니다.', test: () => bestStreak() >= 7 },
+    { id: 'streak30', prog: () => [streak(), 30], icon: G.s30, name: '30일', desc: '30일 연속으로 기록했습니다.', test: () => bestStreak() >= 30 },
+    { id: 'votes100', prog: () => [totalChecks(), 100], icon: G.votes, name: '100표', desc: '되고 싶은 나에게 100표를 던졌습니다.', test: () => totalChecks() >= 100 },
+    { id: 'dots10', prog: () => [S.dots.length, 10], icon: G.dots10, name: '점 10개', desc: '오늘의 점을 10개 찍었습니다.', test: () => S.dots.length >= 10 },
+    { id: 'hub', prog: () => [Math.max(0, ...Object.values(degreeMap())), 5], icon: G.hub, name: '허브', desc: '한 점에서 선이 다섯 개 이상 뻗어나갔습니다.', test: () => Object.values(degreeMap()).some((n) => n >= 5) },
+    { id: 'mood7', prog: () => [Object.keys(S.moods).length, 7], icon: G.mood, name: '마음', desc: '기분을 7일 기록했습니다.', test: () => Object.keys(S.moods).length >= 7 },
+    { id: 'constellation', prog: () => [xp(), LEVELS[5].xp], icon: G.sky, name: '별자리', desc: '레벨 “별자리”에 도달했습니다.', test: () => level().i >= 5 },
   ];
   // 새로 얻은 배지가 있으면 축하
   function checkBadges(celebrate = true) {
@@ -361,6 +364,125 @@
       }, 300);
     }
     lastLevel = lv;
+  }
+
+  // =========================================================
+  // 동기부여: 보호권 · 신고가 · 다음 목표 · 전망 · 복귀 환영
+  // =========================================================
+  const FREEZE_MAX = 2;
+  // 7일 연속마다 보호권 1개 (최대 2개)
+  function checkStreakReward() {
+    const st = streak();
+    if (st > 0 && st % 7 === 0 && didSomething(today()) && !S.freezeLog.includes(today()) && S.freezes < FREEZE_MAX) {
+      S.freezes++;
+      S.freezeLog.push(today());
+      save();
+      toast(`${st}일 연속 · 보호권을 받았습니다`);
+      haptic([10, 40, 10]);
+    }
+  }
+  // 어제 기록을 놓쳤다면 보호권이 자동으로 연속 기록을 지켜줍니다
+  function applyFreezes() {
+    if (!S.freezes) return;
+    const act = activeDays();
+    const missed = [];
+    let d = shift(today(), -1);
+    while (!act.has(d) && missed.length <= S.freezes) {
+      missed.push(d);
+      d = shift(d, -1);
+    }
+    if (missed.length && missed.length <= S.freezes && act.has(d)) {
+      S.frozen.push(...missed);
+      S.freezes -= missed.length;
+      save();
+      toast(`보호권이 ${missed.length}일의 연속 기록을 지켰습니다`);
+    }
+  }
+  // 역대 최고(신고가) 경신: 하루 한 번 축하
+  function checkATH() {
+    const ser = indexSeries();
+    if (ser.length < 2) return;
+    const last = ser[ser.length - 1];
+    const prevMax = Math.max(...ser.slice(0, -1).map((p) => p.v));
+    if (last.g > 0 && last.v > prevMax + 0.001 && S.athDay !== today()) {
+      S.athDay = today();
+      save();
+      toast(`신고가 · ${fmtIdx(last.v)}`);
+      haptic([8, 30, 8]);
+    }
+  }
+  // 목표에 가장 가까운 배지
+  function nextGoal() {
+    let best = null;
+    for (const b of BADGES) {
+      if (S.badges[b.id]) continue;
+      const [cur, target] = b.prog();
+      if (cur >= target) continue; // 곧 받게 될 배지는 건너뛰기
+      const r = cur / target;
+      if (!best || r > best.r) best = { b, cur: Math.min(cur, target), target, r };
+    }
+    return best;
+  }
+  // 오늘의 전망: 하면 얼마나 오르고, 안 하면 얼마나 내려가는지
+  function forecast() {
+    const ser = indexSeries();
+    const last = ser[ser.length - 1];
+    const p = dayProgress(today());
+    const left = p.total - p.done;
+    if (!last.g) {
+      const drop = (last.v - INDEX_BASE) * INDEX_DECAY;
+      return drop > 0.004
+        ? { cls: 'down', text: `오늘 기록이 없으면 지수가 ${fmtIdx(drop)} 내려갑니다` }
+        : { cls: 'flat', text: '첫 기록으로 지수를 올려보세요' };
+    }
+    if (left > 0) return { cls: 'up', text: `남은 습관 ${left}개를 하면 +${left * XP.check} 더 오릅니다` };
+    return { cls: 'up', text: `오늘 +${last.g} 상승 마감` };
+  }
+  // 이틀 이상 쉬었다가 돌아온 사람에게
+  function renderNotice() {
+    const box = $('#notice');
+    const days = [...activeDays()].filter((d) => d < today()).sort();
+    const lastDay = days[days.length - 1];
+    const gap = lastDay ? dayDiff(lastDay, today()) : 0;
+    const show = lastDay && gap >= 3 && !didSomething(today());
+    box.hidden = !show;
+    if (!show) return;
+    box.innerHTML = `<p class="nt-k">${gap}일 만이에요</p><h3>다시 오셨네요.</h3>` +
+      `<p>끊긴 선은 다시 이을 수 있습니다. 오늘은 가장 쉬운 습관 하나만 해볼까요?</p>`;
+  }
+  // 잡스의 스탠퍼드 연설에서 하루 한 문장
+  const QUOTES = [
+    '앞을 내다보며 점을 이을 수는 없습니다. 뒤를 돌아볼 때만 이을 수 있죠.',
+    '지금의 점들이 미래에 어떻게든 이어질 거라 믿어야 합니다.',
+    '위대한 일을 하는 유일한 방법은 자신이 하는 일을 사랑하는 것입니다.',
+    '아직 찾지 못했다면 계속 찾으세요. 안주하지 마세요.',
+    '여러분의 시간은 한정되어 있습니다. 다른 사람의 삶을 사느라 낭비하지 마세요.',
+    '가장 중요한 것은 마음과 직관을 따르는 용기입니다.',
+    '오늘이 내 생의 마지막 날이라면, 오늘 하려는 일을 하고 싶을까?',
+    'Stay hungry. Stay foolish.',
+  ];
+  function renderQuote() {
+    $('#quote').textContent = `“${QUOTES[dayDiff('2026-01-01', today()) % QUOTES.length]}”`;
+  }
+  function renderGoal() {
+    const box = $('#goal');
+    const g = nextGoal();
+    box.hidden = !g;
+    if (!g) return;
+    const left = g.target - g.cur;
+    const unit = ['streak3', 'streak7', 'streak30'].includes(g.b.id) ? '일' : g.b.id === 'constellation' ? ' XP' : g.b.id === 'votes100' ? '표' : '개';
+    box.innerHTML = `<span class="medal sm"><svg viewBox="0 0 24 24">${g.b.icon}</svg></span>` +
+      `<span class="g-body"><span class="g-k">다음 목표</span><b>${g.b.name}</b><span class="g-bar"><i style="width:${Math.round(g.r * 100)}%"></i></span></span>` +
+      `<span class="g-left">${left}${unit}<small>남음</small></span>`;
+    box.onclick = () => openBadge(g.b);
+  }
+  // 모든 기록 후에 한 번에 확인
+  function afterAction() {
+    checkLevel();
+    checkBadges();
+    checkStreakReward();
+    checkATH();
+    if (view === 'today') renderGoal();
   }
 
   // ---------- 탭 ----------
@@ -393,7 +515,8 @@
     const st = streak();
     const pill = $('#streak-pill');
     pill.innerHTML = st ? `<b>${st}</b>일 연속` : '';
-    pill.onclick = () => toast(`최고 기록 ${bestStreak()}일`);
+    pill.onclick = () => toast(`최고 ${bestStreak()}일 · 보호권 ${S.freezes}개`);
+    if (st && S.freezes) pill.innerHTML += ` <span class="shield" title="보호권">${'◆'.repeat(S.freezes)}</span>`;
 
     renderWeek();
     renderProgress();
@@ -402,6 +525,9 @@
     renderMoods();
     renderMoments();
     renderLookback();
+    renderNotice();
+    renderGoal();
+    renderQuote();
   }
 
   function ringSVG(pct, size, stroke, color, track = 'var(--hair)') {
@@ -538,8 +664,7 @@
         toast(selDay === today() ? '오늘의 점이 모두 이어졌습니다' : '이 날의 점이 모두 이어졌습니다');
       }
     }
-    checkLevel();
-    checkBadges();
+    afterAction();
   }
 
   function renderMoods() {
@@ -558,8 +683,9 @@
         haptic(8);
         save();
         renderMoods();
-        checkLevel();
-        checkBadges();
+        renderTicker();
+        renderGoal();
+        afterAction();
       };
       box.appendChild(b);
     }
@@ -608,8 +734,7 @@
           save();
           justAdded = t.id;
           toast('두 점을 이었습니다');
-          checkLevel();
-          checkBadges();
+          afterAction();
         } else toast('이미 이어져 있습니다');
         show('sky');
       } else {
@@ -757,7 +882,8 @@
     const recent = ser.slice(-30);
     const color = recent[recent.length - 1].v >= recent[0].v ? 'var(--up)' : 'var(--down)';
     box.innerHTML = `<span class="tk-name"><b>성장 지수</b>오늘</span>${sparkSVG(recent, 120, 30, color)}` +
-      `<span class="tk-val"><b id="tk-num">${fmtIdx(last.v)}</b><span class="${ch.cls}">${ch.text.split(' (')[0] || '0.00'}</span></span>`;
+      `<span class="tk-val"><b id="tk-num">${fmtIdx(last.v)}</b><span class="${ch.cls}">${ch.text.split(' (')[0] || '0.00'}</span></span>` +
+      (() => { const f = forecast(); return `<span class="tk-cast ${f.cls}">${f.text}</span>`; })();
     const num = box.querySelector('#tk-num');
     countTo(num, 'ticker', last.v, (v) => (num.textContent = fmtIdx(v)));
     box.onclick = () => show('growth');
@@ -789,7 +915,8 @@
     const valEl = $('#idx-value'), chEl = $('#idx-change');
     const setHeader = (p, label) => {
       const ch = changeText(first.v, p.v);
-      chEl.innerHTML = `<span class="${ch.cls}">${ch.text}</span><span class="when">${label}</span>`;
+      const ath = p === last && last.v >= Math.max(...all.map((q) => q.v)) - 0.001 && last.g > 0;
+      chEl.innerHTML = `<span class="${ch.cls}">${ch.text}</span><span class="when">${label}</span>${ath ? '<span class="ath">신고가</span>' : ''}`;
     };
     const idle = () => {
       countTo(valEl, 'hero', last.v, (v) => (valEl.textContent = fmtIdx(v)));
@@ -1187,8 +1314,7 @@
     save();
     closeSheets();
     show('sky');
-    checkLevel();
-    checkBadges();
+    afterAction();
   });
 
   // =========================================================
@@ -1385,14 +1511,24 @@
     $('#tooltip').hidden = true;
   }
   let toastTimer;
-  function toast(msg) {
+  function nextToast() {
     const t = $('#toast');
-    t.textContent = msg;
+    if (!toastQ.length) return;
+    t.textContent = toastQ[0];
     t.hidden = true;
     void t.offsetWidth; // 애니메이션 다시 시작
     t.hidden = false;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => (t.hidden = true), 2800);
+    toastTimer = setTimeout(() => {
+      t.hidden = true;
+      toastQ.shift();
+      setTimeout(nextToast, 250);
+    }, toastQ.length > 1 ? 1800 : 2600);
+  }
+  const toastQ = [];
+  function toast(msg) {
+    toastQ.push(msg);
+    if (toastQ.length === 1) nextToast();
   }
   function haptic(p) {
     try {
@@ -1556,11 +1692,13 @@
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
       if (selDay > today()) selDay = today();
+      applyFreezes();
       render();
     }
   });
   if (!S.profile.onboarded) startOnboarding();
   else {
+    applyFreezes();
     checkBadges(false);
     lastLevel = level().i;
   }

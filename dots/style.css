@@ -405,3 +405,34 @@ cite { display: block; margin-top: 18px; font-size: 12px; color: var(--muted); f
 .ticker .tk-val b { display: block; font-size: 16px; font-weight: 600; }
 .ticker .tk-val span { font-size: 12px; font-weight: 500; }
 .ticker:active { background: var(--surface-2); }
+
+/* ── 동기부여 ─────────────────────────── */
+.streak .shield { color: var(--warm); font-size: 9px; letter-spacing: 2px; vertical-align: 2px; margin-left: 2px; }
+.ticker { grid-template-rows: auto auto; }
+.ticker .tk-cast { grid-column: 1 / -1; padding-top: 10px; margin-top: 2px; border-top: 1px solid var(--hair); font-size: 12px; font-weight: 500; }
+.ticker .tk-cast.flat { color: var(--muted); }
+.ath { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; color: var(--up); background: rgba(255, 91, 91, .12); vertical-align: 1px; }
+
+.goal {
+  width: 100%; margin-top: 8px; display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; border: 0; border-radius: var(--r); background: var(--surface); cursor: pointer; text-align: left;
+}
+.goal[hidden] { display: none; }
+.goal:active { background: var(--surface-2); }
+.medal.sm { width: 40px; height: 40px; flex: none; border-color: var(--hair-2); color: var(--text-2); }
+.medal.sm svg { width: 20px; height: 20px; }
+.goal .g-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.goal .g-k { font-size: 11px; color: var(--muted); }
+.goal b { font-size: 15px; font-weight: 600; margin: 1px 0 8px; }
+.goal .g-bar { height: 2px; background: var(--hair); border-radius: 1px; }
+.goal .g-bar i { display: block; height: 100%; background: var(--warm); border-radius: 1px; transition: width .8s var(--ease); }
+.goal .g-left { text-align: right; font-size: 18px; font-weight: 300; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.goal .g-left small { display: block; font-size: 11px; color: var(--muted); font-weight: 400; letter-spacing: 0; }
+
+.notice { margin: 0 0 22px; padding: 18px 20px; border-radius: var(--r); background: var(--surface); }
+.notice[hidden] { display: none; }
+.notice .nt-k { margin: 0 0 6px; font-size: 12px; color: var(--warm); font-weight: 600; }
+.notice h3 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.02em; }
+.notice p:last-child { margin: 6px 0 0; color: var(--text-2); font-size: 14px; }
+
+#quote { margin-top: 44px; padding: 0 12px; line-height: 1.7; }
