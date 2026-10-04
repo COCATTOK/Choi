@@ -163,8 +163,8 @@ ${faq.map(([q, a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).j
 
 <h2 id="gcs-links">관련 링크</h2>
 <ul class="gc-links">
-<li><a href="#" data-slot="minwage-2027">[링크 자리] 2027년 최저임금</a></li>
-<li><a href="#" data-slot="standard-contract">[링크 자리] 표준근로계약서</a></li>
+<li>${ext("https://www.moel.go.kr/news/enews/report/enewsView.do?news_seq=19744", "2027년도 적용 최저임금 시간급 10,700원 (고용노동부)").replace("<a ", '<a data-slot="minwage-2027" ')}</li>
+<li>${ext("https://www.moel.go.kr/policy/policydata/view.do?bbs_seq=20250300356", "표준근로계약서 2025년 배포판 (고용노동부 게시판)").replace("<a ", '<a data-slot="standard-contract" ')}</li>
 <li><span data-slot="night-overtime-calc">야간·연장수당 계산기 (준비 중)</span></li>
 </ul>
 
