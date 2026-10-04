@@ -54,15 +54,11 @@ const must = (cond, label) => { if (!cond) throw new Error("JS 변환 실패: " 
 must(js.includes('const $ = (id) => document.getElementById(id);'), "$ 헬퍼");
 js = js.replace('const $ = (id) => document.getElementById(id);',
   'const ROOT = document.getElementById("guard-calc");\n  if (!ROOT) return;\n  const $ = (id) => document.getElementById("gc-" + id);');
-must(js.includes("document.querySelector(`input[name=${name}]:checked`)"), "radio 헬퍼");
-js = js.replace("document.querySelector(`input[name=${name}]:checked`)", "ROOT.querySelector(`input[name=gc-${name}]:checked`)");
-must(js.includes("r.name === \"wtype\""), "wtype 분기");
-js = js.replace('r.name === "wtype"', 'r.name === "gc-wtype"');
 js = js.replace(/document\.querySelectorAll\(/g, "ROOT.querySelectorAll(");
-// 스크립트가 런타임에 만드는 HTML 안의 id (예: totalA, hourlyB)도 접두어 처리
+// 스크립트가 런타임에 만드는 HTML 안의 id (예: totalA, in-rest, opt-year-2026)도 접두어 처리
 let jsIds = 0;
-js = js.replace(/\bid="(\w+)"/g, (_, v) => { jsIds++; return `id="gc-${v}"`; });
-must(jsIds >= 2, "스크립트 내 id 접두어");
+js = js.replace(/\bid="([^"]+)"/g, (_, v) => { jsIds++; return `id="gc-${v}"`; });
+must(jsIds >= 10, "스크립트 내 id 접두어");
 must(!/document\.(querySelector|getElementsBy)/.test(js.replace(/document\.getElementById/g, "")), "남은 전역 조회");
 js = js.replace('"use strict";', "").trim();
 js = `(function () {\n"use strict";\n${js}\n})();`;

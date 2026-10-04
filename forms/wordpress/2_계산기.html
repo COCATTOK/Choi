@@ -1,50 +1,66 @@
 <!-- 경비원 월급 계산기 · 워드프레스 '사용자 정의 HTML' 블록에 통째로 붙여넣기 (build-wp.js 로 생성, 직접 수정 금지) -->
 <div id="guard-calc">
 <style>
-#guard-calc{--bg:#f6f7fa;--card:#fff;--fg:#1c1f26;--mut:#5b6472;--line:#d9dee7;--acc:#1f4e9c;--acc-fg:#fff;--soft:#eef2f9;
---ok:#14683a;--ok-bg:#e6f5ec;--bad:#a3261b;--bad-bg:#fdecea;--warn-bg:#fff6e5;--warn-line:#f0c36d}
+#guard-calc{--bg:#f6f7fa;--card:#fff;--fg:#111827;--mut:#4b5563;--line:#8a94a6;--cline:#c9d0dc;--acc:#0b3d91;--acc-fg:#fff;--soft:#e6edfb;
+--ok:#0b5d2e;--ok-bg:#dff3e7;--bad:#9b1c1c;--bad-bg:#fde8e8;--warn-bg:#fff4d6;--warn-line:#b7791f}
 #guard-calc *{box-sizing:border-box}
-#guard-calc{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 "Pretendard","Noto Sans KR","맑은 고딕",system-ui,sans-serif}
+#guard-calc{margin:0;background:var(--bg);color:var(--fg);font:18px/1.6 "Pretendard","Noto Sans KR","맑은 고딕",system-ui,sans-serif}
 #guard-calc .gc-main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
-#guard-calc .gc-title{font-size:1.45rem;line-height:1.35;margin:.2em 0 .3em}
-#guard-calc .lead{color:var(--mut);margin:0 0 1em;font-size:.95rem}
-#guard-calc .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
-#guard-calc .card h2{font-size:1.05rem;margin:0 0 .6em}
-#guard-calc label,#guard-calc .lbl{display:block;font-weight:600;font-size:.92rem;margin:12px 0 4px}
-#guard-calc .hint{font-weight:400;color:var(--mut);font-size:.82rem}
-#guard-calc input[type=number],#guard-calc select{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
-#guard-calc input:focus,#guard-calc select:focus,#guard-calc button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
-#guard-calc .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media (max-width:420px){#guard-calc .row{grid-template-columns:1fr}
-}
-#guard-calc .tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--soft);padding:4px;border-radius:12px;margin:12px 0}
-#guard-calc .tabs button{font:inherit;font-weight:600;border:0;border-radius:9px;padding:10px 6px;background:transparent;color:var(--mut);cursor:pointer}
-#guard-calc .tabs button[aria-selected=true]{background:var(--card);color:var(--acc);box-shadow:0 1px 3px rgba(0,0,0,.15)}
-#guard-calc .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-#guard-calc .seg label{margin:0;font-weight:500;border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;gap:8px;align-items:center;cursor:pointer;background:var(--bg)}
-#guard-calc .seg input{margin:0}
-#guard-calc .seg label:has(input:checked){border-color:var(--acc);background:var(--soft)}
-#guard-calc .chk label{display:flex;gap:10px;align-items:flex-start;font-weight:500;margin:8px 0;cursor:pointer}
-#guard-calc .chk input{margin-top:5px}
-#guard-calc .err{color:var(--bad);font-size:.85rem;margin:4px 0 0}
-#guard-calc .result{margin-top:4px}
-#guard-calc .empty{color:var(--mut);font-size:.95rem}
-#guard-calc table.r{width:100%;border-collapse:collapse;margin:6px 0}
-#guard-calc table.r td{padding:9px 4px;border-bottom:1px solid var(--line)}
-#guard-calc table.r td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
-#guard-calc table.r tr.total td{font-size:1.2rem;border-bottom:0;color:var(--acc)}
-#guard-calc .big{font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
-#guard-calc .badge{display:inline-block;padding:4px 12px;border-radius:99px;font-weight:700}
+#guard-calc .gc-title{font-size:28px;line-height:1.35;margin:.2em 0 .4em}
+#guard-calc .lead{color:var(--mut);margin:0 0 18px;font-size:18px}
+#guard-calc .card{background:var(--card);border:1px solid var(--cline);border-radius:16px;padding:20px;margin:12px 0}
+#guard-calc button{font-family:inherit}
+#guard-calc .big-btn{display:block;width:100%;min-height:92px;margin:14px 0;padding:14px 18px;border-radius:16px;border:3px solid var(--acc);background:var(--acc);color:var(--acc-fg);font-size:23px;font-weight:700;line-height:1.35;text-align:center;cursor:pointer}
+#guard-calc .big-btn.alt{background:var(--card);color:var(--acc)}
+#guard-calc .big-btn small{display:block;font-size:18px;font-weight:500;margin-top:4px}
+#guard-calc .ex-btn{display:block;width:100%;min-height:56px;margin:10px 0 0;border-radius:14px;border:2px dashed var(--acc);background:transparent;color:var(--acc);font-size:20px;font-weight:700;cursor:pointer}
+#guard-calc .progress{display:flex;align-items:center;gap:12px;margin:4px 0 14px}
+#guard-calc .progress b{font-size:22px;white-space:nowrap}
+#guard-calc .bar{flex:1;height:12px;border-radius:99px;background:var(--cline);overflow:hidden}
+#guard-calc .bar i{display:block;height:100%;background:var(--acc)}
+#guard-calc .mode-tag{display:inline-block;font-size:18px;font-weight:700;color:var(--acc);background:var(--soft);border-radius:99px;padding:2px 14px;margin-bottom:6px}
+#guard-calc .q-title{font-size:26px;line-height:1.4;margin:6px 0 6px;font-weight:800;outline:none}
+#guard-calc .q-help{color:var(--mut);font-size:18px;margin:0 0 16px}
+#guard-calc .opt{display:block;width:100%;min-height:64px;margin:10px 0;padding:12px 16px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--fg);font-size:21px;font-weight:700;text-align:left;cursor:pointer}
+#guard-calc .opt small{display:block;font-size:18px;font-weight:500;color:var(--mut)}
+#guard-calc .opt[aria-pressed=true]{border:4px solid var(--acc);background:var(--soft);padding:10px 14px}
+#guard-calc .opt[aria-pressed=true]::before{content:"✓ ";color:var(--acc)}
+#guard-calc .stp{display:grid;grid-template-columns:68px 1fr 68px;gap:10px;margin:8px 0}
+#guard-calc .stp button{min-height:68px;border-radius:14px;border:3px solid var(--acc);background:var(--card);color:var(--acc);font-size:34px;font-weight:700;line-height:1;cursor:pointer}
+#guard-calc .stp input,#guard-calc .num-in{width:100%;min-height:68px;font:inherit;font-size:30px;font-weight:700;text-align:center;border:3px solid var(--line);border-radius:14px;background:#fff;color:var(--fg);padding:6px}
+#guard-calc .num-in{display:block;margin:8px 0}
+#guard-calc input:focus,#guard-calc button:focus-visible,#guard-calc a:focus-visible,#guard-calc summary:focus-visible{outline:4px solid #f59e0b;outline-offset:2px}
+#guard-calc .unit{font-size:18px;color:var(--mut);margin:2px 0 0}
+#guard-calc .err{color:var(--bad);font-size:19px;font-weight:700;margin:10px 0 0;min-height:0}
+#guard-calc .nav{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+#guard-calc .nav button{min-height:60px;border-radius:14px;font-size:22px;font-weight:700;cursor:pointer;border:3px solid var(--acc)}
+#guard-calc .nav .prev{background:var(--card);color:var(--acc)}
+#guard-calc .nav .next{background:var(--acc);color:var(--acc-fg)}
+#guard-calc .nav .only{grid-column:1/-1}
+#guard-calc .chk{margin-top:18px;border-top:2px solid var(--cline);padding-top:12px}
+#guard-calc .chk p{margin:0 0 4px;font-size:18px;font-weight:700}
+#guard-calc .chk label{display:flex;gap:12px;align-items:flex-start;font-size:19px;margin:10px 0;cursor:pointer}
+#guard-calc .chk input{width:28px;height:28px;margin:2px 0 0;flex:none}
+#guard-calc .note{border:2px solid var(--warn-line);background:var(--warn-bg);color:var(--fg);border-radius:12px;padding:12px 14px;margin:12px 0;font-size:18px}
+#guard-calc .note.stop{border-color:var(--bad);background:var(--bad-bg)}
+#guard-calc .note a,#guard-calc .res a{color:var(--acc);font-weight:800;text-decoration:underline;font-size:20px}
+#guard-calc .btn{min-height:52px;border:0;border-radius:12px;padding:10px 16px;background:var(--acc);color:var(--acc-fg);font-size:19px;font-weight:700;cursor:pointer;margin-top:8px}
+#guard-calc .res-lead{font-size:22px;font-weight:700;margin:8px 0 0}
+#guard-calc .res-big{font-size:42px;line-height:1.2;font-weight:800;color:var(--acc);margin:4px 0;font-variant-numeric:tabular-nums}
+#guard-calc .res-big small{display:block;font-size:22px;color:var(--fg);font-weight:700}
+#guard-calc .cmp{font-size:21px;font-weight:700;background:var(--soft);border-radius:12px;padding:12px 14px;margin:12px 0}
+#guard-calc .badge{display:inline-block;padding:6px 16px;border-radius:99px;font-size:22px;font-weight:800}
 #guard-calc .badge.ok{background:var(--ok-bg);color:var(--ok)}
 #guard-calc .badge.bad{background:var(--bad-bg);color:var(--bad)}
-#guard-calc .note{border:1px solid var(--warn-line);background:var(--warn-bg);color:var(--fg);border-radius:10px;padding:10px 12px;margin:10px 0;font-size:.92rem}
-#guard-calc .note.stop{border-color:var(--bad);background:var(--bad-bg)}
-#guard-calc .btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:9px 14px;background:var(--acc);color:var(--acc-fg);cursor:pointer;margin-top:6px}
-#guard-calc details{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--bg)}
-#guard-calc summary{cursor:pointer;font-weight:600}
-#guard-calc details ol{padding-left:1.2em;margin:.6em 0}
-#guard-calc details li{margin:.3em 0;font-size:.92rem;font-variant-numeric:tabular-nums}
-#guard-calc footer{font-size:.84rem;color:var(--mut);margin-top:20px}
+#guard-calc table.r{width:100%;border-collapse:collapse;margin:10px 0;font-size:19px}
+#guard-calc table.r td{padding:10px 4px;border-bottom:1px solid var(--cline)}
+#guard-calc table.r td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+#guard-calc details{margin-top:12px;border:2px solid var(--cline);border-radius:12px;padding:10px 14px;background:var(--bg)}
+#guard-calc summary{cursor:pointer;font-weight:700;font-size:20px;min-height:44px;display:flex;align-items:center}
+#guard-calc details ol{padding-left:1.3em;margin:.6em 0}
+#guard-calc details li{margin:.4em 0;font-size:18px;font-variant-numeric:tabular-nums}
+#guard-calc .help-link{margin-top:14px;font-size:19px}
+#guard-calc footer{font-size:16px;color:var(--mut);margin-top:22px}
 #guard-calc footer ul{padding-left:1.1em}
 #guard-calc [hidden]{display:none!important}
 #guard-calc{border-radius:16px;overflow:hidden;text-align:left;letter-spacing:normal}
@@ -53,128 +69,16 @@
 </style>
 <div class="gc-main">
 <h2 class="gc-title">경비원 월급 계산기</h2>
-<p class="lead">감시·단속 승인을 받은 경비원의 예상 월급과 최저임금 충족 여부를 계산합니다. 세전 금액이며, 다른 수당은 없고 통상시급은 입력한 시급과 같다고 가정합니다.</p>
-<div class="card">
-  <label for="gc-year">적용 연도</label>
-  <select id="gc-year">
-    <option value="2026">2026년 (최저시급 10,320원)</option>
-    <option value="2027">2027년 (최저시급 10,700원)</option>
-  </select>
-  <div class="lbl">근무형태</div>
-  <div class="seg" role="radiogroup" aria-label="근무형태">
-    <label><input type="radio" name="gc-wtype" value="daily" checked>24시간 격일제</label>
-    <label><input type="radio" name="gc-wtype" value="shift">교대제·직접 입력</label>
-  </div>
-</div>
-<div class="tabs" role="tablist" aria-label="계산 모드">
-  <button type="button" role="tab" id="gc-tabA" aria-selected="true" aria-controls="gc-panelA">예상 월급 계산</button>
-  <button type="button" role="tab" id="gc-tabB" aria-selected="false" aria-controls="gc-panelB">내 월급 최저임금 확인</button>
-</div>
-<!-- 모드 A -->
-<section class="card" id="gc-panelA" role="tabpanel" aria-labelledby="gc-tabA">
-  <h2>예상 월급 계산</h2>
-  <label for="gc-wage">시급 <span class="hint">(기본값: 해당 연도 최저시급)</span></label>
-  <input type="number" id="gc-wage" inputmode="numeric" min="0" step="10">
-  <div id="gc-blkDailyA">
-    <div class="row">
-      <div>
-        <label for="gc-restA">1회 근무 중 실제 휴게시간 <span class="hint">(시간)</span></label>
-        <input type="number" id="gc-restA" inputmode="decimal" min="0" max="23.5" step="0.5" placeholder="예: 8">
-      </div>
-      <div>
-        <label for="gc-nightRestA">그중 야간(22~06시) 휴게 <span class="hint">(시간)</span></label>
-        <input type="number" id="gc-nightRestA" inputmode="decimal" min="0" max="8" step="0.5" placeholder="예: 4">
-      </div>
-    </div>
-  </div>
-  <div id="gc-blkShiftA" hidden>
-    <div class="row">
-      <div>
-        <label for="gc-daysA">월 근무일수 <span class="hint">(일)</span></label>
-        <input type="number" id="gc-daysA" inputmode="decimal" min="0" max="31" step="0.5" placeholder="예: 20">
-      </div>
-      <div>
-        <label for="gc-shiftA">1회 근무시간 <span class="hint">(시간)</span></label>
-        <input type="number" id="gc-shiftA" inputmode="decimal" min="0" max="24" step="0.5" placeholder="예: 8">
-      </div>
-      <div>
-        <label for="gc-restSA">1회 휴게시간 <span class="hint">(시간)</span></label>
-        <input type="number" id="gc-restSA" inputmode="decimal" min="0" max="23.5" step="0.5" placeholder="예: 1">
-      </div>
-      <div>
-        <label for="gc-nightWA">그중 밤 10시~오전 6시에 실제 일한 시간 <span class="hint">(시간)</span></label>
-        <input type="number" id="gc-nightWA" inputmode="decimal" min="0" max="8" step="0.5" placeholder="예: 7">
-      </div>
-    </div>
-  </div>
-  <div id="gc-errA" class="err" role="alert"></div>
-  <div class="lbl">감시·단속적 근로 승인 (고용노동부장관)</div>
-  <div class="seg" role="radiogroup" aria-label="승인 여부">
-    <label><input type="radio" name="gc-approved" value="yes">예, 승인받음</label>
-    <label><input type="radio" name="gc-approved" value="no">아니오</label>
-  </div>
-  <div class="lbl">상시근로자 수</div>
-  <div class="seg" role="radiogroup" aria-label="사업장 규모">
-    <label><input type="radio" name="gc-five" value="yes">5인 이상</label>
-    <label><input type="radio" name="gc-five" value="no">5인 미만</label>
-  </div>
-  <div class="result" id="gc-resA" aria-live="polite"></div>
-</section>
-<!-- 모드 B -->
-<section class="card" id="gc-panelB" role="tabpanel" aria-labelledby="gc-tabB" hidden>
-  <h2>내 월급 최저임금 확인</h2>
-  <label for="gc-base">실제 기본급 <span class="hint">(월, 야간수당 제외)</span></label>
-  <input type="number" id="gc-base" inputmode="numeric" min="0" step="1000" placeholder="예: 2511200">
-  <div id="gc-blkDailyB">
-    <label for="gc-restB">1회 근무 중 실제 휴게시간 <span class="hint">(시간)</span></label>
-    <input type="number" id="gc-restB" inputmode="decimal" min="0" max="23.5" step="0.5" placeholder="예: 8">
-  </div>
-  <div id="gc-blkShiftB" hidden>
-    <div class="row">
-      <div>
-        <label for="gc-daysB">월 근무일수 <span class="hint">(일)</span></label>
-        <input type="number" id="gc-daysB" inputmode="decimal" min="0" max="31" step="0.5" placeholder="예: 20">
-      </div>
-      <div>
-        <label for="gc-shiftB">1회 근무시간 <span class="hint">(시간)</span></label>
-        <input type="number" id="gc-shiftB" inputmode="decimal" min="0" max="24" step="0.5" placeholder="예: 8">
-      </div>
-    </div>
-    <label for="gc-restSB">1회 휴게시간 <span class="hint">(시간)</span></label>
-    <input type="number" id="gc-restSB" inputmode="decimal" min="0" max="23.5" step="0.5" placeholder="예: 1">
-  </div>
-  <div id="gc-errB" class="err" role="alert"></div>
-  <div class="lbl">감시·단속적 근로 승인 (고용노동부장관)</div>
-  <div class="seg" role="radiogroup" aria-label="승인 여부">
-    <label><input type="radio" name="gc-approvedB" value="yes">예, 승인받음</label>
-    <label><input type="radio" name="gc-approvedB" value="no">아니오</label>
-  </div>
-  <div class="result" id="gc-resB" aria-live="polite"></div>
-</section>
-<!-- 휴게시간 점검 -->
-<section class="card" id="gc-restCheck">
-  <h2>휴게시간 점검</h2>
-  <p class="hint" style="margin:0 0 4px">휴게시간으로 정해 둔 시간에 아래 상황이 있었다면 체크하세요.</p>
-  <div class="chk">
-    <label><input type="checkbox" class="rc"> 휴게 중에도 순찰·업무를 해야 한다 (강제)</label>
-    <label><input type="checkbox" class="rc"> 정해진 장소를 벗어나면 임금 감액 등 제재를 받는다</label>
-    <label><input type="checkbox" class="rc"> 잠을 자면 제재하거나, 수면 여부를 감시한다</label>
-    <label><input type="checkbox" class="rc"> 지휘·감독 아래에서 업무를 위해 대기한다</label>
-  </div>
-  <div id="gc-restWarn" class="note stop" hidden>
-    <strong>이 시간은 근로시간으로 인정될 수 있음</strong><br>
-    해당하는 시간은 휴게시간에서 빼고 다시 입력해 보세요. (그 시간이 22~06시 사이라면 야간 휴게시간에서도 빼야 합니다.)
-    <div><button type="button" class="btn" id="gc-refocus">휴게시간 다시 입력하기</button></div>
-  </div>
-</section>
+<div id="gc-app"></div>
+<noscript><p class="note">이 계산기는 자바스크립트를 켜야 쓸 수 있어요.</p></noscript>
 <footer>
-  <div class="note"><strong>개별 사업장 승인·휴게 실태에 따라 달라질 수 있음.</strong> 이 계산기는 참고용이며 실제 지급액·법적 판단과 다를 수 있습니다. 문의: 고용노동부 상담센터 1350.</div>
+  <div class="note"><strong>개별 사업장 승인·휴게 실태에 따라 달라질 수 있음.</strong> 이 계산기는 참고용이며 실제 지급액·법적 판단과 다를 수 있습니다. 문의: 고용노동부 상담센터 <a href="tel:1350">1350</a>.</div>
   <p><strong>계산 가정</strong></p>
   <ul>
     <li><b>24시간 격일제</b>: 월평균 근로시간 = (24 − 휴게시간) × 365 ÷ 24 (격일 근무 연간 평균). 야간수당 = (8 − 야간휴게) × 365 ÷ 24 × 시급 × 0.5.</li>
     <li><b>교대제·직접 입력</b>: 월 근로시간 = 근무일수 × (근무시간 − 휴게시간). 야간수당 = 근무일수 × 야간근로시간 × 시급 × 0.5.</li>
     <li>야간수당은 기본급에 야간시간의 100%가 이미 포함되어 추가분 50%만 계산합니다. 5인 미만은 법정 야간 가산 의무가 없어 0원으로 둡니다.</li>
-    <li>야간수당은 최저임금 비교(내 월급 확인)에서 제외합니다. 고용노동부가 발표하는 월 209시간 환산액은 주 40시간 근로자 기준이라 이 계산에 쓰지 않았습니다.</li>
+    <li>야간수당은 최저임금 비교(월급 확인)에서 제외합니다. 고용노동부가 발표하는 월 209시간 환산액은 주 40시간 근로자 기준이라 이 계산에 쓰지 않았습니다.</li>
   </ul>
   <p><strong>출처</strong></p>
   <ul>
@@ -239,47 +143,134 @@ function judge(year, base, hours) {
 const calcB = ({ year, base, rest }) => ({ rest, ...judge(year, base, monthlyHours(rest)) });
 const calcShiftB = ({ year, base, days, shift, rest }) => ({ days, shift, rest, ...judge(year, base, shiftHours(days, shift, rest)) });
 if (typeof window !== "undefined") window.GuardCalc = { C, monthlyHours, calcA, calcB, calcShiftA, calcShiftB, validateRest, validateShift };
-/* ── UI ──────────────────────────────── */
+/* ── 화면 (한 번에 질문 하나씩) ─────────── */
 (function () {
   if (typeof document === "undefined") return;
   const ROOT = document.getElementById("guard-calc");
   if (!ROOT) return;
   const $ = (id) => document.getElementById("gc-" + id);
+  const APP = $("app");
   const won = (n) => Math.round(n).toLocaleString("ko-KR") + "원";
   const num = (n, d = 2) => (Math.round(n * 10 ** d) / 10 ** d).toLocaleString("ko-KR", { maximumFractionDigits: d });
-  const val = (el) => (el.value.trim() === "" ? NaN : Number(el.value));
-  const radio = (name) => { const r = ROOT.querySelector(`input[name=gc-${name}]:checked`); return r ? r.value : ""; };
-  const wtype = () => radio("wtype") || "daily";
-  let wageTouched = false, mode = "A";
-  function syncWage() {
-    if (!wageTouched) $("wage").value = C.MIN[$("year").value];
-  }
-  function restBanner() {
-    return Array.from(ROOT.querySelectorAll(".rc")).some((c) => c.checked)
-      ? `<div class="note">휴게시간 점검에서 근로시간으로 인정될 수 있는 항목이 체크되어 있습니다. 아래 결과는 실제보다 작게 나올 수 있으니 휴게시간을 다시 확인하세요.</div>` : "";
-  }
-  // 승인 '아니오' 안내 (모드 A·B 공통 문구)
-  const noApproval = (what) => `<div class="note stop"><strong>${what}을(를) 계산하지 않았습니다.</strong><br>감시·단속 승인이 없으면 연장·휴일·주휴 가산 대상일 수 있어 금액이 더 클 수 있습니다. 정확한 금액은 상담 1350(고용노동부)에서 확인하세요.</div>`;
-  function renderA() {
-    const year = Number($("year").value), wage = val($("wage")), type = wtype();
-    const approved = radio("approved"), five = radio("five");
-    const out = $("resA"), err = $("errA");
-    err.textContent = "";
-    const hourInputs = type === "daily"
-      ? { rest: val($("restA")), nightRest: val($("nightRestA")) }
-      : { days: val($("daysA")), shift: val($("shiftA")), rest: val($("restSA")), nightWork: val($("nightWA")) };
-    if (Object.values(hourInputs).some(Number.isNaN) || Number.isNaN(wage) || !approved || !five) {
-      out.innerHTML = `<p class="empty">시급·근무시간·승인 여부·사업장 규모를 모두 입력하면 결과가 표시됩니다.</p>`;
-      return;
+  const TEL = `<a href="tel:1350">1350</a>`;
+  /* 질문 정의: 제목·도움말·종류 */
+  const Q = {
+    year: { t: "몇 년 월급으로 계산할까요?", h: "최저임금은 해마다 달라요.", kind: "choice",
+      opts: [["2026", "2026년", "최저시급 10,320원"], ["2027", "2027년", "최저시급 10,700원"]] },
+    wtype: { t: "어떤 방식으로 일하세요?", h: "근무표나 근로계약서에 적혀 있어요.", kind: "choice",
+      opts: [["daily", "24시간 격일제", "하루 일하고 하루 쉬어요"], ["shift", "교대제·직접 입력", "근무일수와 시간을 직접 적어요"]] },
+    wage: { t: "시급(한 시간 일한 값)이 얼마예요?", h: "근로계약서에 적혀 있어요. 모르면 그대로 두세요(그해 최저시급).", kind: "money", unit: "원", label: "시급" },
+    base: { t: "한 달 기본급이 얼마예요?", h: "급여명세서의 ‘기본급’이에요. 야간수당은 빼고 적어 주세요.", kind: "money", unit: "원", label: "기본급" },
+    rest: { t: "한 번 출근하면 몇 시간 쉬세요?", h: "쉬거나 잘 수 있는 시간이에요. 근무표나 근로계약서에 적혀 있어요.", kind: "hours", min: 0, max: 23.5, step: 0.5, ph: "예: 8", label: "휴게시간", check: true },
+    nightRest: { t: "그중 밤 10시~아침 6시에 쉬는 시간은요?", h: "밤에 자거나 쉬는 시간만 적어요. 0~8시간이에요.", kind: "hours", min: 0, max: 8, step: 0.5, ph: "예: 4", label: "야간 휴게시간" },
+    days: { t: "한 달에 며칠 일하세요?", h: "근무표를 보고 적어 주세요.", kind: "hours", min: 0, max: 31, step: 1, ph: "예: 20", label: "월 근무일수", unit: "일" },
+    shift: { t: "한 번 출근하면 몇 시간 일하세요?", h: "쉬는 시간까지 합친 시간이에요. 예) 8시간 근무", kind: "hours", min: 0, max: 24, step: 0.5, ph: "예: 8", label: "1회 근무시간" },
+    restS: { t: "그중 쉬는 시간은 몇 시간이에요?", h: "점심·휴식 등 실제로 쉬는 시간이에요. 근무표나 근로계약서에 적혀 있어요.", kind: "hours", min: 0, max: 23.5, step: 0.5, ph: "예: 1", label: "1회 휴게시간", check: true },
+    nightWork: { t: "그중 밤 10시~아침 6시에 일하는 시간은요?", h: "이 시간에 실제로 일한 시간만 적어요. 0~8시간이에요.", kind: "hours", min: 0, max: 8, step: 0.5, ph: "예: 7", label: "야간 근로시간" },
+    approved: { t: "‘감시·단속 근로 승인’을 받았나요?", h: "회사가 노동청에서 받는 승인이에요. 모르면 ‘모르겠어요’를 누르세요.", kind: "choice",
+      opts: [["yes", "예, 받았어요", ""], ["no", "아니요", ""], ["unknown", "모르겠어요", ""]] },
+    five: { t: "회사 전체 근로자가 5명 이상인가요?", h: "모르면 ‘모르겠어요’를 누르세요.", kind: "choice",
+      opts: [["yes", "5명 이상", ""], ["no", "5명 미만", ""], ["unknown", "모르겠어요", ""]] },
+  };
+  const CHECKS = ["휴게 중에도 순찰·업무를 해야 한다 (강제)", "정해진 장소를 벗어나면 임금 감액 등 제재를 받는다", "잠을 자면 제재하거나, 수면 여부를 감시한다", "지휘·감독 아래에서 업무를 위해 대기한다"];
+  const MODE_NAME = { A: "앞으로 받을 월급 미리 계산하기", B: "내 월급, 제대로 받았나 확인하기" };
+  const fresh = () => ({ screen: "start", mode: "", idx: 0, a: {}, checks: [false, false, false, false], err: "", example: false, wageTouched: false });
+  let S = fresh();
+  const steps = () => {
+    const wt = S.a.wtype === "shift" ? "shift" : "daily";
+    const head = ["year", "wtype"];
+    if (S.mode === "A") return wt === "daily" ? [...head, "wage", "rest", "nightRest", "approved", "five"] : [...head, "wage", "days", "shift", "restS", "nightWork", "approved", "five"];
+    return wt === "daily" ? [...head, "base", "rest", "approved"] : [...head, "base", "days", "shift", "restS", "approved"];
+  };
+  const n = (k) => (S.a[k] === undefined || String(S.a[k]).trim() === "" ? NaN : Number(S.a[k]));
+  /* ── 단계별 검사 (오류 문구는 기존 검증 함수 재사용) ── */
+  function stepError(key) {
+    const q = Q[key];
+    if (q.kind === "choice") return S.a[key] ? "" : "하나를 골라 주세요.";
+    const v = n(key);
+    if (Number.isNaN(v)) return "숫자를 적어 주세요.";
+    switch (key) {
+      case "wage": return v > 0 ? "" : "시급을 입력하세요.";
+      case "base": return v > 0 ? "" : "기본급을 입력하세요.";
+      case "rest": return validateRest(v);
+      case "nightRest": return validateRest(n("rest"), v);
+      case "days": return validateShift({ days: v, shift: 24, rest: 0 });
+      case "shift": return validateShift({ days: 1, shift: v, rest: 0 });
+      case "restS": return validateShift({ days: 1, shift: n("shift"), rest: v });
+      case "nightWork": return validateShift({ days: 1, shift: n("shift"), rest: n("restS"), nightWork: v });
     }
-    const e = (type === "daily" ? validateRest(hourInputs.rest, hourInputs.nightRest) : validateShift(hourInputs)) || (wage > 0 ? "" : "시급을 입력하세요.");
-    if (e) { err.textContent = e; out.innerHTML = ""; return; }
-    if (approved === "no") { out.innerHTML = restBanner() + noApproval("금액"); return; }
-    const isFive = five === "yes";
+    return "";
+  }
+  /* ── 화면 그리기 ───────────────────── */
+  const restBanner = () => S.checks.some(Boolean)
+    ? `<div class="note">휴게시간 점검에서 근로시간으로 인정될 수 있는 항목이 체크되어 있어요. 아래 결과는 실제보다 작게 나올 수 있으니 휴게시간을 다시 확인하세요.</div>` : "";
+  function viewStart() {
+    return `<div class="card">
+      <p class="lead">질문에 하나씩 답하면 월급을 계산해 드려요. 먼저 하고 싶은 것을 골라 주세요.</p>
+      <button type="button" class="big-btn" id="gc-start-B" data-act="start" data-mode="B">내 월급, 제대로 받았나 확인하기<small>받고 있는 기본급이 최저임금 이상인지 봐요</small></button>
+      <button type="button" class="big-btn alt" id="gc-start-A" data-act="start" data-mode="A">앞으로 받을 월급 미리 계산하기<small>시급과 근무 시간으로 한 달 월급을 계산해요</small></button>
+      <button type="button" class="ex-btn" id="gc-start-example" data-act="example">예시로 해보기</button>
+    </div>`;
+  }
+  function stepper(key, q) {
+    const val = S.a[key] ?? "";
+    return `<div class="stp">
+      <button type="button" id="gc-dec-${key}" data-act="dec" data-field="${key}" aria-label="${q.label} 줄이기">−</button>
+      <input type="number" id="gc-in-${key}" data-field="${key}" inputmode="decimal" min="${q.min}" max="${q.max}" step="${q.step}" placeholder="${q.ph}" value="${val}" aria-label="${q.label}">
+      <button type="button" id="gc-inc-${key}" data-act="inc" data-field="${key}" aria-label="${q.label} 늘리기">+</button>
+    </div><p class="unit">${q.unit || "시간"}</p>`;
+  }
+  function viewQuestion() {
+    const list = steps(), key = list[S.idx], q = Q[key];
+    let body = "";
+    if (q.kind === "choice") {
+      body = q.opts.map(([v, label, sub]) => `<button type="button" class="opt" id="gc-opt-${key}-${v}" data-act="opt" data-field="${key}" data-value="${v}" aria-pressed="${S.a[key] === v}">${label}${sub ? `<small>${sub}</small>` : ""}</button>`).join("");
+    } else if (q.kind === "money") {
+      body = `<input type="number" class="num-in" id="gc-in-${key}" data-field="${key}" inputmode="numeric" min="0" step="10" value="${S.a[key] ?? ""}" aria-label="${q.label}"><p class="unit">원</p>`;
+    } else {
+      body = stepper(key, q);
+    }
+    if (q.check) {
+      const any = S.checks.some(Boolean);
+      body += `<div class="chk"><p>혹시 쉬는 시간에 이런 일이 있나요? 해당하면 눌러 주세요.</p>
+        ${CHECKS.map((c, i) => `<label><input type="checkbox" class="rc" data-act="chk" data-idx="${i}" ${S.checks[i] ? "checked" : ""}> ${c}</label>`).join("")}
+        <div id="gc-restWarn" class="note stop" ${any ? "" : "hidden"}><strong>이 시간은 근로시간으로 인정될 수 있음</strong><br>해당하는 시간은 쉬는 시간에서 빼고 다시 적어 보세요. (그 시간이 밤 10시~아침 6시라면 야간 휴게시간에서도 빼야 해요.)
+        <div><button type="button" class="btn" id="gc-refocus" data-act="refocus" data-field="${key}">휴게시간 다시 입력하기</button></div></div></div>`;
+    }
+    return `<div class="card" id="gc-q" data-step="${key}">
+      <div class="progress"><b id="gc-progress">${S.idx + 1}/${list.length}</b><div class="bar" aria-hidden="true"><i style="width:${Math.round(((S.idx + 1) / list.length) * 100)}%"></i></div></div>
+      <span class="mode-tag">${MODE_NAME[S.mode]}</span>
+      <h2 class="q-title" id="gc-q-title" tabindex="-1">${q.t}</h2>
+      <p class="q-help">${q.h}</p>
+      ${body}
+      <div class="err" id="gc-q-err" role="alert">${S.err}</div>
+      <div class="nav"><button type="button" class="prev" id="gc-btn-prev" data-act="prev">이전</button><button type="button" class="next" id="gc-btn-next" data-act="next">${S.idx === list.length - 1 ? "결과 보기" : "다음"}</button></div>
+    </div>`;
+  }
+  const noApproval = (what) => `<div class="note stop"><strong>${what}을(를) 계산하지 않았어요.</strong><br>감시·단속 승인이 없으면 연장·휴일·주휴 가산 대상일 수 있어 금액이 더 클 수 있어요. 정확한 금액은 상담 ${TEL}(고용노동부)에서 확인하세요.</div>`;
+  const unknownNotes = () => {
+    let s = "";
+    if (S.a.approved === "unknown") s += `<div class="note">승인을 받은 것으로 계산했어요. 승인을 안 받았다면 이보다 더 받아야 할 수 있어요. 상담 ${TEL}</div>`;
+    if (S.mode === "A" && S.a.five === "unknown") s += `<div class="note">아파트 관리업체는 대부분 5인 이상이에요. 5인 이상으로 계산했어요.</div>`;
+    return s;
+  };
+  function viewResult() {
+    const year = Number(S.a.year), type = S.a.wtype === "shift" ? "shift" : "daily";
+    const ex = S.example ? `<div class="note"><strong>예시 값으로 계산한 결과예요.</strong> (격일제 · 휴게 8시간 · 야간휴게 4시간 · 승인 · 5인 이상)</div>` : "";
+    let out;
+    if (S.mode === "A") out = resultA(year, type); else out = resultB(year, type);
+    return `<div class="card res" id="gc-result">${ex}<span class="mode-tag">${MODE_NAME[S.mode]}</span>${out}
+      <div class="help-link">궁금한 점은 고용노동부 상담 ${TEL}</div>
+      <div class="nav"><button type="button" class="prev" id="gc-btn-prev" data-act="prev">이전</button><button type="button" class="next" id="gc-btn-restart" data-act="restart">처음으로</button></div></div>`;
+  }
+  function resultA(year, type) {
+    const wage = n("wage"), approved = S.a.approved;
+    if (approved === "no") return restBanner() + noApproval("금액");
+    const isFive = S.a.five !== "no";
     const r = type === "daily"
-      ? calcA({ year, wage, ...hourInputs, five: isFive })
-      : calcShiftA({ year, wage, ...hourInputs, five: isFive });
-    const low = wage < r.min ? `<div class="note">입력한 시급이 ${year}년 최저시급(${won(r.min)})보다 낮습니다.</div>` : "";
+      ? calcA({ year, wage, rest: n("rest"), nightRest: n("nightRest"), five: isFive })
+      : calcShiftA({ year, wage, days: n("days"), shift: n("shift"), rest: n("restS"), nightWork: n("nightWork"), five: isFive });
+    const low = wage < r.min ? `<div class="note">입력한 시급이 ${year}년 최저시급(${won(r.min)})보다 낮아요.</div>` : "";
     const nightCell = isFive ? won(r.night) : "0원 (5인 미만)";
     const nightFinal = isFive ? won(r.night) : "0원 (5인 미만은 법정 가산 의무 없음)";
     const steps = type === "daily" ? `
@@ -291,42 +282,33 @@ if (typeof window !== "undefined") window.GuardCalc = { C, monthlyHours, calcA, 
         <li>기본급 = ${num(r.hours)} × ${won(wage)} = <b>${won(r.basic)}</b></li>
         <li>월 야간 근로시간 = ${num(r.days)} × ${num(r.nightWork)} = ${num(r.nHours)}시간</li>
         <li>야간수당 = ${num(r.nHours)} × ${won(wage)} × 0.5 = <b>${nightFinal}</b></li>`;
-    out.innerHTML = restBanner() + low + `
+    return restBanner() + unknownNotes() + low + `
+      <p class="res-lead">한 달 약</p>
+      <div class="res-big"><span id="gc-totalA">${won(r.total)}</span><small>(세금 떼기 전)</small></div>
+      <div class="cmp">급여명세서 총액과 비교해 보세요.</div>
       <table class="r"><tbody>
         <tr><td>${type === "daily" ? "월평균 근로시간" : "월 근로시간"}</td><td>${num(r.hours)}시간</td></tr>
         <tr><td>기본급</td><td>${won(r.basic)}</td></tr>
         <tr><td>야간수당 (가산 50%)</td><td>${nightCell}</td></tr>
-        <tr class="total"><td>합계 (세전)</td><td id="gc-totalA">${won(r.total)}</td></tr>
       </tbody></table>
       <details><summary>계산 과정 펼쳐보기</summary><ol>${steps}
         <li>합계 = ${won(r.basic)} + ${isFive ? won(r.night) : "0원"} = <b>${won(r.total)}</b></li>
       </ol></details>`;
   }
-  function renderB() {
-    const year = Number($("year").value), base = val($("base")), type = wtype(), approved = radio("approvedB");
-    const out = $("resB"), err = $("errB");
-    err.textContent = "";
-    const hourInputs = type === "daily"
-      ? { rest: val($("restB")) }
-      : { days: val($("daysB")), shift: val($("shiftB")), rest: val($("restSB")) };
-    if (Object.values(hourInputs).some(Number.isNaN) || Number.isNaN(base) || !approved) {
-      out.innerHTML = `<p class="empty">기본급·근무시간·승인 여부를 입력하면 판정이 표시됩니다.</p>`;
-      return;
-    }
-    const e = (type === "daily" ? validateRest(hourInputs.rest) : validateShift(hourInputs)) || (base > 0 ? "" : "기본급을 입력하세요.");
-    if (e) { err.textContent = e; out.innerHTML = ""; return; }
-    if (approved === "no") { out.innerHTML = restBanner() + noApproval("판정"); return; }
-    const r = type === "daily" ? calcB({ year, base, ...hourInputs }) : calcShiftB({ year, base, ...hourInputs });
+  function resultB(year, type) {
+    const base = n("base"), approved = S.a.approved;
+    if (approved === "no") return restBanner() + noApproval("판정");
+    const r = type === "daily" ? calcB({ year, base, rest: n("rest") }) : calcShiftB({ year, base, days: n("days"), shift: n("shift"), rest: n("restS") });
     const verdict = r.pass ? `<span class="badge ok">최저임금 이상</span>` : `<span class="badge bad">최저임금 미달</span>`;
-    const gapTxt = r.pass ? `최저임금 기준 월 기본급(${won(r.minMonthly)})보다 ${won(-r.gap)} 많습니다.` : `최저임금 기준 월 기본급(${won(r.minMonthly)})보다 ${won(r.gap)} 부족합니다.`;
+    const gapTxt = r.pass ? `최저임금 기준 월 기본급(${won(r.minMonthly)})보다 ${won(-r.gap)} 많아요.` : `최저임금 기준 월 기본급(${won(r.minMonthly)})보다 ${won(r.gap)} 부족해요.`;
     const hoursStep = type === "daily"
       ? `월평균 근로시간 = (24 − ${num(r.rest)}) × 365 ÷ 24 = <b>${num(r.hours)}시간</b>`
       : `월 근로시간 = ${num(r.days)} × (${num(r.shift)} − ${num(r.rest)}) = <b>${num(r.hours)}시간</b>`;
-    out.innerHTML = restBanner() + `
-      <p style="margin:10px 0 2px">${verdict}</p>
-      <div class="big" id="gc-hourlyB">${num(r.hourly)}원 <span class="hint">/ 시간 (기본급)</span></div>
-      <p style="margin:4px 0">${year}년 최저시급 ${won(r.min)} 대비 ${gapTxt}</p>
-      <div class="note"><strong>야간수당은 최저임금 비교에서 제외됨.</strong> 기본급만 입력해야 정확합니다.</div>
+    return restBanner() + unknownNotes() + `
+      <p style="margin:12px 0 4px">${verdict}</p>
+      <div class="res-big" id="gc-hourlyB">${num(r.hourly)}원<small>한 시간 기본급</small></div>
+      <div class="cmp">${year}년 최저시급 ${won(r.min)} 대비 ${gapTxt}</div>
+      <div class="note"><strong>야간수당은 최저임금 비교에서 제외됨.</strong> 기본급만 적어야 정확해요.</div>
       <details><summary>계산 과정 펼쳐보기</summary><ol>
         <li>${hoursStep}</li>
         <li>시간당 기본급 = ${won(base)} ÷ ${num(r.hours)} = <b>${num(r.hourly)}원</b></li>
@@ -334,37 +316,69 @@ if (typeof window !== "undefined") window.GuardCalc = { C, monthlyHours, calcA, 
         <li>최저임금 기준 월 기본급 = ${num(r.hours)} × ${won(r.min)} = ${won(r.minMonthly)}</li>
       </ol></details>`;
   }
-  function render() { renderA(); renderB(); }
-  function applyType() {
-    const daily = wtype() === "daily";
-    $("blkDailyA").hidden = !daily; $("blkShiftA").hidden = daily;
-    $("blkDailyB").hidden = !daily; $("blkShiftB").hidden = daily;
-    render();
+  function render(focusTitle) {
+    APP.innerHTML = S.screen === "start" ? viewStart() : S.screen === "q" ? viewQuestion() : viewResult();
+    if (focusTitle) {
+      APP.scrollIntoView({ block: "start" });
+      const t = $("q-title"); if (t) t.focus({ preventScroll: true });
+    }
   }
-  function setMode(m) {
-    mode = m;
-    $("tabA").setAttribute("aria-selected", m === "A");
-    $("tabB").setAttribute("aria-selected", m === "B");
-    $("panelA").hidden = m !== "A";
-    $("panelB").hidden = m !== "B";
+  /* ── 동작 ──────────────────────────── */
+  function enterStep() {
+    const key = steps()[S.idx];
+    if (key === "wage" && !S.wageTouched) S.a.wage = String(C.MIN[S.a.year]);
   }
-  $("tabA").addEventListener("click", () => setMode("A"));
-  $("tabB").addEventListener("click", () => setMode("B"));
-  $("year").addEventListener("change", () => { syncWage(); render(); });
-  $("wage").addEventListener("input", () => { wageTouched = $("wage").value !== String(C.MIN[$("year").value]); render(); });
-  ["restA", "nightRestA", "daysA", "shiftA", "restSA", "nightWA", "base", "restB", "daysB", "shiftB", "restSB"].forEach((id) => $(id).addEventListener("input", render));
-  ROOT.querySelectorAll("input[type=radio]").forEach((r) => r.addEventListener("change", () => (r.name === "gc-wtype" ? applyType() : render())));
-  ROOT.querySelectorAll(".rc").forEach((c) => c.addEventListener("change", () => {
-    $("restWarn").hidden = !Array.from(ROOT.querySelectorAll(".rc")).some((x) => x.checked);
-    render();
-  }));
-  $("refocus").addEventListener("click", () => {
-    const id = { "A-daily": "restA", "A-shift": "restSA", "B-daily": "restB", "B-shift": "restSB" }[`${mode}-${wtype()}`];
-    const el = $(id);
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-    el.focus();
+  function go(dir) {
+    if (dir > 0) {
+      const key = steps()[S.idx], e = stepError(key);
+      if (e) { S.err = e; render(); return; }
+      S.err = "";
+      if (S.idx === steps().length - 1) S.screen = "result"; else { S.idx++; enterStep(); }
+    } else {
+      S.err = "";
+      if (S.screen === "result") { S.screen = "q"; S.example = false; }
+      else if (S.idx === 0) S.screen = "start"; else S.idx--;
+    }
+    render(true);
+  }
+  function bump(key, sign) {
+    const q = Q[key], cur = n(key);
+    let v = Number.isNaN(cur) ? (sign > 0 ? q.step : q.min) : cur + sign * q.step;
+    v = Math.min(q.max, Math.max(q.min, Math.round(v * 100) / 100));
+    S.a[key] = String(v); S.err = "";
+    const input = $(`in-${key}`); if (input) input.value = S.a[key];
+    const e = $("q-err"); if (e) e.textContent = "";
+  }
+  APP.addEventListener("click", (ev) => {
+    const el = ev.target.closest("[data-act]"); if (!el) return;
+    const act = el.dataset.act;
+    if (act === "start") { S = { ...fresh(), screen: "q", mode: el.dataset.mode }; render(true); }
+    else if (act === "example") {
+      S = { ...fresh(), screen: "result", mode: "A", example: true, a: { year: "2026", wtype: "daily", wage: String(C.MIN[2026]), rest: "8", nightRest: "4", approved: "yes", five: "yes" } };
+      S.idx = steps().length - 1; render(true);
+    }
+    else if (act === "opt") {
+      const f = el.dataset.field; S.a[f] = el.dataset.value; S.err = "";
+      if (f === "year" && !S.wageTouched) delete S.a.wage;
+      render();
+    }
+    else if (act === "inc") bump(el.dataset.field, 1);
+    else if (act === "dec") bump(el.dataset.field, -1);
+    else if (act === "prev") go(-1);
+    else if (act === "next") go(1);
+    else if (act === "restart") { S = fresh(); render(true); }
+    else if (act === "refocus") { const i = $(`in-${el.dataset.field}`); i.scrollIntoView({ behavior: "smooth", block: "center" }); i.focus(); }
   });
-  syncWage();
+  APP.addEventListener("input", (ev) => {
+    const f = ev.target.dataset.field; if (!f) return;
+    S.a[f] = ev.target.value; S.err = ""; const e = $("q-err"); if (e) e.textContent = "";
+    if (f === "wage") S.wageTouched = ev.target.value !== String(C.MIN[S.a.year]);
+  });
+  APP.addEventListener("change", (ev) => {
+    if (ev.target.dataset.act !== "chk") return;
+    S.checks[Number(ev.target.dataset.idx)] = ev.target.checked;
+    const w = $("restWarn"); if (w) w.hidden = !S.checks.some(Boolean);
+  });
   render();
 })();
 })();
