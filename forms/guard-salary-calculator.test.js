@@ -45,6 +45,7 @@ const RADIO = new Set(["year", "wtype", "approved", "five"]);
       if (until && key === until) return "stopped";
       if (!(key in ans)) throw new Error("답이 없는 단계: " + key);
       await answer(key, ans[key]);
+      if (await p.isDisabled(S("#btn-next"))) return "__disabled__";
       await click("#btn-next");
       if (await has("#q-err")) { const e = await T("#q-err"); if (e) return e; }
     }
@@ -65,6 +66,18 @@ const RADIO = new Set(["year", "wtype", "approved", "five"]);
   ok("첫 화면 큰 버튼: 앞으로 받을 월급 미리 계산하기", startA.startsWith("앞으로 받을 월급 미리 계산하기"));
   ok("첫 화면에 '예시로 해보기' 버튼", (await T("#start-example")) === "예시로 해보기");
   ok("첫 화면에는 진행 표시가 없음", !(await has("#progress")));
+
+  /* ── ② 계산 가정·출처는 '계산 방법 자세히 보기' 안으로 ── */
+  const FT = (PX ? "#guard-calc " : "") + "footer";
+  ok("푸터에 '계산 방법 자세히 보기' 접기가 있고 기본은 닫힘", (await p.locator(`${FT} details > summary`).innerText()) === "계산 방법 자세히 보기" && !(await p.locator(S("#calc-info")).evaluate((d) => d.open)));
+  const inside = await p.locator(S("#calc-info")).textContent();
+  ok("계산 가정·출처가 접기 안에 있음", inside.includes("계산 가정") && inside.includes("출처") && inside.includes("고용노동부 최저임금 고시") && inside.includes("월평균 근로시간 = (24 − 휴게시간) × 365 ÷ 24"));
+  ok("접힌 상태에서는 계산 가정·출처가 화면에 보이지 않음", !(await p.locator(`${FT} li`).first().isVisible()));
+  const yellow = await p.evaluate((sel) => { const n = document.querySelector(sel + " .note"); return { text: n.textContent, outside: n.closest("details") === null, shown: n.getBoundingClientRect().height > 0 }; }, FT);
+  ok("노란 주의 박스는 그대로(접기 밖, 항상 보임)", yellow.outside && yellow.shown && yellow.text.includes("개별 사업장 승인·휴게 실태에 따라 달라질 수 있음"));
+  await p.locator(`${FT} summary`).click();
+  ok("접기를 열면 계산 가정·출처가 보임", await p.locator(`${FT} li`).first().isVisible());
+  await p.locator(`${FT} summary`).click();
 
   /* ── ⑦ 글자·버튼 크기, 색 대비 ───── */
   const m = await p.evaluate(({ sa, sb, root }) => {
@@ -99,6 +112,19 @@ const RADIO = new Set(["year", "wtype", "approved", "five"]);
   /* ── ③④ 도움말 문구, +/− 입력 ────── */
   await flow("A", A(), "rest");
   ok("휴게 질문 도움말: 근무표나 근로계약서에 적혀 있어요", (await T("#q .q-help")).includes("근무표나 근로계약서에 적혀 있어요"));
+  ok("③ 격일제 도움말에 '24시간 근무라면 보통 쉬는 시간이 몇 시간씩 정해져 있어요. 근무표를 확인해 주세요' 추가", (await T("#q .q-help")).includes("24시간 근무라면 보통 쉬는 시간이 몇 시간씩 정해져 있어요. 근무표를 확인해 주세요."));
+  ok("③ 휴게시간 입력은 기본값 없이 비어 있음", (await p.inputValue(S("#in-rest"))) === "");
+  ok("③ 빈 칸에서는 '다음'이 눌리지 않음(비활성) + 안내 문구", (await p.isDisabled(S("#btn-next"))) && (await T("#need")).includes("숫자를 넣으면 ‘다음’ 버튼이 눌려요"));
+  await p.fill(S("#in-rest"), "8");
+  ok("③ 숫자를 넣으면 '다음'이 활성화되고 안내가 사라짐", !(await p.isDisabled(S("#btn-next"))) && !(await p.locator(S("#need")).isVisible()));
+  await p.fill(S("#in-rest"), "");
+  ok("③ 숫자를 지우면 다시 비활성", (await p.isDisabled(S("#btn-next"))) && (await p.locator(S("#need")).isVisible()));
+  await click("#inc-rest");
+  ok("③ [+]로 숫자가 들어가면 활성화", !(await p.isDisabled(S("#btn-next"))));
+  await click("#dec-rest"); await click("#dec-rest"); await p.fill(S("#in-rest"), "");
+  const labels = await p.locator(S("#q .chk label")).allInnerTexts();
+  ok("① 체크리스트 문구 4개가 쉬운 말로 바뀜", JSON.stringify(labels.map((x) => x.trim())) === JSON.stringify(["쉬는 시간에도 순찰이나 다른 일을 해야 한다", "쉬는 시간에 자리를 비우면 월급이 깎이거나 혼난다", "쉬는 시간에 자면 혼내거나, 자는지 지켜본다", "관리자가 부르면 바로 일할 수 있게 자리를 지켜야 한다"]));
+  ok("① 예전 어려운 문구가 남아 있지 않음", !labels.join("").includes("지휘·감독") && !labels.join("").includes("제재") && !labels.join("").includes("(강제)"));
   ok("wage default 2026 = 10320 (이전 단계 값 확인)", await (async () => { await click("#btn-prev"); const v = await p.inputValue(S("#in-wage")); await click("#btn-next"); return v === "10320"; })());
   await click("#inc-rest");
   ok("[+] 빈 칸에서 0.5", (await p.inputValue(S("#in-rest"))) === "0.5");
@@ -127,6 +153,20 @@ const RADIO = new Set(["year", "wtype", "approved", "five"]);
   }, { title: PX + "q-title", card: PX + "q", next: PX + "btn-next", prev: PX + "btn-prev" });
   const R = Object.fromEntries(Object.entries(cols).map(([k, [f, bgc]]) => [k, ratio(f, bgc)]));
   ok(`색 대비: 제목 ${R.title.toFixed(1)} / 도움말 ${R.help.toFixed(1)} / 다음 ${R.next.toFixed(1)} / 이전 ${R.prev.toFixed(1)} (모두 7:1 이상)`, Object.values(R).every((v) => v >= 7));
+
+  await p.fill(S("#in-rest"), "");
+  const dis = await p.evaluate((id) => { const e = document.getElementById(id), c = getComputedStyle(e); return [c.color, c.backgroundColor]; }, PX + "btn-next");
+  ok(`③ 비활성 '다음' 버튼도 색 대비 7:1 이상 (${ratio(...dis).toFixed(1)})`, ratio(...dis) >= 7);
+
+  /* ── 교대제 휴게·숫자 질문도 같은 규칙 ── */
+  await flow("A", AS(), "restS");
+  ok("③ 교대제 휴게시간도 비어 있고 '다음' 비활성, 격일제 전용 도움말은 없음", (await p.inputValue(S("#in-restS"))) === "" && (await p.isDisabled(S("#btn-next"))) && !(await T("#q .q-help")).includes("24시간 근무라면"));
+  await flow("A", A(), "wage");
+  ok("시급은 기본값(최저시급)이 있어 '다음'이 바로 활성", !(await p.isDisabled(S("#btn-next"))) && (await p.inputValue(S("#in-wage"))) === "10320");
+  await p.fill(S("#in-wage"), "");
+  ok("시급을 지우면 '다음' 비활성", await p.isDisabled(S("#btn-next")));
+  await flow("B", B(), "base");
+  ok("기본급 칸도 비어 있으면 '다음' 비활성", (await p.inputValue(S("#in-base"))) === "" && (await p.isDisabled(S("#btn-next"))));
 
   /* ── 격일제 값 검증 (기존 값 그대로) ── */
   ok("격일제 2026 결과 도달", (await flow("A", A())) === "");
@@ -165,7 +205,7 @@ const RADIO = new Set(["year", "wtype", "approved", "five"]);
   ok("야간휴게 9 오류", (await flow("A", A({ nightRest: 9 }))).includes("0~8시간"));
   ok("야간휴게>휴게 오류", (await flow("A", A({ rest: 3, nightRest: 4 }))).includes("클 수 없습니다"));
   ok("휴게 24 오류", (await flow("A", A({ rest: 24 }))).includes("24 미만"));
-  ok("숫자 비움 오류", (await flow("A", A({ rest: "" }))) === "숫자를 적어 주세요.");
+  ok("숫자를 비우면 '다음'이 눌리지 않음(비활성)", (await flow("A", A({ rest: "" }))) === "__disabled__");
 
   /* ── 교대제 (월 20일, 8시간, 휴게 1, 야간 7) ── */
   ok("교대제 결과 도달", (await flow("A", AS())) === "");
