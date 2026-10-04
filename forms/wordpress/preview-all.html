@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>미리보기 (위쪽글 + 계산기 + 아래쪽글)</title></head>
+<body style="margin:0">
+<h1 id="sentinel-h1">테마 제목(h1)</h1><button id="sentinel-btn">테마 버튼</button><p id="sentinel-p">테마 문단</p>
+<!-- 경비원 월급 계산기 · 위쪽 설명글 (워드프레스 '사용자 정의 HTML' 블록). CSS는 .gc-article 안쪽으로만 적용 -->
+<div class="gc-article" id="gc-article-top">
+<style>
+.gc-article{--fg:#1c1f26;--mut:#5b6472;--line:#d9dee7;--soft:#f4f6fa;--acc:#1f4e9c;--warn-bg:#fff6e5;--warn-line:#f0c36d;color:var(--fg);font:16px/1.75 "Pretendard","Noto Sans KR","맑은 고딕",system-ui,sans-serif;max-width:700px;margin:0 auto;padding:8px 16px;box-sizing:border-box;text-align:left;letter-spacing:normal}
+.gc-article *{box-sizing:border-box}
+.gc-article h2{font-size:1.3rem;line-height:1.4;margin:2em 0 .6em;padding-bottom:.3em;border-bottom:2px solid var(--line);color:var(--fg)}
+.gc-article h3{font-size:1.05rem;margin:1.4em 0 .4em;color:var(--fg)}
+.gc-article p{margin:.7em 0}
+.gc-article ul,.gc-article ol{padding-left:1.3em;margin:.6em 0}
+.gc-article li{margin:.3em 0}
+.gc-article a{color:var(--acc);text-decoration:underline;word-break:break-all}
+.gc-article .gc-operator{margin:0 0 1.2em;padding:14px 16px;background:var(--soft);border-left:4px solid var(--acc);border-radius:0 10px 10px 0}
+.gc-article .gc-operator p{margin:0}
+.gc-article .gc-summary{border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:1em 0;background:#fff}
+.gc-article .gc-toc{border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:1em 0;background:var(--soft)}
+.gc-article .gc-toc ol{margin:.4em 0 0}
+.gc-article .gc-note{border:1px solid var(--warn-line);background:var(--warn-bg);border-radius:10px;padding:10px 14px;margin:1em 0;font-size:.95rem}
+.gc-article .gc-tbl{overflow-x:auto;margin:.8em 0}
+.gc-article table{border-collapse:collapse;width:100%;min-width:0;font-size:.9rem;background:#fff}
+.gc-article th,.gc-article td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;color:var(--fg)}
+.gc-article th{background:var(--soft)}
+.gc-article td.gc-num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.gc-article details{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0;background:#fff}
+.gc-article summary{cursor:pointer;font-weight:700}
+.gc-article .gc-links{list-style:none;padding:0}
+.gc-article .gc-links li{margin:8px 0}
+.gc-article .gc-links a,.gc-article .gc-links span{display:block;padding:10px 14px;border:1px dashed var(--line);border-radius:10px;text-decoration:none;word-break:normal}
+.gc-article .gc-links span{color:var(--mut)}
+.gc-article .gc-src{font-size:.88rem;color:var(--mut)}
+.gc-article .gc-src li{word-break:break-all}
+</style>
+<blockquote class="gc-operator"><p>저는 3교대로 경비 일을 하고 있습니다. 다행히 저희 근무지는 휴게시간이 잘 지켜지는 편이지만, 동료들과 이야기하다 보면 '돈 더 벌고 싶다'는 말이 늘 나옵니다. 그런데 막상 내 월급이 제대로 계산된 건지는 야간수당, 휴게시간, 감시·단속 승인까지 얽혀 있어 알기가 어렵습니다. 모르셔서 답답했던 분들이 쉽게 확인하실 수 있도록 이 계산기를 만들었습니다.</p></blockquote>
+<div class="gc-summary">
+<strong>2줄 요약</strong>
+<p>① 감시·단속 승인을 받은 경비원도 야간근로 가산수당(통상임금의 50% 이상)은 적용되고, 연장·휴일 가산수당과 주휴수당은 적용에서 제외됩니다.<br>
+② 격일제 월급은 계약서에 적힌 휴게가 아니라 실제로 자유롭게 쉰 시간을 뺀 근로시간으로 계산하며, 승인 여부와 휴게 실태에 따라 결과가 달라질 수 있습니다.</p>
+</div>
+<nav class="gc-toc" aria-label="목차">
+<strong>목차</strong>
+<ol>
+<li><a href="#guard-calc">계산기 바로 사용하기</a></li>
+<li><a href="#gcs-approval">감시·단속 승인이란</a></li>
+<li><a href="#gcs-changes">승인받으면 달라지는 것</a></li>
+<li><a href="#gcs-rest">휴게시간 판단 기준</a></li>
+<li><a href="#gcs-night">야간수당 계산법</a></li>
+<li><a href="#gcs-examples">격일제·교대제 계산 예시 (2026·2027)</a></li>
+<li><a href="#gcs-faq">자주 묻는 질문</a></li>
+<li><a href="#gcs-source">출처</a></li>
+</ol>
+</nav>
+</div>
+
+<!-- 경비원 월급 계산기 · 워드프레스 '사용자 정의 HTML' 블록에 통째로 붙여넣기 (build-wp.js 로 생성, 직접 수정 금지) -->
+<div id="guard-calc">
+<style>
+#guard-calc{--bg:#f6f7fa;--card:#fff;--fg:#1c1f26;--mut:#5b6472;--line:#d9dee7;--acc:#1f4e9c;--acc-fg:#fff;--soft:#eef2f9;
+--ok:#14683a;--ok-bg:#e6f5ec;--bad:#a3261b;--bad-bg:#fdecea;--warn-bg:#fff6e5;--warn-line:#f0c36d}
+#guard-calc *{box-sizing:border-box}
+#guard-calc{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 "Pretendard","Noto Sans KR","맑은 고딕",system-ui,sans-serif}
+#guard-calc .gc-main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+#guard-calc .gc-title{font-size:1.45rem;line-height:1.35;margin:.2em 0 .3em}
+#guard-calc .lead{color:var(--mut);margin:0 0 1em;font-size:.95rem}
+#guard-calc .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+#guard-calc .card h2{font-size:1.05rem;margin:0 0 .6em}
+#guard-calc label,#guard-calc .lbl{display:block;font-weight:600;font-size:.92rem;margin:12px 0 4px}
+#guard-calc .hint{font-weight:400;color:var(--mut);font-size:.82rem}
+#guard-calc input[type=number],#guard-calc select{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
+#guard-calc input:focus,#guard-calc select:focus,#guard-calc button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+#guard-calc .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){#guard-calc .row{grid-template-columns:1fr}
+}
+#guard-calc .tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--soft);padding:4px;border-radius:12px;margin:12px 0}
+#guard-calc .tabs button{font:inherit;font-weight:600;border:0;border-radius:9px;padding:10px 6px;background:transparent;color:var(--mut);cursor:pointer}
+#guard-calc .tabs button[aria-selected=true]{background:var(--card);color:var(--acc);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+#guard-calc .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#guard-calc .seg label{margin:0;font-weight:500;border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;gap:8px;align-items:center;cursor:pointer;background:var(--bg)}
+#guard-calc .seg input{margin:0}
+#guard-calc .seg label:has(input:checked){border-color:var(--acc);background:var(--soft)}
+#guard-calc .chk label{display:flex;gap:10px;align-items:flex-start;font-weight:500;margin:8px 0;cursor:pointer}
+#guard-calc .chk input{margin-top:5px}
+#guard-calc .err{color:var(--bad);font-size:.85rem;margin:4px 0 0}
+#guard-calc .result{margin-top:4px}
+#guard-calc .empty{color:var(--mut);font-size:.95rem}
+#guard-calc table.r{width:100%;border-collapse:collapse;margin:6px 0}
+#guard-calc table.r td{padding:9px 4px;border-bottom:1px solid var(--line)}
+#guard-calc table.r td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+#guard-calc table.r tr.total td{font-size:1.2rem;border-bottom:0;color:var(--acc)}
+#guard-calc .big{font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
+#guard-calc .badge{display:inline-block;padding:4px 12px;border-radius:99px;font-weight:700}
+#guard-calc .badge.ok{background:var(--ok-bg);color:var(--ok)}
+#guard-calc .badge.bad{background:var(--bad-bg);color:var(--bad)}
+#guard-calc .note{border:1px solid var(--warn-line);background:var(--warn-bg);color:var(--fg);border-radius:10px;padding:10px 12px;margin:10px 0;font-size:.92rem}
+#guard-calc .note.stop{border-color:var(--bad);background:var(--bad-bg)}
+#guard-calc .btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:9px 14px;background:var(--acc);color:var(--acc-fg);cursor:pointer;margin-top:6px}
+#guard-calc details{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--bg)}
+#guard-calc summary{cursor:pointer;font-weight:600}
+#guard-calc details ol{padding-left:1.2em;margin:.6em 0}
+#guard-calc details li{margin:.3em 0;font-size:.92rem;font-variant-numeric:tabular-nums}
+#guard-calc footer{font-size:.84rem;color:var(--mut);margin-top:20px}
+#guard-calc footer ul{padding-left:1.1em}
+#guard-calc [hidden]{display:none!important}
+#guard-calc{border-radius:16px;overflow:hidden;text-align:left;letter-spacing:normal}
+#guard-calc button,#guard-calc input,#guard-calc select{margin:0;box-shadow:none;text-transform:none}
+#guard-calc a{color:inherit}
+</style>
+<div class="gc-main">
+<h2 class="gc-title">경비원 월급 계산기</h2>
+<p class="lead">감시·단속 승인을 받은 경비원의 예상 월급과 최저임금 충족 여부를 계산합니다. 세전 금액이며, 다른 수당은 없고 통상시급은 입력한 시급과 같다고 가정합니다.</p>
+<div class="card">
+  <label for="gc-year">적용 연도</label>
+  <select id="gc-year">
+    <option value="2026">2026년 (최저시급 10,320원)</option>
+    <option value="2027">2027년 (최저시급 10,700원)</option>
+  </select>
+  <div class="lbl">근무형태</div>
+  <div class="seg" role="radiogroup" aria-label="근무형태">
+    <label><input type="radio" name="gc-wtype" value="daily" checked>24시간 격일제</label>
+    <label><input type="radio" name="gc-wtype" value="shift">교대제·직접 입력</label>
+  </div>
+</div>
+<div class="tabs" role="tablist" aria-label="계산 모드">
+  <button type="button" role="tab" id="gc-tabA" aria-selected="true" aria-controls="gc-panelA">예상 월급 계산</button>
+  <button type="button" role="tab" id="gc-tabB" aria-selected="false" aria-controls="gc-panelB">내 월급 최저임금 확인</button>
+</div>
+<!-- 모드 A -->
+<section class="card" id="gc-panelA" role="tabpanel" aria-labelledby="gc-tabA">
+  <h2>예상 월급 계산</h2>
+  <label for="gc-wage">시급 <span class="hint">(기본값: 해당 연도 최저시급)</span></label>
+  <input type="number" id="gc-wage" inputmode="numeric" min="0" step="10">
+  <div id="gc-blkDailyA">
+    <div class="row">
+      <div>
+        <label for="gc-restA">1회 근무 중 실제 휴게시간 <span class="hint">(시간)</span></label>
+        <input type="number" id="gc-restA" inputmode="decimal" min="0" max="23.5" step="0.5" placeholder="예: 8">
+      </div>
+      <div>
+        <label for="gc-nightRestA">그중 야간(22~06시) 휴게 <span class="hint">(시간)</span></label>
+        <input type="number" id="gc-nightRestA" inputmode="decimal" min="0" max="8" step="0.5" placeholder="예: 4">
+      </div>
+    </div>
+  </div>
+  <div id="gc-blkShiftA" hidden>
+    <div class="row">
+      <div>
+        <label for="gc-daysA">월 근무일수 <span class="hint">(일)</span></label>
+        <input type="number" id="gc-daysA" inputmode="decimal" min="0" max="31" step="0.5" placeholder="예: 20">
+      </div>
+      <div>
+        <label for="gc-shiftA">1회 근무시간 <span class="hint">(시간)</span></label>
+        <input type="number" id="gc-shiftA" inputmode="decimal" min="0" max="24" step="0.5" placeholder="예: 8">
+      </div>
+      <div>
+        <label for="gc-restSA">1회 휴게시간 <span class="hint">(시간)</span></label>
+        <input type="number" id="gc-restSA" inputmode="decimal" min="0" max="23.5" step="0.5" placeholder="예: 1">
+      </div>
+      <div>
+        <label for="gc-nightWA">그중 밤 10시~오전 6시에 실제 일한 시간 <span class="hint">(시간)</span></label>
+        <input type="number" id="gc-nightWA" inputmode="decimal" min="0" max="8" step="0.5" placeholder="예: 7">
+      </div>
+    </div>
+  </div>
+  <div id="gc-errA" class="err" role="alert"></div>
+  <div class="lbl">감시·단속적 근로 승인 (고용노동부장관)</div>
+  <div class="seg" role="radiogroup" aria-label="승인 여부">
+    <label><input type="radio" name="gc-approved" value="yes">예, 승인받음</label>
+    <label><input type="radio" name="gc-approved" value="no">아니오</label>
+  </div>
+  <div class="lbl">상시근로자 수</div>
+  <div class="seg" role="radiogroup" aria-label="사업장 규모">
+    <label><input type="radio" name="gc-five" value="yes">5인 이상</label>
+    <label><input type="radio" name="gc-five" value="no">5인 미만</label>
+  </div>
+  <div class="result" id="gc-resA" aria-live="polite"></div>
+</section>
+<!-- 모드 B -->
+<section class="card" id="gc-panelB" role="tabpanel" aria-labelledby="gc-tabB" hidden>
+  <h2>내 월급 최저임금 확인</h2>
+  <label for="gc-base">실제 기본급 <span class="hint">(월, 야간수당 제외)</span></label>
+  <input type="number" id="gc-base" inputmode="numeric" min="0" step="1000" placeholder="예: 2511200">
+  <div id="gc-blkDailyB">
+    <label for="gc-restB">1회 근무 중 실제 휴게시간 <span class="hint">(시간)</span></label>
+    <input type="number" id="gc-restB" inputmode="decimal" min="0" max="23.5" step="0.5" placeholder="예: 8">
+  </div>
+  <div id="gc-blkShiftB" hidden>
+    <div class="row">
+      <div>
+        <label for="gc-daysB">월 근무일수 <span class="hint">(일)</span></label>
+        <input type="number" id="gc-daysB" inputmode="decimal" min="0" max="31" step="0.5" placeholder="예: 20">
+      </div>
+      <div>
+        <label for="gc-shiftB">1회 근무시간 <span class="hint">(시간)</span></label>
+        <input type="number" id="gc-shiftB" inputmode="decimal" min="0" max="24" step="0.5" placeholder="예: 8">
+      </div>
+    </div>
+    <label for="gc-restSB">1회 휴게시간 <span class="hint">(시간)</span></label>
+    <input type="number" id="gc-restSB" inputmode="decimal" min="0" max="23.5" step="0.5" placeholder="예: 1">
+  </div>
+  <div id="gc-errB" class="err" role="alert"></div>
+  <div class="lbl">감시·단속적 근로 승인 (고용노동부장관)</div>
+  <div class="seg" role="radiogroup" aria-label="승인 여부">
+    <label><input type="radio" name="gc-approvedB" value="yes">예, 승인받음</label>
+    <label><input type="radio" name="gc-approvedB" value="no">아니오</label>
+  </div>
+  <div class="result" id="gc-resB" aria-live="polite"></div>
+</section>
+<!-- 휴게시간 점검 -->
+<section class="card" id="gc-restCheck">
+  <h2>휴게시간 점검</h2>
+  <p class="hint" style="margin:0 0 4px">휴게시간으로 정해 둔 시간에 아래 상황이 있었다면 체크하세요.</p>
+  <div class="chk">
+    <label><input type="checkbox" class="rc"> 휴게 중에도 순찰·업무를 해야 한다 (강제)</label>
+    <label><input type="checkbox" class="rc"> 정해진 장소를 벗어나면 임금 감액 등 제재를 받는다</label>
+    <label><input type="checkbox" class="rc"> 잠을 자면 제재하거나, 수면 여부를 감시한다</label>
+    <label><input type="checkbox" class="rc"> 지휘·감독 아래에서 업무를 위해 대기한다</label>
+  </div>
+  <div id="gc-restWarn" class="note stop" hidden>
+    <strong>이 시간은 근로시간으로 인정될 수 있음</strong><br>
+    해당하는 시간은 휴게시간에서 빼고 다시 입력해 보세요. (그 시간이 22~06시 사이라면 야간 휴게시간에서도 빼야 합니다.)
+    <div><button type="button" class="btn" id="gc-refocus">휴게시간 다시 입력하기</button></div>
+  </div>
+</section>
+<footer>
+  <div class="note"><strong>개별 사업장 승인·휴게 실태에 따라 달라질 수 있음.</strong> 이 계산기는 참고용이며 실제 지급액·법적 판단과 다를 수 있습니다. 문의: 고용노동부 상담센터 1350.</div>
+  <p><strong>계산 가정</strong></p>
+  <ul>
+    <li><b>24시간 격일제</b>: 월평균 근로시간 = (24 − 휴게시간) × 365 ÷ 24 (격일 근무 연간 평균). 야간수당 = (8 − 야간휴게) × 365 ÷ 24 × 시급 × 0.5.</li>
+    <li><b>교대제·직접 입력</b>: 월 근로시간 = 근무일수 × (근무시간 − 휴게시간). 야간수당 = 근무일수 × 야간근로시간 × 시급 × 0.5.</li>
+    <li>야간수당은 기본급에 야간시간의 100%가 이미 포함되어 추가분 50%만 계산합니다. 5인 미만은 법정 야간 가산 의무가 없어 0원으로 둡니다.</li>
+    <li>야간수당은 최저임금 비교(내 월급 확인)에서 제외합니다. 고용노동부가 발표하는 월 209시간 환산액은 주 40시간 근로자 기준이라 이 계산에 쓰지 않았습니다.</li>
+  </ul>
+  <p><strong>출처</strong></p>
+  <ul>
+    <li>고용노동부, 「감시·단속적 근로자의 근로·휴게시간 구분에 관한 가이드라인」</li>
+    <li>고용노동부 최저임금 고시 (2026년 시간급 10,320원 / 2027년 시간급 10,700원)</li>
+    <li>근로기준법 제56조(야간근로 가산), 제63조(적용의 제외)</li>
+  </ul>
+  <p>이 페이지는 외부 서버로 어떤 정보도 보내지 않습니다. 입력값은 이 기기 안에서만 계산됩니다.</p>
+</footer>
+</div>
+<script>
+(function () {
+"use strict";
+/* ── 상수 ─────────────────────────────── */
+const C = { MIN: { 2026: 10320, 2027: 10700 }, NIGHT_RATE: 0.5, NIGHT_HOURS: 8 /* 22:00~06:00 */, DAYS: 365 };
+/* ── 순수 계산 함수 (테스트 대상) ─────────── */
+// 24시간 격일제
+const monthlyHours = (rest) => (24 - rest) * C.DAYS / 24;
+const nightWorkHours = (nightRest) => C.NIGHT_HOURS - nightRest;
+const monthlyNightHours = (nightRest) => nightWorkHours(nightRest) * C.DAYS / 24;
+function validateRest(rest, nightRest) {
+  if (!(rest >= 0 && rest < 24)) return "휴게시간은 0 이상 24 미만으로 입력하세요.";
+  if (nightRest !== undefined) {
+    if (!(nightRest >= 0 && nightRest <= C.NIGHT_HOURS)) return "야간 휴게시간은 0~8시간 사이로 입력하세요.";
+    if (nightRest > rest) return "야간 휴게시간은 전체 휴게시간보다 클 수 없습니다.";
+  }
+  return "";
+}
+function calcA({ year, wage, rest, nightRest, five }) {
+  const hours = monthlyHours(rest);
+  const basic = Math.round(hours * wage);
+  const nHours = monthlyNightHours(nightRest);
+  const night = five ? Math.round(nHours * wage * C.NIGHT_RATE) : 0;
+  return { year, wage, rest, nightRest, five, hours, basic, nHours, night, total: basic + night, min: C.MIN[year] };
+}
+// 교대제·직접 입력
+const shiftHours = (days, shift, rest) => days * (shift - rest);
+function validateShift({ days, shift, rest, nightWork }) {
+  if (!(days > 0 && days <= 31)) return "월 근무일수는 0보다 크고 31 이하로 입력하세요.";
+  if (!(shift > 0 && shift <= 24)) return "1회 근무시간은 0보다 크고 24 이하로 입력하세요.";
+  if (!(rest >= 0 && rest < shift)) return "1회 휴게시간은 0 이상, 근무시간 미만으로 입력하세요.";
+  if (nightWork !== undefined) {
+    if (!(nightWork >= 0 && nightWork <= C.NIGHT_HOURS)) return "밤 10시~오전 6시에 일한 시간은 0~8시간 사이로 입력하세요.";
+    if (nightWork > shift - rest) return "야간 근로시간은 1회 실제 근로시간(근무시간 − 휴게)보다 클 수 없습니다.";
+  }
+  return "";
+}
+function calcShiftA({ year, wage, days, shift, rest, nightWork, five }) {
+  const hours = shiftHours(days, shift, rest);
+  const basic = Math.round(hours * wage);
+  const nHours = days * nightWork;
+  const night = five ? Math.round(nHours * wage * C.NIGHT_RATE) : 0;
+  return { year, wage, days, shift, rest, nightWork, five, hours, basic, nHours, night, total: basic + night, min: C.MIN[year] };
+}
+// 최저임금 판정 (공통)
+function judge(year, base, hours) {
+  const hourly = base / hours;
+  const min = C.MIN[year];
+  const minMonthly = Math.round(hours * min);
+  return { year, base, hours, hourly, min, minMonthly, pass: hourly >= min, gap: minMonthly - base };
+}
+const calcB = ({ year, base, rest }) => ({ rest, ...judge(year, base, monthlyHours(rest)) });
+const calcShiftB = ({ year, base, days, shift, rest }) => ({ days, shift, rest, ...judge(year, base, shiftHours(days, shift, rest)) });
+if (typeof window !== "undefined") window.GuardCalc = { C, monthlyHours, calcA, calcB, calcShiftA, calcShiftB, validateRest, validateShift };
+/* ── UI ──────────────────────────────── */
+(function () {
+  if (typeof document === "undefined") return;
+  const ROOT = document.getElementById("guard-calc");
+  if (!ROOT) return;
+  const $ = (id) => document.getElementById("gc-" + id);
+  const won = (n) => Math.round(n).toLocaleString("ko-KR") + "원";
+  const num = (n, d = 2) => (Math.round(n * 10 ** d) / 10 ** d).toLocaleString("ko-KR", { maximumFractionDigits: d });
+  const val = (el) => (el.value.trim() === "" ? NaN : Number(el.value));
+  const radio = (name) => { const r = ROOT.querySelector(`input[name=gc-${name}]:checked`); return r ? r.value : ""; };
+  const wtype = () => radio("wtype") || "daily";
+  let wageTouched = false, mode = "A";
+  function syncWage() {
+    if (!wageTouched) $("wage").value = C.MIN[$("year").value];
+  }
+  function restBanner() {
+    return Array.from(ROOT.querySelectorAll(".rc")).some((c) => c.checked)
+      ? `<div class="note">휴게시간 점검에서 근로시간으로 인정될 수 있는 항목이 체크되어 있습니다. 아래 결과는 실제보다 작게 나올 수 있으니 휴게시간을 다시 확인하세요.</div>` : "";
+  }
+  // 승인 '아니오' 안내 (모드 A·B 공통 문구)
+  const noApproval = (what) => `<div class="note stop"><strong>${what}을(를) 계산하지 않았습니다.</strong><br>감시·단속 승인이 없으면 연장·휴일·주휴 가산 대상일 수 있어 금액이 더 클 수 있습니다. 정확한 금액은 상담 1350(고용노동부)에서 확인하세요.</div>`;
+  function renderA() {
+    const year = Number($("year").value), wage = val($("wage")), type = wtype();
+    const approved = radio("approved"), five = radio("five");
+    const out = $("resA"), err = $("errA");
+    err.textContent = "";
+    const hourInputs = type === "daily"
+      ? { rest: val($("restA")), nightRest: val($("nightRestA")) }
+      : { days: val($("daysA")), shift: val($("shiftA")), rest: val($("restSA")), nightWork: val($("nightWA")) };
+    if (Object.values(hourInputs).some(Number.isNaN) || Number.isNaN(wage) || !approved || !five) {
+      out.innerHTML = `<p class="empty">시급·근무시간·승인 여부·사업장 규모를 모두 입력하면 결과가 표시됩니다.</p>`;
+      return;
+    }
+    const e = (type === "daily" ? validateRest(hourInputs.rest, hourInputs.nightRest) : validateShift(hourInputs)) || (wage > 0 ? "" : "시급을 입력하세요.");
+    if (e) { err.textContent = e; out.innerHTML = ""; return; }
+    if (approved === "no") { out.innerHTML = restBanner() + noApproval("금액"); return; }
+    const isFive = five === "yes";
+    const r = type === "daily"
+      ? calcA({ year, wage, ...hourInputs, five: isFive })
+      : calcShiftA({ year, wage, ...hourInputs, five: isFive });
+    const low = wage < r.min ? `<div class="note">입력한 시급이 ${year}년 최저시급(${won(r.min)})보다 낮습니다.</div>` : "";
+    const nightCell = isFive ? won(r.night) : "0원 (5인 미만)";
+    const nightFinal = isFive ? won(r.night) : "0원 (5인 미만은 법정 가산 의무 없음)";
+    const steps = type === "daily" ? `
+        <li>월평균 근로시간 = (24 − ${num(r.rest)}) × 365 ÷ 24 = ${num(24 - r.rest)} × 365 ÷ 24 = <b>${num(r.hours)}시간</b></li>
+        <li>기본급 = ${num(r.hours)} × ${won(wage)} = <b>${won(r.basic)}</b></li>
+        <li>야간 근로시간(1회) = 8 − ${num(r.nightRest)} = ${num(nightWorkHours(r.nightRest))}시간 → 월평균 ${num(nightWorkHours(r.nightRest))} × 365 ÷ 24 = ${num(r.nHours)}시간</li>
+        <li>야간수당 = ${num(r.nHours)} × ${won(wage)} × 0.5 = <b>${nightFinal}</b></li>` : `
+        <li>월 근로시간 = ${num(r.days)} × (${num(r.shift)} − ${num(r.rest)}) = <b>${num(r.hours)}시간</b></li>
+        <li>기본급 = ${num(r.hours)} × ${won(wage)} = <b>${won(r.basic)}</b></li>
+        <li>월 야간 근로시간 = ${num(r.days)} × ${num(r.nightWork)} = ${num(r.nHours)}시간</li>
+        <li>야간수당 = ${num(r.nHours)} × ${won(wage)} × 0.5 = <b>${nightFinal}</b></li>`;
+    out.innerHTML = restBanner() + low + `
+      <table class="r"><tbody>
+        <tr><td>${type === "daily" ? "월평균 근로시간" : "월 근로시간"}</td><td>${num(r.hours)}시간</td></tr>
+        <tr><td>기본급</td><td>${won(r.basic)}</td></tr>
+        <tr><td>야간수당 (가산 50%)</td><td>${nightCell}</td></tr>
+        <tr class="total"><td>합계 (세전)</td><td id="gc-totalA">${won(r.total)}</td></tr>
+      </tbody></table>
+      <details><summary>계산 과정 펼쳐보기</summary><ol>${steps}
+        <li>합계 = ${won(r.basic)} + ${isFive ? won(r.night) : "0원"} = <b>${won(r.total)}</b></li>
+      </ol></details>`;
+  }
+  function renderB() {
+    const year = Number($("year").value), base = val($("base")), type = wtype(), approved = radio("approvedB");
+    const out = $("resB"), err = $("errB");
+    err.textContent = "";
+    const hourInputs = type === "daily"
+      ? { rest: val($("restB")) }
+      : { days: val($("daysB")), shift: val($("shiftB")), rest: val($("restSB")) };
+    if (Object.values(hourInputs).some(Number.isNaN) || Number.isNaN(base) || !approved) {
+      out.innerHTML = `<p class="empty">기본급·근무시간·승인 여부를 입력하면 판정이 표시됩니다.</p>`;
+      return;
+    }
+    const e = (type === "daily" ? validateRest(hourInputs.rest) : validateShift(hourInputs)) || (base > 0 ? "" : "기본급을 입력하세요.");
+    if (e) { err.textContent = e; out.innerHTML = ""; return; }
+    if (approved === "no") { out.innerHTML = restBanner() + noApproval("판정"); return; }
+    const r = type === "daily" ? calcB({ year, base, ...hourInputs }) : calcShiftB({ year, base, ...hourInputs });
+    const verdict = r.pass ? `<span class="badge ok">최저임금 이상</span>` : `<span class="badge bad">최저임금 미달</span>`;
+    const gapTxt = r.pass ? `최저임금 기준 월 기본급(${won(r.minMonthly)})보다 ${won(-r.gap)} 많습니다.` : `최저임금 기준 월 기본급(${won(r.minMonthly)})보다 ${won(r.gap)} 부족합니다.`;
+    const hoursStep = type === "daily"
+      ? `월평균 근로시간 = (24 − ${num(r.rest)}) × 365 ÷ 24 = <b>${num(r.hours)}시간</b>`
+      : `월 근로시간 = ${num(r.days)} × (${num(r.shift)} − ${num(r.rest)}) = <b>${num(r.hours)}시간</b>`;
+    out.innerHTML = restBanner() + `
+      <p style="margin:10px 0 2px">${verdict}</p>
+      <div class="big" id="gc-hourlyB">${num(r.hourly)}원 <span class="hint">/ 시간 (기본급)</span></div>
+      <p style="margin:4px 0">${year}년 최저시급 ${won(r.min)} 대비 ${gapTxt}</p>
+      <div class="note"><strong>야간수당은 최저임금 비교에서 제외됨.</strong> 기본급만 입력해야 정확합니다.</div>
+      <details><summary>계산 과정 펼쳐보기</summary><ol>
+        <li>${hoursStep}</li>
+        <li>시간당 기본급 = ${won(base)} ÷ ${num(r.hours)} = <b>${num(r.hourly)}원</b></li>
+        <li>${year}년 최저시급 = ${won(r.min)} → 비교: ${num(r.hourly)} ${r.pass ? "≥" : "<"} ${r.min.toLocaleString("ko-KR")} → <b>${r.pass ? "이상" : "미달"}</b></li>
+        <li>최저임금 기준 월 기본급 = ${num(r.hours)} × ${won(r.min)} = ${won(r.minMonthly)}</li>
+      </ol></details>`;
+  }
+  function render() { renderA(); renderB(); }
+  function applyType() {
+    const daily = wtype() === "daily";
+    $("blkDailyA").hidden = !daily; $("blkShiftA").hidden = daily;
+    $("blkDailyB").hidden = !daily; $("blkShiftB").hidden = daily;
+    render();
+  }
+  function setMode(m) {
+    mode = m;
+    $("tabA").setAttribute("aria-selected", m === "A");
+    $("tabB").setAttribute("aria-selected", m === "B");
+    $("panelA").hidden = m !== "A";
+    $("panelB").hidden = m !== "B";
+  }
+  $("tabA").addEventListener("click", () => setMode("A"));
+  $("tabB").addEventListener("click", () => setMode("B"));
+  $("year").addEventListener("change", () => { syncWage(); render(); });
+  $("wage").addEventListener("input", () => { wageTouched = $("wage").value !== String(C.MIN[$("year").value]); render(); });
+  ["restA", "nightRestA", "daysA", "shiftA", "restSA", "nightWA", "base", "restB", "daysB", "shiftB", "restSB"].forEach((id) => $(id).addEventListener("input", render));
+  ROOT.querySelectorAll("input[type=radio]").forEach((r) => r.addEventListener("change", () => (r.name === "gc-wtype" ? applyType() : render())));
+  ROOT.querySelectorAll(".rc").forEach((c) => c.addEventListener("change", () => {
+    $("restWarn").hidden = !Array.from(ROOT.querySelectorAll(".rc")).some((x) => x.checked);
+    render();
+  }));
+  $("refocus").addEventListener("click", () => {
+    const id = { "A-daily": "restA", "A-shift": "restSA", "B-daily": "restB", "B-shift": "restSB" }[`${mode}-${wtype()}`];
+    const el = $(id);
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.focus();
+  });
+  syncWage();
+  render();
+})();
+})();
+</script>
+</div>
+
+<!-- 경비원 월급 계산기 · 아래쪽 설명글 (워드프레스 '사용자 정의 HTML' 블록). CSS는 .gc-article 안쪽으로만 적용 -->
+<div class="gc-article" id="gc-article-bottom">
+<style>
+.gc-article{--fg:#1c1f26;--mut:#5b6472;--line:#d9dee7;--soft:#f4f6fa;--acc:#1f4e9c;--warn-bg:#fff6e5;--warn-line:#f0c36d;color:var(--fg);font:16px/1.75 "Pretendard","Noto Sans KR","맑은 고딕",system-ui,sans-serif;max-width:700px;margin:0 auto;padding:8px 16px;box-sizing:border-box;text-align:left;letter-spacing:normal}
+.gc-article *{box-sizing:border-box}
+.gc-article h2{font-size:1.3rem;line-height:1.4;margin:2em 0 .6em;padding-bottom:.3em;border-bottom:2px solid var(--line);color:var(--fg)}
+.gc-article h3{font-size:1.05rem;margin:1.4em 0 .4em;color:var(--fg)}
+.gc-article p{margin:.7em 0}
+.gc-article ul,.gc-article ol{padding-left:1.3em;margin:.6em 0}
+.gc-article li{margin:.3em 0}
+.gc-article a{color:var(--acc);text-decoration:underline;word-break:break-all}
+.gc-article .gc-operator{margin:0 0 1.2em;padding:14px 16px;background:var(--soft);border-left:4px solid var(--acc);border-radius:0 10px 10px 0}
+.gc-article .gc-operator p{margin:0}
+.gc-article .gc-summary{border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:1em 0;background:#fff}
+.gc-article .gc-toc{border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:1em 0;background:var(--soft)}
+.gc-article .gc-toc ol{margin:.4em 0 0}
+.gc-article .gc-note{border:1px solid var(--warn-line);background:var(--warn-bg);border-radius:10px;padding:10px 14px;margin:1em 0;font-size:.95rem}
+.gc-article .gc-tbl{overflow-x:auto;margin:.8em 0}
+.gc-article table{border-collapse:collapse;width:100%;min-width:0;font-size:.9rem;background:#fff}
+.gc-article th,.gc-article td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;color:var(--fg)}
+.gc-article th{background:var(--soft)}
+.gc-article td.gc-num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.gc-article details{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:8px 0;background:#fff}
+.gc-article summary{cursor:pointer;font-weight:700}
+.gc-article .gc-links{list-style:none;padding:0}
+.gc-article .gc-links li{margin:8px 0}
+.gc-article .gc-links a,.gc-article .gc-links span{display:block;padding:10px 14px;border:1px dashed var(--line);border-radius:10px;text-decoration:none;word-break:normal}
+.gc-article .gc-links span{color:var(--mut)}
+.gc-article .gc-src{font-size:.88rem;color:var(--mut)}
+.gc-article .gc-src li{word-break:break-all}
+</style>
+
+<h2 id="gcs-approval">감시·단속 승인이란</h2>
+<p>근로기준법 제63조제3호는 “감시 또는 단속적으로 근로에 종사하는 사람으로서 사용자가 고용노동부장관의 승인을 받은 사람”에 대해 근로시간·휴게·휴일 규정의 적용을 제외합니다. 사용자가 관할 지방고용노동관서에 신청해 승인을 받아야 하며, 승인 요건은 근로기준법 시행규칙 제10조의 업무 정의와 「근로감독관집무규정」 제68조의 기준을 충족해야 합니다.</p>
+<h3>감시적 근로자 — 주요 요건</h3>
+<ul>
+<li><b>업무 성격</b>: 경비·물품감시 등 심신의 피로가 적은 업무. 잠시도 감시를 소홀히 할 수 없는 고도의 정신적 긴장이 요구되는 경우는 제외.</li>
+<li><b>다른 업무</b>: 본래 업무는 감시이며, 다른 업무는 불규칙적으로 단시간 수행. 다른 업무를 반복 수행하거나 겸직하는 경우는 제외.</li>
+<li><b>근무시간</b>: 1일 근로시간이 12시간 이내이거나, 24시간 격일제 요건 충족(수면·휴게시간 8시간 이상 확보 등).</li>
+<li><b>휴게시설</b>: 자유롭게 이용할 수 있는 수면·휴게시설 확보.</li>
+<li><b>근로조건</b>: 적용 제외 사실의 서면 명시, 실질적인 휴게 보장, 월평균 4회 이상 휴무 등.</li>
+</ul>
+<p>단속적 근로자는 평소에는 한가하지만 돌발상황에 대비해 간헐적으로 일하고 휴게·대기시간이 많은 업무가 대상입니다. 일반 근무는 실근로시간이 8시간 이내이면서 전체 근무시간의 절반 이하여야 합니다.</p>
+<div class="gc-note">아파트 경비원이 분리수거·청소 보조·주차관리 등을 한다고 해서 무조건 승인 대상에서 제외되는 것은 아닙니다. 고용노동부 가이드라인은 실제 수행하는 업무 전체의 시간·빈도·강도와 심신의 피로도를 종합해 판단하도록 합니다.</div>
+
+<h2 id="gcs-changes">승인받으면 달라지는 것</h2>
+<div class="gc-tbl"><table>
+<thead><tr><th>항목</th><th>승인받은 감시·단속적 근로자</th></tr></thead>
+<tbody>
+<tr><th scope="row">법정근로시간</th><td>1일 8시간·1주 40시간 제한 적용 제외</td></tr>
+<tr><th scope="row">연장근로 한도</th><td>일반적인 주 12시간 연장근로 한도 적용 제외</td></tr>
+<tr><th scope="row">법정휴게</th><td>4시간 근로 시 30분, 8시간 근로 시 1시간 등 법정휴게 규정 적용 제외</td></tr>
+<tr><th scope="row">법정휴일·주휴수당</th><td>주휴일·법정공휴일 규정과 법정 주휴수당 지급 의무 적용 제외</td></tr>
+<tr><th scope="row">연장·휴일 가산수당</th><td>법정 가산수당 적용 제외</td></tr>
+<tr><th scope="row"><b>야간근로 가산수당</b></th><td><b>적용</b></td></tr>
+<tr><th scope="row">연차유급휴가</th><td>제63조에 따른 적용 제외 대상 아님</td></tr>
+</tbody>
+</table></div>
+<p>가산수당을 지급하지 않아도 된다는 것이 추가로 일한 시간의 임금까지 지급하지 않아도 된다는 뜻은 아닙니다. 고용노동부는 승인받은 근로자도 추가 근로에 대한 임금 100%는 발생하되 연장·휴일 가산임금 50%는 발생하지 않는 것으로 해석했습니다. 계약·취업규칙에서 별도로 약정한 유급휴게 등도 확인해야 합니다.</p>
+<p>또한 감시·단속 승인만으로 <b>최저임금 적용까지 제외되지는 않습니다.</b></p>
+
+<h2 id="gcs-rest">휴게시간 판단 기준</h2>
+<p>핵심은 명칭이 아니라 사용자의 지휘·감독에서 벗어나 자유롭게 이용할 수 있었는지입니다. 계약서에 ‘휴게’ 또는 ‘취침’이라고 적었어도 실제로 업무·대기가 강제된다면 근로시간이 될 수 있습니다.</p>
+<div class="gc-tbl"><table>
+<thead><tr><th>실제 상황</th><th>판단</th></tr></thead>
+<tbody>
+<tr><th scope="row">휴게 중 순찰·정비 등 업무 수행이 강제됨</th><td>근로시간 인정</td></tr>
+<tr><th scope="row">특정 장소에서 대기해야 하고, 이탈하면 임금 감액·제재를 받음</th><td>근로시간 인정</td></tr>
+<tr><th scope="row">취침하면 제재하거나 관리자가 수면 여부를 감시함</th><td>근로시간 인정</td></tr>
+<tr><th scope="row">업무를 위해 지휘·감독 아래 대기함</th><td>근로시간 인정</td></tr>
+<tr><th scope="row">업무에서 완전히 벗어나 자유롭게 식사·수면·외출·휴식함</th><td>휴게시간 인정 가능</td></tr>
+<tr><th scope="row">경비초소에서 쉬지만 근로자가 스스로 그 장소를 선택함</th><td>실질적인 자유 이용이 보장되면 휴게 인정 가능</td></tr>
+<tr><th scope="row">비상연락체계만 유지하고 평소에는 지휘·감독 없이 자유롭게 쉼</th><td>휴게 인정 가능</td></tr>
+</tbody>
+</table></div>
+<p>장소 제한이나 비상연락 가능성 하나만으로 전부 근로시간 또는 전부 휴게시간이라고 단정하지 않고 실제 구속 정도를 봅니다. 판단 자료에는 근로계약·취업규칙, 업무 내용과 방식, 휴게 중 간섭·감독 여부, 휴게 장소, 실질적 휴식을 방해한 사정 등이 포함되며 개별 사안별로 종합 판단합니다.</p>
+
+<h2 id="gcs-night">야간수당 계산법</h2>
+<p>근로기준법 제56조제3항은 오후 10시부터 다음 날 오전 6시 사이의 근로에 대해 통상임금의 50% 이상을 가산하도록 규정합니다. 승인받은 감시·단속적 근로자에게도 적용됩니다.</p>
+<div class="gc-note"><b>야간 가산수당 = 실제 야간근로시간 × 시간급 통상임금 × 0.5</b></div>
+<ul>
+<li>월 기본임금에 해당 야간시간의 기본급 100%가 이미 포함돼 있다면 추가 지급액은 50%입니다.</li>
+<li>야간시간 중 진정한 휴게시간은 야간근로시간에서 제외하지만, 지휘·감독 아래의 대기시간은 제외할 수 없습니다.</li>
+<li>법정 야간 가산수당은 원칙적으로 상시근로자 5인 이상 사업장에 적용됩니다.</li>
+<li>야간 가산임금은 최저임금 산입 대상에서 제외됩니다.</li>
+</ul>
+
+<h2 id="gcs-examples">격일제·교대제 계산 예시 (2026·2027)</h2>
+<h3>최저시급</h3>
+<div class="gc-tbl"><table>
+<thead><tr><th>적용 연도</th><th>최저시급</th><th>적용 기간</th><th>고용노동부 확정 발표</th></tr></thead>
+<tbody>
+<tr><th scope="row">2026년</th><td class="gc-num">10,320원</td><td>2026.1.1.~12.31.</td><td>2025.8.5. 확정·고시</td></tr>
+<tr><th scope="row">2027년</th><td class="gc-num">10,700원</td><td>2027.1.1.~12.31.</td><td>2026.8.5. 결정·고시 (2026년보다 380원, 3.7% 인상)</td></tr>
+</tbody>
+</table></div>
+<h3>24시간 격일제 — 월평균 근로시간</h3>
+<p>1회 근무 중 진정한 무급휴게를 R시간이라고 하면 <b>월평균 임금 대상 근로시간 = (24 − R) × 365 ÷ 24</b>입니다. 고용노동부 상담자료도 격일제 급여를 ‘365일의 절반으로 연간 급여를 계산한 뒤 12개월로 나누는 방식’으로 설명합니다.</p>
+<div class="gc-tbl"><table>
+<thead><tr><th>1회 근무 중 휴게</th><th>1회 근로시간</th><th>월평균 근로시간</th></tr></thead>
+<tbody>
+<tr><th scope="row">8시간</th><td class="gc-num">16시간</td><td class="gc-num">약 243.33시간</td></tr>
+<tr><th scope="row">10시간</th><td class="gc-num">14시간</td><td class="gc-num">약 212.92시간</td></tr>
+</tbody>
+</table></div>
+<h3>24시간 격일제 — 야간수당 포함 예시</h3>
+<p>가정: 감시적 근로자 승인 유효, 상시근로자 5인 이상, 1회 근무 24시간 중 진정한 무급휴게 8시간(임금 대상 16시간), 밤 10시~다음 날 오전 6시 8시간 중 진정한 무급휴게 4시간(야간근로 4시간), 시간급 통상임금은 해당 연도 최저시급과 같고 다른 수당은 없음.</p>
+<div class="gc-tbl"><table>
+<thead><tr><th>항목</th><th>2026년</th><th>2027년</th></tr></thead>
+<tbody>
+<tr><th scope="row">기본임금 (16 × 365 ÷ 24 × 시급)</th><td class="gc-num">2,511,200원</td><td class="gc-num">약 2,603,667원</td></tr>
+<tr><th scope="row">야간 가산 (4 × 365 ÷ 24 × 시급 × 0.5)</th><td class="gc-num">313,900원</td><td class="gc-num">약 325,458원</td></tr>
+<tr><th scope="row"><b>합계 (세전)</b></th><td class="gc-num"><b>2,825,100원</b></td><td class="gc-num"><b>2,929,125원</b></td></tr>
+</tbody>
+</table></div>
+<h3>교대제·직접 입력 — 계산기 방식 예시</h3>
+<p>가정: 월 20일 근무, 1회 8시간 근무 중 휴게 1시간, 밤 10시~오전 6시에 실제 일한 시간 7시간, 상시근로자 5인 이상, 시급은 해당 연도 최저시급, 승인 유효.</p>
+<div class="gc-tbl"><table>
+<thead><tr><th>항목</th><th>2026년</th><th>2027년</th></tr></thead>
+<tbody>
+<tr><th scope="row">월 근로시간 (20 × (8 − 1))</th><td class="gc-num">140시간</td><td class="gc-num">140시간</td></tr>
+<tr><th scope="row">기본급 (140 × 시급)</th><td class="gc-num">1,444,800원</td><td class="gc-num">1,498,000원</td></tr>
+<tr><th scope="row">야간수당 (20 × 7 × 시급 × 0.5)</th><td class="gc-num">722,400원</td><td class="gc-num">749,000원</td></tr>
+<tr><th scope="row"><b>합계 (세전)</b></th><td class="gc-num"><b>2,167,200원</b></td><td class="gc-num"><b>2,247,000원</b></td></tr>
+</tbody>
+</table></div>
+<p class="gc-src">교대제 산식(월 근로시간 = 근무일수 × (근무시간 − 휴게시간))은 위 격일제와 같은 원리로 이 계산기가 정한 방식이며, 고용노동부 자료가 이 산식 자체를 제시한 것은 아닙니다.</p>
+<div class="gc-note">
+<b>계산 시 주의</b>
+<ul>
+<li>휴게로 적힌 시간 중 일부가 실제 업무·강제 대기였다면 그 시간을 근로시간에 다시 포함하고, 밤 10시~오전 6시에 해당하면 야간 가산도 다시 산정해야 합니다.</li>
+<li>시간급 통상임금이 최저시급보다 높다면 야간 가산수당도 그 통상임금을 기준으로 계산합니다.</li>
+<li>실제 월의 출근 횟수로 임금을 산정하는 방식과 연간 평균 고정 월급 방식은 구분해야 합니다. 임금명세서에서 실제 야간근로시간·통상시급·가산율 등 계산방법을 확인할 수 있어야 합니다.</li>
+<li>위 금액은 확인된 최저시급과 법정 야간 가산율을 가정에 대입한 세전 예시이며, 법령이 모든 근로자에게 정한 고정 월급이 아닙니다.</li>
+</ul>
+</div>
+
+<h2 id="gcs-faq">자주 묻는 질문</h2>
+<details><summary>아파트 경비원이면 자동으로 근로시간 규정 적용이 제외되나요?</summary><p>아닙니다. 근로기준법 제63조제3호는 ‘감시 또는 단속적으로 근로에 종사하는 사람으로서 사용자가 고용노동부장관의 승인을 받은 사람’을 대상으로 합니다. 경비원이라는 직종명이나 근로계약서의 ‘감단직’ 표기만으로는 적용 제외가 되지 않습니다.</p></details>
+<details><summary>승인을 받으면 야간수당도 못 받나요?</summary><p>받을 수 있습니다. 승인받은 근로자도 야간근로 가산수당은 적용됩니다. 적용에서 제외되는 것은 법정근로시간·연장근로 한도·법정휴게·법정휴일·주휴수당·연장·휴일 가산수당입니다. 연차유급휴가는 제63조에 따른 적용 제외 대상이 아닙니다.</p></details>
+<details><summary>계약서에 ‘휴게 8시간’이라고 적혀 있으면 그만큼 빼고 계산하나요?</summary><p>계약서의 명칭이 아니라 실제로 지휘·감독에서 벗어나 자유롭게 쉴 수 있었던 시간만 뺍니다. 휴게 중 순찰 등 업무가 강제되거나, 이탈하면 제재를 받거나, 수면을 감시하거나, 지휘·감독 아래 대기하는 시간은 근로시간으로 인정될 수 있습니다.</p></details>
+<details><summary>고용노동부가 발표하는 월 209시간 기준 최저임금 월 환산액을 쓰면 안 되나요?</summary><p>월 209시간 기준 금액은 주 40시간 근로자의 환산액이라, 승인받은 24시간 격일제 경비원에게 그대로 적용할 계산 기준은 아닙니다. 해당 근무형태의 임금 대상 시간을 먼저 산정해야 합니다. 이 계산기의 ‘내 월급 최저임금 확인’이 그 방식입니다.</p></details>
+<details><summary>야간수당을 합쳐서 최저임금을 맞추면 되나요?</summary><p>안 됩니다. 야간 가산임금은 최저임금 산입 대상에서 제외됩니다. 기본임금이 최저임금에 미달하는데 야간 가산수당을 합친 총액만 맞추는 방식으로 판단하면 안 됩니다.</p></details>
+<details><summary>5인 미만 사업장은 야간수당을 못 받나요?</summary><p>법정 야간 가산수당은 원칙적으로 상시근로자 5인 이상 사업장에 적용됩니다. 5인 미만 사업장에는 제56조의 법정 가산 의무가 적용되지 않으므로 계산기도 0원으로 둡니다. 다만 계약·취업규칙에서 따로 정한 내용은 확인해야 합니다.</p></details>
+
+<h2 id="gcs-links">관련 링크</h2>
+<ul class="gc-links">
+<li><a href="#" data-slot="minwage-2027">[링크 자리] 2027년 최저임금</a></li>
+<li><a href="#" data-slot="standard-contract">[링크 자리] 표준근로계약서</a></li>
+<li><span data-slot="night-overtime-calc">야간·연장수당 계산기 (준비 중)</span></li>
+</ul>
+
+<div class="gc-note"><b>개별 사업장 승인·휴게 실태에 따라 달라질 수 있습니다.</b> 이 글과 계산기는 참고용이며 법률 자문이 아닙니다. 정확한 판단은 관할 지방고용노동관서나 고용노동부 상담 1350에서 확인하세요. (확인 기준일 2026년 10월 4일)</div>
+
+<h2 id="gcs-source">출처</h2>
+<ul class="gc-src">
+<li><a href="https://www.moel.go.kr/common/downloadFile.do?file_seq=21171219954&bbs_seq=1475642422328&bbs_id=29&file_ext=pdf" target="_blank" rel="noopener noreferrer">고용노동부, 「감시·단속적 근로자의 근로·휴게시간 구분에 관한 가이드라인」(PDF)</a></li>
+<li><a href="https://www.moel.go.kr/common/downloadFile.do?file_seq=20211001502&bbs_seq=12833&bbs_id=12&file_ext=pdf" target="_blank" rel="noopener noreferrer">고용노동부, 공동주택 경비원의 감시·단속적 근로자 승인 판단 가이드라인(PDF)</a></li>
+<li><a href="https://www.law.go.kr/LSW//lsLawLinkInfo.do?lsJoLnkSeq=1012317909&chrClsCd=010202" target="_blank" rel="noopener noreferrer">근로기준법 제63조(적용의 제외) — 국가법령정보센터</a></li>
+<li><a href="https://www.easylaw.go.kr/CSP/CnpClsMain.laf?csmSeq=1450&ccfNo=3&cciNo=2&cnpClsNo=3" target="_blank" rel="noopener noreferrer">감시적 근로종사자의 근로관계 — 찾기쉬운 생활법령정보</a></li>
+<li><a href="https://www.law.go.kr/LSW/cgmExpcInfoP.do?cgmExpcDatSeq=18402&mode=2&ofiClsCd=350101" target="_blank" rel="noopener noreferrer">제63조 적용제외 근로자의 연장·휴일 가산 관련 고용노동부 행정해석 — 국가법령정보센터</a></li>
+<li><a href="https://www.moel.go.kr/news/enews/report/enewsView.do?news_seq=18144" target="_blank" rel="noopener noreferrer">2026년 적용 최저임금 시간급 10,320원 — 고용노동부 보도자료</a></li>
+<li><a href="https://www.moel.go.kr/news/enews/report/enewsView.do?news_seq=19744" target="_blank" rel="noopener noreferrer">2027년도 적용 최저임금 시간급 10,700원 — 고용노동부 보도자료</a></li>
+<li><a href="https://www.minimumwage.go.kr/minWage/policy/decisionMain.do" target="_blank" rel="noopener noreferrer">연도별 최저임금 결정현황 — 최저임금위원회</a></li>
+<li><a href="https://labor.moel.go.kr/minwonSysInfo/minwagesys.do" target="_blank" rel="noopener noreferrer">최저임금제도 — 고용노동부 노동포털</a></li>
+<li><a href="https://1350.moel.go.kr/rtmview.do?id=1000253929" target="_blank" rel="noopener noreferrer">고용노동부 고객상담 1350 — 격일제 급여 계산 상담자료</a></li>
+</ul>
+</div>
+
+</body></html>
