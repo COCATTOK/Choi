@@ -24,6 +24,8 @@ const CSS = `
 .idf th,.idf td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
 .idf th{background:var(--soft);white-space:nowrap}
 .idf td.ex{color:var(--acc);font-weight:600}
+.idf table.dl{min-width:0}
+.idf table.dl .btn{padding:6px 10px;font-size:.85rem;white-space:nowrap}
 .idf details{border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0}
 .idf summary{cursor:pointer;font-weight:600}
 .idf ul.slots{list-style:none;padding:0;display:grid;gap:8px}
@@ -125,17 +127,27 @@ ${LAW_REPUB("피보험자 이직확인서", "별지 제75호의4")}`,
 page("2_수급자격인정신청서.html", {
   title: "실업급여 수급자격 인정(국민연금 가입기간 추가 산입) 신청서 다운로드와 작성 예시",
   desc: "고용보험법 시행규칙 별지 제75호서식 수급자격 인정신청서 원본 파일과 칸별 작성 예시.",
-  badges: ["별지 제75호서식", "고용보험법 시행규칙", "서식 개정일 2025.7.1"],
+  badges: ["별지 제75호서식", "고용보험법 시행규칙", "첨부본 개정일 2024.12.31"],
   lead: "구직급여 수급자격 인정을 신청할 때 쓰는 서식의 정식 명칭은 ‘수급자격 인정(국민연금 가입기간 추가 산입)신청서’입니다.",
-  download: `<p>국가법령정보센터에 게시된 「고용보험법 시행규칙」 별지 제75호서식 원본입니다. 서식 표기 개정일은 <strong>2025.7.1</strong>입니다.</p>
+  download: `<p>「고용보험법 시행규칙」 별지 제75호서식 파일입니다. 첨부 파일 첫머리의 서식 표기 개정일은 <strong>2024.12.31</strong>입니다. 본인의 <strong>피보험자격 유형</strong>에 맞는 파일을 받으세요. (아래 파일은 유형마다 ‘구직급여 신청 대상 피보험자격’ 칸이 해당 유형으로 미리 표시되어 있습니다.)</p>
+<div class="tbl-wrap"><table class="dl">
+<thead><tr><th>피보험자격 유형</th><th>PDF</th><th>HWP</th></tr></thead>
+<tbody>
+${[["상용근로자", 1, 0], ["일용근로자", 1, 0], ["예술인", 1, 0], ["단기예술인", 1, 0], ["노무제공자", 1, 1], ["단기노무제공자", 1, 1]]
+  .map(([t, pdf, hwp]) => {
+    const base = "files/수급자격인정신청서_별지75호_개정2024.12.31_" + t;
+    return `<tr><th scope="row">${t}</th><td>${pdf ? btn("PDF 받기", base + ".pdf", { download: true }) : "-"}</td><td>${hwp ? btn("HWP 받기", base + ".hwp", { download: true }) : "-"}</td></tr>`;
+  }).join("\n")}
+</tbody>
+</table></div>
 <div class="btns">
-<!-- TODO(게시 전): 국가법령정보센터 원본을 pages/files/ 에 넣을 것. 고용24 파일은 유형별(상용·일용 등)이므로 첫머리 개정일 표기를 대조 -->
-${btn("원본 파일 내려받기 (HWP)", "files/수급자격인정신청서_별지75호_개정2025.7.1.hwp", { download: true, attrs: ' data-attach="pending"' })}
-${btn("원본 파일 내려받기 (PDF)", "files/수급자격인정신청서_별지75호_개정2025.7.1.pdf", { download: true, attrs: ' data-attach="pending"' })}
 ${btn("국가법령정보센터에서 보기", "https://www.law.go.kr/%EB%B2%95%EB%A0%B9%EB%B3%84%ED%91%9C%EC%84%9C%EC%8B%9D/(%EA%B3%A0%EC%9A%A9%EB%B3%B4%ED%97%98%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99,%EC%84%9C%EC%8B%9D75)", { sub: true })}
 ${btn("고용24 서식자료실", "https://m.work24.go.kr/cm/c/b/1100/selectBbttInfo.do?polySvcFomtId=FM00000112", { sub: true })}
 </div>
-${LAW_REPUB("수급자격 인정(국민연금 가입기간 추가 산입)신청서", "별지 제75호")}`,
+<div class="box"><strong>출처 표기 (복사해서 사용)</strong><br>
+출처: 「고용보험법 시행규칙」 별지 제75호서식 ‘수급자격 인정(국민연금 가입기간 추가 산입)신청서’<br>
+서식 표기 개정일: 2024년 12월 31일 (첨부 파일 첫머리 표기 기준) · 확인일: ${CHECKED}<br>
+본 첨부자료는 법령 별지 서식 원문입니다. 제출 전 공식 사이트에서 현행 서식을 확인하시기 바랍니다.</div>`,
   rows: [
     ["성명·주민등록번호", "홍길동 / 900101-*******", "주민등록번호 뒷자리는 예시에서 가렸습니다."],
     ["주소·연락처", "서울특별시 예시구 예시로 123 / 010-0000-0000", "실제 거주지와 연락 가능한 번호를 기재."],
@@ -146,7 +158,8 @@ ${LAW_REPUB("수급자격 인정(국민연금 가입기간 추가 산입)신청�
   ],
   faq: [
     ["이직확인서와 무엇이 다른가요?", "이직확인서는 사업주가 작성하는 서식이고, 이 서식은 수급자격 인정을 신청하는 사람이 작성합니다."],
-    ["고용24에서 받은 파일과 법령 서식이 다른가요?", "고용24에는 상용·일용 등 유형별 파일이 올라와 있습니다. 파일 첫머리에 적힌 개정일 표기를 법령 서식과 대조해 최신판인지 확인하세요."],
+    ["어떤 파일을 받아야 하나요?", "본인의 피보험자격 유형(상용근로자·일용근로자·예술인·단기예술인·노무제공자·단기노무제공자)에 맞는 파일을 받으세요. 파일마다 ‘구직급여 신청 대상 피보험자격’ 칸이 해당 유형으로 미리 표시되어 있습니다."],
+    ["첨부 파일이 최신판인가요?", "첨부 파일 첫머리에는 <개정 2024. 12. 31.>이 적혀 있습니다. 서식은 개정될 수 있으니 제출 전 국가법령정보센터·고용24에서 현행 서식의 개정일을 다시 확인하세요."],
     ["온라인으로도 신청할 수 있나요?", "신청 방법(방문·온라인)은 고용24와 관할 고용센터 안내를 확인하세요."],
   ],
   slots: [["form-isik", "이직확인서 서식 페이지"], ["form-resign", "사직서 양식"], ["calc-unemployment", "실업급여 계산기"]],
