@@ -95,9 +95,8 @@ page("1_이직확인서.html", {
   lead: "실업급여(구직급여) 신청 때 필요한 이직확인서는 사업주가 작성해 고용센터에 제출하는 서식입니다. 아래 원본 파일과 칸별 예시를 참고하세요.",
   download: `<p>국가법령정보센터에 게시된 「고용보험법 시행규칙」 별지 제75호의4서식 원본입니다. 서식 표기 개정일은 <strong>2025.7.1</strong>입니다.</p>
 <div class="btns">
-<!-- TODO(게시 전): 국가법령정보센터에서 받은 원본을 pages/files/ 에 아래 이름으로 넣을 것 (files/README.md 참고) -->
-${btn("원본 파일 내려받기 (HWP)", "files/이직확인서_별지75호의4_개정2025.7.1.hwp", { download: true, attrs: ' data-attach="pending"' })}
-${btn("원본 파일 내려받기 (PDF)", "files/이직확인서_별지75호의4_개정2025.7.1.pdf", { download: true, attrs: ' data-attach="pending"' })}
+${btn("원본 파일 내려받기 (HWP)", "files/이직확인서_별지75호의4_개정2025.7.1.hwp", { download: true })}
+${btn("원본 파일 내려받기 (PDF)", "files/이직확인서_별지75호의4_개정2025.7.1.pdf", { download: true })}
 ${btn("국가법령정보센터에서 보기", "https://www.law.go.kr/%EB%B2%95%EB%A0%B9%EB%B3%84%ED%91%9C%EC%84%9C%EC%8B%9D/(%EA%B3%A0%EC%9A%A9%EB%B3%B4%ED%97%98%EB%B2%95%20%EC%8B%9C%ED%96%89%EA%B7%9C%EC%B9%99,%EC%84%9C%EC%8B%9D75%EC%9D%984)", { sub: true })}
 ${btn("고용24 서식자료실", "https://m.work24.go.kr/cm/c/b/1100/selectBbttInfo.do?polySvcFomtId=FM00000115", { sub: true })}
 </div>
