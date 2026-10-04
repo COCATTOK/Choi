@@ -174,7 +174,7 @@ if (typeof window !== "undefined") window.GuardCalc = { C, monthlyHours, calcA, 
   /* 질문 정의: 제목·도움말·종류 */
   const Q = {
     year: { t: "몇 년 월급으로 계산할까요?", h: "최저임금은 해마다 달라요.", kind: "choice",
-      opts: [["2026", "2026년", "최저시급 10,320원"], ["2027", "2027년", "최저시급 10,700원"]] },
+      opts: [] /* 연도 버튼은 yearOpts() 가 현재 날짜 기준으로 만듦 */ },
     wtype: { t: "어떤 방식으로 일하세요?", h: "근무표나 근로계약서에 적혀 있어요.", kind: "choice",
       opts: [["daily", "24시간 격일제", "하루 일하고 하루 쉬어요"], ["shift", "교대제·직접 입력", "근무일수와 시간을 직접 적어요"]] },
     wage: { t: "시급(한 시간 일한 값)이 얼마예요?", h: "근로계약서에 적혀 있어요. 모르면 그대로 두세요(그해 최저시급).", kind: "money", unit: "원", label: "시급" },
@@ -189,6 +189,12 @@ if (typeof window !== "undefined") window.GuardCalc = { C, monthlyHours, calcA, 
       opts: [["yes", "예, 받았어요", ""], ["no", "아니요", ""], ["unknown", "모르겠어요", ""]] },
     five: { t: "회사 전체 근로자가 5명 이상인가요?", h: "모르면 ‘모르겠어요’를 누르세요.", kind: "choice",
       opts: [["yes", "5명 이상", ""], ["no", "5명 미만", ""], ["unknown", "모르겠어요", ""]] },
+  };
+  // 연도 버튼: 현재 날짜 기준으로 (올해)/(내년) 표시
+  const yearOpts = () => {
+    const now = new Date().getFullYear();
+    const tag = (y) => (y === now ? " (올해)" : y === now + 1 ? " (내년)" : "");
+    return Object.keys(C.MIN).map((y) => [y, `${y}년${tag(Number(y))}`, `최저시급 ${C.MIN[y].toLocaleString("ko-KR")}원`]);
   };
   const CHECKS = ["쉬는 시간에도 순찰이나 다른 일을 해야 한다", "쉬는 시간에 자리를 비우면 월급이 깎이거나 혼난다", "쉬는 시간에 자면 혼내거나, 자는지 지켜본다", "관리자가 부르면 바로 일할 수 있게 자리를 지켜야 한다"];
   const MODE_NAME = { A: "앞으로 받을 월급 미리 계산하기", B: "내 월급, 제대로 받았나 확인하기" };
@@ -249,7 +255,7 @@ if (typeof window !== "undefined") window.GuardCalc = { C, monthlyHours, calcA, 
     const list = steps(), key = list[S.idx], q = Q[key];
     let body = "";
     if (q.kind === "choice") {
-      body = q.opts.map(([v, label, sub]) => `<button type="button" class="opt" id="opt-${key}-${v}" data-act="opt" data-field="${key}" data-value="${v}" aria-pressed="${S.a[key] === v}">${label}${sub ? `<small>${sub}</small>` : ""}</button>`).join("");
+      body = (key === "year" ? yearOpts() : q.opts).map(([v, label, sub]) => `<button type="button" class="opt" id="opt-${key}-${v}" data-act="opt" data-field="${key}" data-value="${v}" aria-pressed="${S.a[key] === v}">${label}${sub ? `<small>${sub}</small>` : ""}</button>`).join("");
     } else {
       body = q.kind === "money"
         ? `<input type="number" class="num-in" id="in-${key}" data-field="${key}" inputmode="numeric" min="0" step="10" value="${S.a[key] ?? ""}" aria-label="${q.label}"><p class="unit">원</p>`

@@ -79,6 +79,28 @@ const RADIO = new Set(["year", "wtype", "approved", "five"]);
   ok("접기를 열면 계산 가정·출처가 보임", await p.locator(`${FT} li`).first().isVisible());
   await p.locator(`${FT} summary`).click();
 
+  /* ── ④ 연도 버튼의 (올해)/(내년): 현재 날짜 기준 ── */
+  const yearLabels = async (iso) => {
+    const pg = await ctx.newPage();
+    if (iso) await pg.addInitScript((t) => { const R = Date; class D extends R { constructor(...a) { a.length ? super(...a) : super(t); } static now() { return t; } } globalThis.Date = D; }, new Date(iso).getTime());
+    await pg.goto("file://" + FILE);
+    await pg.click(S("#start-A"));
+    const r = [await pg.innerText(S("#opt-year-2026")), await pg.innerText(S("#opt-year-2027"))].map((x) => x.replace(/\s+/g, " ").trim());
+    await pg.close();
+    return r;
+  };
+  let yl = await yearLabels("2026-10-04T12:00:00");
+  ok(`연도 라벨(2026년에 열면): ${yl[0]} / ${yl[1]}`, yl[0] === "2026년 (올해) 최저시급 10,320원" && yl[1] === "2027년 (내년) 최저시급 10,700원");
+  yl = await yearLabels("2027-03-01T12:00:00");
+  ok(`연도 라벨(2027년에 열면): ${yl[0]} / ${yl[1]}`, yl[0] === "2026년 최저시급 10,320원" && yl[1] === "2027년 (올해) 최저시급 10,700원");
+  yl = await yearLabels("2025-12-31T12:00:00");
+  ok(`연도 라벨(2025년 말에 열면): ${yl[0]} / ${yl[1]}`, yl[0] === "2026년 (내년) 최저시급 10,320원" && yl[1] === "2027년 최저시급 10,700원");
+  yl = await yearLabels("2028-01-02T12:00:00");
+  ok("연도 라벨(2028년에 열면): 표시 없음", !yl.join(" ").includes("(올해)") && !yl.join(" ").includes("(내년)"));
+  const nowY = new Date().getFullYear(), tg = (y) => (y === nowY ? " (올해)" : y === nowY + 1 ? " (내년)" : "");
+  yl = await yearLabels(null);
+  ok("연도 라벨(실제 현재 날짜) 자동 계산", yl[0].startsWith("2026년" + tg(2026)) && yl[1].startsWith("2027년" + tg(2027)));
+
   /* ── ⑦ 글자·버튼 크기, 색 대비 ───── */
   const m = await p.evaluate(({ sa, sb, root }) => {
     const fs = (s) => parseFloat(getComputedStyle(document.querySelector(s)).fontSize);

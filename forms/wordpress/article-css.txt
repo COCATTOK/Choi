@@ -6,8 +6,6 @@
 .gc-article ul,.gc-article ol{padding-left:1.3em;margin:.6em 0}
 .gc-article li{margin:.3em 0}
 .gc-article a{color:var(--acc);text-decoration:underline;word-break:break-all}
-.gc-article .gc-operator{margin:0 0 1.2em;padding:14px 16px;background:var(--soft);border-left:4px solid var(--acc);border-radius:0 10px 10px 0}
-.gc-article .gc-operator p{margin:0}
 .gc-article .gc-summary{border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:1em 0;background:#fff}
 .gc-article .gc-toc{border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:1em 0;background:var(--soft)}
 .gc-article .gc-toc ol{margin:.4em 0 0}

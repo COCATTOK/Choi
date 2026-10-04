@@ -11,31 +11,17 @@ const tbl = (head, rows, numCols = []) =>
     .map((r) => `<tr>${r.map((c, i) => (i === 0 ? `<th scope="row">${c}</th>` : `<td${numCols.includes(i) ? ' class="gc-num"' : ""}>${c}</td>`)).join("")}</tr>`)
     .join("\n")}\n</tbody>\n</table></div>`;
 
-/* ───────── 위쪽 글 ───────── */
-const top = `<!-- 경비원 월급 계산기 · 위쪽 설명글 (워드프레스 '사용자 정의 HTML' 블록). CSS는 .gc-article 안쪽으로만 적용 -->
+/* ───────── 위쪽 글 (2줄 요약만) ───────── */
+const top = `<!-- 경비원 월급 계산기 · 위쪽 글: 2줄 요약 (워드프레스 '사용자 정의 HTML' 블록). CSS는 .gc-article 안쪽으로만 적용 -->
 <div class="gc-article" id="gc-article-top">
 <style>
 ${css}
 </style>
-<blockquote class="gc-operator"><p>저는 3교대로 경비 일을 하고 있습니다. 다행히 저희 근무지는 휴게시간이 잘 지켜지는 편이지만, 동료들과 이야기하다 보면 '돈 더 벌고 싶다'는 말이 늘 나옵니다. 그런데 막상 내 월급이 제대로 계산된 건지는 야간수당, 휴게시간, 감시·단속 승인까지 얽혀 있어 알기가 어렵습니다. 모르셔서 답답했던 분들이 쉽게 확인하실 수 있도록 이 계산기를 만들었습니다.</p></blockquote>
 <div class="gc-summary">
 <strong>2줄 요약</strong>
 <p>① 감시·단속 승인을 받은 경비원도 야간근로 가산수당(통상임금의 50% 이상)은 적용되고, 연장·휴일 가산수당과 주휴수당은 적용에서 제외됩니다.<br>
 ② 격일제 월급은 계약서에 적힌 휴게가 아니라 실제로 자유롭게 쉰 시간을 뺀 근로시간으로 계산하며, 승인 여부와 휴게 실태에 따라 결과가 달라질 수 있습니다.</p>
 </div>
-<nav class="gc-toc" aria-label="목차">
-<strong>목차</strong>
-<ol>
-<li><a href="#guard-calc">계산기 바로 사용하기</a></li>
-<li><a href="#gcs-approval">감시·단속 승인이란</a></li>
-<li><a href="#gcs-changes">승인받으면 달라지는 것</a></li>
-<li><a href="#gcs-rest">휴게시간 판단 기준</a></li>
-<li><a href="#gcs-night">야간수당 계산법</a></li>
-<li><a href="#gcs-examples">격일제·교대제 계산 예시 (2026·2027)</a></li>
-<li><a href="#gcs-faq">자주 묻는 질문</a></li>
-<li><a href="#gcs-source">출처</a></li>
-</ol>
-</nav>
 </div>
 `;
 
@@ -73,6 +59,18 @@ const bottom = `<!-- 경비원 월급 계산기 · 아래쪽 설명글 (워드�
 <style>
 ${css}
 </style>
+<nav class="gc-toc" aria-label="목차">
+<strong>목차</strong>
+<ol>
+<li><a href="#gcs-approval">감시·단속 승인이란</a></li>
+<li><a href="#gcs-changes">승인받으면 달라지는 것</a></li>
+<li><a href="#gcs-rest">휴게시간 판단 기준</a></li>
+<li><a href="#gcs-night">야간수당 계산법</a></li>
+<li><a href="#gcs-examples">격일제·교대제 계산 예시 (2026·2027)</a></li>
+<li><a href="#gcs-faq">자주 묻는 질문</a></li>
+<li><a href="#gcs-source">출처</a></li>
+</ol>
+</nav>
 
 <h2 id="gcs-approval">감시·단속 승인이란</h2>
 <p>근로기준법 제63조제3호는 “감시 또는 단속적으로 근로에 종사하는 사람으로서 사용자가 고용노동부장관의 승인을 받은 사람”에 대해 근로시간·휴게·휴일 규정의 적용을 제외합니다. 사용자가 관할 지방고용노동관서에 신청해 승인을 받아야 하며, 승인 요건은 근로기준법 시행규칙 제10조의 업무 정의와 「근로감독관집무규정」 제68조의 기준을 충족해야 합니다.</p>
@@ -180,16 +178,24 @@ ${sources.map(([l, u]) => `<li>${ext(u, l)}</li>`).join("\n")}
 fs.writeFileSync(path.join(__dirname, "1_위쪽글.html"), compact(top));
 fs.writeFileSync(path.join(__dirname, "3_아래쪽글.html"), compact(bottom));
 
-/* ───────── 미리보기(위+계산기+아래) — 아무 테마도 없는 맨 페이지 ───────── */
+/* ───────── 합본: 요약 → 계산기 → 목차 → 설명글 (블록 하나에 통째로 붙여넣기) ───────── */
 const calc = fs.readFileSync(path.join(__dirname, "2_계산기.html"), "utf8");
+const dropComment = (x) => x.replace(/^<!--[^\n]*-->\n/, "");
+const dropStyle = (x) => x.replace(/<style>[\s\S]*?<\/style>\n/, "");
+const all = compact(`<!-- 경비원 월급 계산기 합본 · 워드프레스 '사용자 정의 HTML' 블록 하나에 통째로 붙여넣기 (순서: 2줄 요약 → 계산기 → 목차 → 설명글). build-articles.js 로 생성, 직접 수정 금지 -->
+<style>
+${css}
+</style>
+${dropStyle(dropComment(top))}${dropComment(calc)}${dropStyle(dropComment(bottom))}`);
+fs.writeFileSync(path.join(__dirname, "wp-guard-calc-all.html"), all);
+
+/* ───────── 미리보기: 합본 + '테마 견본'(h1·버튼·문단, 스타일 누수 점검용) ───────── */
 const sentinel = `<h1 id="sentinel-h1">테마 제목(h1)</h1><button id="sentinel-btn">테마 버튼</button><p id="sentinel-p">테마 문단</p>`;
 fs.writeFileSync(path.join(__dirname, "preview-all.html"), `<!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>미리보기 (위쪽글 + 계산기 + 아래쪽글)</title></head>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>미리보기 (요약 + 계산기 + 목차·설명글)</title></head>
 <body style="margin:0">
 ${sentinel}
-${top}
-${calc}
-${bottom}
+${all}
 </body></html>
 `);
-console.log("1_위쪽글.html / 3_아래쪽글.html / preview-all.html 생성");
+console.log("1_위쪽글.html / 3_아래쪽글.html / wp-guard-calc-all.html / preview-all.html 생성");
