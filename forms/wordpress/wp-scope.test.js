@@ -58,6 +58,10 @@ const decoded = Buffer.from(b64Lines.map((l) => l.replace(/[",]/g, "")).join("")
   ok("합본: 목차 7개 항목, '계산기 바로 사용하기' 항목 없음", (toc.match(/<li><a href="#gcs-/g) || []).length === 7 && !ALL.includes("계산기 바로 사용하기") && !toc.includes('href="#guard-calc"'));
   ok("합본: <style> 2개(설명글 1 + 계산기 1), <script> 1개, 문서 한 덩어리", (ALL.match(/<style>/g) || []).length === 2 && (ALL.match(/<script>/g) || []).length === 1 && ALL.trimStart().startsWith("<!--"));
   ok("합본: 운영자 문단 없음", !ALL.includes("gc-operator") && !ALL.includes("blockquote"));
+  ok("합본에 <h1> 없음 (마크업·풀린 스크립트 모두) — 워드프레스 페이지 제목이 h1", !/<h1[\s>]/i.test(ALL) && !/<h1[\s>]/i.test(decoded));
+  ok("합본의 계산기 제목 '경비원 월급 계산기'는 <h2 class=\"gc-title\">", /<h2 class="gc-title">경비원 월급 계산기<\/h2>/.test(ALL));
+  const standalone = fs.readFileSync(path.join(__dirname, "..", "guard-salary-calculator.html"), "utf8");
+  ok("(참고) 단독 파일은 페이지 제목이 없으므로 h1 유지", /<h1 class="gc-title">경비원 월급 계산기<\/h1>/.test(standalone));
   const PRE = fs.readFileSync(path.join(__dirname, "preview-all.html"), "utf8");
   ok("테스트용 preview-all.html 은 합본 + 테마 견본(같은 내용 포함)", PRE.includes(ALL) && PRE.includes("sentinel-h1"));
 }
@@ -127,6 +131,8 @@ ok("풀린 스크립트는 한글을 그대로 포함(UTF-8 보존)", decoded.in
     return { dom: before(".gc-summary", "#guard-calc") && before("#guard-calc", ".gc-toc") && before(".gc-toc", "#gcs-approval"), pos: [y(".gc-summary"), y("#guard-calc"), y(".gc-toc"), y("#gcs-approval")] };
   });
   ok(`합본만 붙여넣은 페이지에서 화면 순서: 요약 → 계산기 → 목차 → 설명글 (y=${ord.pos.map(Math.round)})`, ord.dom && ord.pos.every((v, i) => i === 0 || v > ord.pos[i - 1]));
+  const heads = await only.evaluate(() => ({ h1: document.querySelectorAll("h1").length, title: document.querySelector("#guard-calc .gc-title").tagName, text: document.querySelector("#guard-calc .gc-title").textContent }));
+  ok(`합본만 붙여넣은 페이지의 실제 DOM: h1 ${heads.h1}개, 계산기 제목은 <${heads.title.toLowerCase()}> "${heads.text}"`, heads.h1 === 0 && heads.title === "H2" && heads.text === "경비원 월급 계산기");
   await only.click("#gc-start-example");
   ok("합본만 붙여넣은 페이지에서도 계산기 동작(예시 → 2,825,100원)", (await only.innerText("#gc-totalA")) === "2,825,100원" && e2.length === 0);
   await only.close();

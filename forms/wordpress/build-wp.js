@@ -48,6 +48,7 @@ body = body
   .replace(/\b(id|for|aria-controls|aria-labelledby)="([^"]+)"/g, (_, a, v) => { count.id++; return `${a}="gc-${v}"`; })
   .replace(/\bname="([^"]+)"/g, (_, v) => { count.name++; return `name="gc-${v}"`; })
   .replace(/<h1 class="gc-title">([\s\S]*?)<\/h1>/, '<h2 class="gc-title">$1</h2>'); // 본문 안에서는 h2
+if (/<h1[\s>]/i.test(body) || !/<h2 class="gc-title">/.test(body)) throw new Error("계산기 제목 h1→h2 변환 실패: 워드프레스 페이지 제목이 이미 h1 이므로 본문에는 h1 이 없어야 함");
 
 /* ── JS: 스코프 한정 ────────────────── */
 const must = (cond, label) => { if (!cond) throw new Error("JS 변환 실패: " + label); };
