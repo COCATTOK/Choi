@@ -133,313 +133,267 @@
 </div>
 <script>
 (function () {
-"use strict";
-/* ── 상수 ─────────────────────────────── */
-const C = { MIN: { 2026: 10320, 2027: 10700 }, NIGHT_RATE: 0.5, NIGHT_HOURS: 8 /* 22:00~06:00 */, DAYS: 365 };
-/* ── 순수 계산 함수 (테스트 대상) ─────────── */
-// 24시간 격일제
-const monthlyHours = (rest) => (24 - rest) * C.DAYS / 24;
-const nightWorkHours = (nightRest) => C.NIGHT_HOURS - nightRest;
-const monthlyNightHours = (nightRest) => nightWorkHours(nightRest) * C.DAYS / 24;
-function validateRest(rest, nightRest) {
-  if (!(rest >= 0 && rest < 24)) return "휴게시간은 0 이상 24 미만으로 입력하세요.";
-  if (nightRest !== undefined) {
-    if (!(nightRest >= 0 && nightRest <= C.NIGHT_HOURS)) return "야간 휴게시간은 0~8시간 사이로 입력하세요.";
-    if (nightRest > rest) return "야간 휴게시간은 전체 휴게시간보다 클 수 없습니다.";
-  }
-  return "";
-}
-function calcA({ year, wage, rest, nightRest, five }) {
-  const hours = monthlyHours(rest);
-  const basic = Math.round(hours * wage);
-  const nHours = monthlyNightHours(nightRest);
-  const night = five ? Math.round(nHours * wage * C.NIGHT_RATE) : 0;
-  return { year, wage, rest, nightRest, five, hours, basic, nHours, night, total: basic + night, min: C.MIN[year] };
-}
-// 교대제·직접 입력
-const shiftHours = (days, shift, rest) => days * (shift - rest);
-function validateShift({ days, shift, rest, nightWork }) {
-  if (!(days > 0 && days <= 31)) return "월 근무일수는 0보다 크고 31 이하로 입력하세요.";
-  if (!(shift > 0 && shift <= 24)) return "1회 근무시간은 0보다 크고 24 이하로 입력하세요.";
-  if (!(rest >= 0 && rest < shift)) return "1회 휴게시간은 0 이상, 근무시간 미만으로 입력하세요.";
-  if (nightWork !== undefined) {
-    if (!(nightWork >= 0 && nightWork <= C.NIGHT_HOURS)) return "밤 10시~오전 6시에 일한 시간은 0~8시간 사이로 입력하세요.";
-    if (nightWork > shift - rest) return "야간 근로시간은 1회 실제 근로시간(근무시간 − 휴게)보다 클 수 없습니다.";
-  }
-  return "";
-}
-function calcShiftA({ year, wage, days, shift, rest, nightWork, five }) {
-  const hours = shiftHours(days, shift, rest);
-  const basic = Math.round(hours * wage);
-  const nHours = days * nightWork;
-  const night = five ? Math.round(nHours * wage * C.NIGHT_RATE) : 0;
-  return { year, wage, days, shift, rest, nightWork, five, hours, basic, nHours, night, total: basic + night, min: C.MIN[year] };
-}
-// 최저임금 판정 (공통)
-function judge(year, base, hours) {
-  const hourly = base / hours;
-  const min = C.MIN[year];
-  const minMonthly = Math.round(hours * min);
-  return { year, base, hours, hourly, min, minMonthly, pass: hourly >= min, gap: minMonthly - base };
-}
-const calcB = ({ year, base, rest }) => ({ rest, ...judge(year, base, monthlyHours(rest)) });
-const calcShiftB = ({ year, base, days, shift, rest }) => ({ days, shift, rest, ...judge(year, base, shiftHours(days, shift, rest)) });
-if (typeof window !== "undefined") window.GuardCalc = { C, monthlyHours, calcA, calcB, calcShiftA, calcShiftB, validateRest, validateShift };
-/* ── 화면 (한 번에 질문 하나씩) ─────────── */
-(function () {
-  if (typeof document === "undefined") return;
-  const ROOT = document.getElementById("guard-calc");
-  if (!ROOT) return;
-  const $ = (id) => document.getElementById("gc-" + id);
-  const APP = $("app");
-  const won = (n) => Math.round(n).toLocaleString("ko-KR") + "원";
-  const num = (n, d = 2) => (Math.round(n * 10 ** d) / 10 ** d).toLocaleString("ko-KR", { maximumFractionDigits: d });
-  const TEL = `<a href="tel:1350">1350</a>`;
-  /* 질문 정의: 제목·도움말·종류 */
-  const Q = {
-    year: { t: "몇 년 월급으로 계산할까요?", h: "최저임금은 해마다 달라요.", kind: "choice",
-      opts: [] /* 연도 버튼은 yearOpts() 가 현재 날짜 기준으로 만듦 */ },
-    wtype: { t: "어떤 방식으로 일하세요?", h: "근무표나 근로계약서에 적혀 있어요.", kind: "choice",
-      opts: [["daily", "24시간 격일제", "하루 일하고 하루 쉬어요"], ["shift", "교대제·직접 입력", "근무일수와 시간을 직접 적어요"]] },
-    wage: { t: "시급(한 시간 일한 값)이 얼마예요?", h: "근로계약서에 적혀 있어요. 모르면 그대로 두세요(그해 최저시급).", kind: "money", unit: "원", label: "시급" },
-    base: { t: "한 달 기본급이 얼마예요?", h: "급여명세서의 ‘기본급’이에요. 야간수당은 빼고 적어 주세요.", kind: "money", unit: "원", label: "기본급" },
-    rest: { t: "한 번 출근하면 몇 시간 쉬세요?", h: "근무표나 근로계약서에 적혀 있어요. 24시간 근무라면 보통 쉬는 시간이 몇 시간씩 정해져 있어요. 근무표를 확인해 주세요.", kind: "hours", min: 0, max: 23.5, step: 0.5, ph: "예: 8", label: "휴게시간", check: true },
-    nightRest: { t: "그중 밤 10시~아침 6시에 쉬는 시간은요?", h: "밤에 자거나 쉬는 시간만 적어요. 0~8시간이에요.", kind: "hours", min: 0, max: 8, step: 0.5, ph: "예: 4", label: "야간 휴게시간" },
-    days: { t: "한 달에 며칠 일하세요?", h: "근무표를 보고 적어 주세요.", kind: "hours", min: 0, max: 31, step: 1, ph: "예: 20", label: "월 근무일수", unit: "일" },
-    shift: { t: "한 번 출근하면 몇 시간 일하세요?", h: "쉬는 시간까지 합친 시간이에요. 예) 8시간 근무", kind: "hours", min: 0, max: 24, step: 0.5, ph: "예: 8", label: "1회 근무시간" },
-    restS: { t: "그중 쉬는 시간은 몇 시간이에요?", h: "점심·휴식 등 실제로 쉬는 시간이에요. 근무표나 근로계약서에 적혀 있어요.", kind: "hours", min: 0, max: 23.5, step: 0.5, ph: "예: 1", label: "1회 휴게시간", check: true },
-    nightWork: { t: "그중 밤 10시~아침 6시에 일하는 시간은요?", h: "이 시간에 실제로 일한 시간만 적어요. 0~8시간이에요.", kind: "hours", min: 0, max: 8, step: 0.5, ph: "예: 7", label: "야간 근로시간" },
-    approved: { t: "‘감시·단속 근로 승인’을 받았나요?", h: "회사가 노동청에서 받는 승인이에요. 모르면 ‘모르겠어요’를 누르세요.", kind: "choice",
-      opts: [["yes", "예, 받았어요", ""], ["no", "아니요", ""], ["unknown", "모르겠어요", ""]] },
-    five: { t: "회사 전체 근로자가 5명 이상인가요?", h: "모르면 ‘모르겠어요’를 누르세요.", kind: "choice",
-      opts: [["yes", "5명 이상", ""], ["no", "5명 미만", ""], ["unknown", "모르겠어요", ""]] },
-  };
-  // 연도 버튼: 현재 날짜 기준으로 (올해)/(내년) 표시
-  const yearOpts = () => {
-    const now = new Date().getFullYear();
-    const tag = (y) => (y === now ? " (올해)" : y === now + 1 ? " (내년)" : "");
-    return Object.keys(C.MIN).map((y) => [y, `${y}년${tag(Number(y))}`, `최저시급 ${C.MIN[y].toLocaleString("ko-KR")}원`]);
-  };
-  const CHECKS = ["쉬는 시간에도 순찰이나 다른 일을 해야 한다", "쉬는 시간에 자리를 비우면 월급이 깎이거나 혼난다", "쉬는 시간에 자면 혼내거나, 자는지 지켜본다", "관리자가 부르면 바로 일할 수 있게 자리를 지켜야 한다"];
-  const MODE_NAME = { A: "앞으로 받을 월급 미리 계산하기", B: "내 월급, 제대로 받았나 확인하기" };
-  const fresh = () => ({ screen: "start", mode: "", idx: 0, a: {}, checks: [false, false, false, false], err: "", example: false, wageTouched: false });
-  let S = fresh();
-  const steps = () => {
-    const wt = S.a.wtype === "shift" ? "shift" : "daily";
-    const head = ["year", "wtype"];
-    if (S.mode === "A") return wt === "daily" ? [...head, "wage", "rest", "nightRest", "approved", "five"] : [...head, "wage", "days", "shift", "restS", "nightWork", "approved", "five"];
-    return wt === "daily" ? [...head, "base", "rest", "approved"] : [...head, "base", "days", "shift", "restS", "approved"];
-  };
-  const n = (k) => (S.a[k] === undefined || String(S.a[k]).trim() === "" ? NaN : Number(S.a[k]));
-  /* ── 단계별 검사 (오류 문구는 기존 검증 함수 재사용) ── */
-  function stepError(key) {
-    const q = Q[key];
-    if (q.kind === "choice") return S.a[key] ? "" : "하나를 골라 주세요.";
-    const v = n(key);
-    if (Number.isNaN(v)) return "숫자를 적어 주세요.";
-    switch (key) {
-      case "wage": return v > 0 ? "" : "시급을 입력하세요.";
-      case "base": return v > 0 ? "" : "기본급을 입력하세요.";
-      case "rest": return validateRest(v);
-      case "nightRest": return validateRest(n("rest"), v);
-      case "days": return validateShift({ days: v, shift: 24, rest: 0 });
-      case "shift": return validateShift({ days: 1, shift: v, rest: 0 });
-      case "restS": return validateShift({ days: 1, shift: n("shift"), rest: v });
-      case "nightWork": return validateShift({ days: 1, shift: n("shift"), rest: n("restS"), nightWork: v });
-    }
-    return "";
-  }
-  /* ── 화면 그리기 ───────────────────── */
-  const restBanner = () => S.checks.some(Boolean)
-    ? `<div class="note">휴게시간 점검에서 근로시간으로 인정될 수 있는 항목이 체크되어 있어요. 아래 결과는 실제보다 작게 나올 수 있으니 휴게시간을 다시 확인하세요.</div>` : "";
-  function viewStart() {
-    return `<div class="card">
-      <p class="lead">질문에 하나씩 답하면 월급을 계산해 드려요. 먼저 하고 싶은 것을 골라 주세요.</p>
-      <button type="button" class="big-btn" id="gc-start-B" data-act="start" data-mode="B">내 월급, 제대로 받았나 확인하기<small>받고 있는 기본급이 최저임금 이상인지 봐요</small></button>
-      <button type="button" class="big-btn alt" id="gc-start-A" data-act="start" data-mode="A">앞으로 받을 월급 미리 계산하기<small>시급과 근무 시간으로 한 달 월급을 계산해요</small></button>
-      <button type="button" class="ex-btn" id="gc-start-example" data-act="example">예시로 해보기</button>
-    </div>`;
-  }
-  function stepper(key, q) {
-    const val = S.a[key] ?? "";
-    return `<div class="stp">
-      <button type="button" id="gc-dec-${key}" data-act="dec" data-field="${key}" aria-label="${q.label} 줄이기">−</button>
-      <input type="number" id="gc-in-${key}" data-field="${key}" inputmode="decimal" min="${q.min}" max="${q.max}" step="${q.step}" placeholder="${q.ph}" value="${val}" aria-label="${q.label}">
-      <button type="button" id="gc-inc-${key}" data-act="inc" data-field="${key}" aria-label="${q.label} 늘리기">+</button>
-    </div><p class="unit">${q.unit || "시간"}</p>`;
-  }
-  function viewQuestion() {
-    const list = steps(), key = list[S.idx], q = Q[key];
-    let body = "";
-    if (q.kind === "choice") {
-      body = (key === "year" ? yearOpts() : q.opts).map(([v, label, sub]) => `<button type="button" class="opt" id="gc-opt-${key}-${v}" data-act="opt" data-field="${key}" data-value="${v}" aria-pressed="${S.a[key] === v}">${label}${sub ? `<small>${sub}</small>` : ""}</button>`).join("");
-    } else {
-      body = q.kind === "money"
-        ? `<input type="number" class="num-in" id="gc-in-${key}" data-field="${key}" inputmode="numeric" min="0" step="10" value="${S.a[key] ?? ""}" aria-label="${q.label}"><p class="unit">원</p>`
-        : stepper(key, q);
-      body += `<p class="need" id="gc-need" ${Number.isNaN(n(key)) ? "" : "hidden"}>숫자를 넣으면 ‘다음’ 버튼이 눌려요.</p>`;
-    }
-    if (q.check) {
-      const any = S.checks.some(Boolean);
-      body += `<div class="chk"><p>혹시 쉬는 시간에 이런 일이 있나요? 해당하면 눌러 주세요.</p>
-        ${CHECKS.map((c, i) => `<label><input type="checkbox" class="rc" data-act="chk" data-idx="${i}" ${S.checks[i] ? "checked" : ""}> ${c}</label>`).join("")}
-        <div id="gc-restWarn" class="note stop" ${any ? "" : "hidden"}><strong>이 시간은 근로시간으로 인정될 수 있음</strong><br>해당하는 시간은 쉬는 시간에서 빼고 다시 적어 보세요. (그 시간이 밤 10시~아침 6시라면 야간 휴게시간에서도 빼야 해요.)
-        <div><button type="button" class="btn" id="gc-refocus" data-act="refocus" data-field="${key}">휴게시간 다시 입력하기</button></div></div></div>`;
-    }
-    return `<div class="card" id="gc-q" data-step="${key}">
-      <div class="progress"><b id="gc-progress">${S.idx + 1}/${list.length}</b><div class="bar" aria-hidden="true"><i style="width:${Math.round(((S.idx + 1) / list.length) * 100)}%"></i></div></div>
-      <span class="mode-tag">${MODE_NAME[S.mode]}</span>
-      <h2 class="q-title" id="gc-q-title" tabindex="-1">${q.t}</h2>
-      <p class="q-help">${q.h}</p>
-      ${body}
-      <div class="err" id="gc-q-err" role="alert">${S.err}</div>
-      <div class="nav"><button type="button" class="prev" id="gc-btn-prev" data-act="prev">이전</button><button type="button" class="next" id="gc-btn-next" data-act="next" ${q.kind !== "choice" && Number.isNaN(n(key)) ? "disabled" : ""}>${S.idx === list.length - 1 ? "결과 보기" : "다음"}</button></div>
-    </div>`;
-  }
-  const noApproval = (what) => `<div class="note stop"><strong>${what}을(를) 계산하지 않았어요.</strong><br>감시·단속 승인이 없으면 연장·휴일·주휴 가산 대상일 수 있어 금액이 더 클 수 있어요. 정확한 금액은 상담 ${TEL}(고용노동부)에서 확인하세요.</div>`;
-  const unknownNotes = () => {
-    let s = "";
-    if (S.a.approved === "unknown") s += `<div class="note">승인을 받은 것으로 계산했어요. 승인을 안 받았다면 이보다 더 받아야 할 수 있어요. 상담 ${TEL}</div>`;
-    if (S.mode === "A" && S.a.five === "unknown") s += `<div class="note">아파트 관리업체는 대부분 5인 이상이에요. 5인 이상으로 계산했어요.</div>`;
-    return s;
-  };
-  function viewResult() {
-    const year = Number(S.a.year), type = S.a.wtype === "shift" ? "shift" : "daily";
-    const ex = S.example ? `<div class="note"><strong>예시 값으로 계산한 결과예요.</strong> (격일제 · 휴게 8시간 · 야간휴게 4시간 · 승인 · 5인 이상)</div>` : "";
-    let out;
-    if (S.mode === "A") out = resultA(year, type); else out = resultB(year, type);
-    return `<div class="card res" id="gc-result">${ex}<span class="mode-tag">${MODE_NAME[S.mode]}</span>${out}
-      <div class="help-link">궁금한 점은 고용노동부 상담 ${TEL}</div>
-      <div class="nav"><button type="button" class="prev" id="gc-btn-prev" data-act="prev">이전</button><button type="button" class="next" id="gc-btn-restart" data-act="restart">처음으로</button></div></div>`;
-  }
-  function resultA(year, type) {
-    const wage = n("wage"), approved = S.a.approved;
-    if (approved === "no") return restBanner() + noApproval("금액");
-    const isFive = S.a.five !== "no";
-    const r = type === "daily"
-      ? calcA({ year, wage, rest: n("rest"), nightRest: n("nightRest"), five: isFive })
-      : calcShiftA({ year, wage, days: n("days"), shift: n("shift"), rest: n("restS"), nightWork: n("nightWork"), five: isFive });
-    const low = wage < r.min ? `<div class="note">입력한 시급이 ${year}년 최저시급(${won(r.min)})보다 낮아요.</div>` : "";
-    const nightCell = isFive ? won(r.night) : "0원 (5인 미만)";
-    const nightFinal = isFive ? won(r.night) : "0원 (5인 미만은 법정 가산 의무 없음)";
-    const steps = type === "daily" ? `
-        <li>월평균 근로시간 = (24 − ${num(r.rest)}) × 365 ÷ 24 = ${num(24 - r.rest)} × 365 ÷ 24 = <b>${num(r.hours)}시간</b></li>
-        <li>기본급 = ${num(r.hours)} × ${won(wage)} = <b>${won(r.basic)}</b></li>
-        <li>야간 근로시간(1회) = 8 − ${num(r.nightRest)} = ${num(nightWorkHours(r.nightRest))}시간 → 월평균 ${num(nightWorkHours(r.nightRest))} × 365 ÷ 24 = ${num(r.nHours)}시간</li>
-        <li>야간수당 = ${num(r.nHours)} × ${won(wage)} × 0.5 = <b>${nightFinal}</b></li>` : `
-        <li>월 근로시간 = ${num(r.days)} × (${num(r.shift)} − ${num(r.rest)}) = <b>${num(r.hours)}시간</b></li>
-        <li>기본급 = ${num(r.hours)} × ${won(wage)} = <b>${won(r.basic)}</b></li>
-        <li>월 야간 근로시간 = ${num(r.days)} × ${num(r.nightWork)} = ${num(r.nHours)}시간</li>
-        <li>야간수당 = ${num(r.nHours)} × ${won(wage)} × 0.5 = <b>${nightFinal}</b></li>`;
-    return restBanner() + unknownNotes() + low + `
-      <p class="res-lead">한 달 약</p>
-      <div class="res-big"><span id="gc-totalA">${won(r.total)}</span><small>(세금 떼기 전)</small></div>
-      <div class="cmp">급여명세서 총액과 비교해 보세요.</div>
-      <table class="r"><tbody>
-        <tr><td>${type === "daily" ? "월평균 근로시간" : "월 근로시간"}</td><td>${num(r.hours)}시간</td></tr>
-        <tr><td>기본급</td><td>${won(r.basic)}</td></tr>
-        <tr><td>야간수당 (가산 50%)</td><td>${nightCell}</td></tr>
-      </tbody></table>
-      <details><summary>계산 과정 펼쳐보기</summary><ol>${steps}
-        <li>합계 = ${won(r.basic)} + ${isFive ? won(r.night) : "0원"} = <b>${won(r.total)}</b></li>
-      </ol></details>`;
-  }
-  function resultB(year, type) {
-    const base = n("base"), approved = S.a.approved;
-    if (approved === "no") return restBanner() + noApproval("판정");
-    const r = type === "daily" ? calcB({ year, base, rest: n("rest") }) : calcShiftB({ year, base, days: n("days"), shift: n("shift"), rest: n("restS") });
-    const verdict = r.pass ? `<span class="badge ok">최저임금 이상</span>` : `<span class="badge bad">최저임금 미달</span>`;
-    const gapTxt = r.pass ? `최저임금 기준 월 기본급(${won(r.minMonthly)})보다 ${won(-r.gap)} 많아요.` : `최저임금 기준 월 기본급(${won(r.minMonthly)})보다 ${won(r.gap)} 부족해요.`;
-    const hoursStep = type === "daily"
-      ? `월평균 근로시간 = (24 − ${num(r.rest)}) × 365 ÷ 24 = <b>${num(r.hours)}시간</b>`
-      : `월 근로시간 = ${num(r.days)} × (${num(r.shift)} − ${num(r.rest)}) = <b>${num(r.hours)}시간</b>`;
-    return restBanner() + unknownNotes() + `
-      <p style="margin:12px 0 4px">${verdict}</p>
-      <div class="res-big" id="gc-hourlyB">${num(r.hourly)}원<small>한 시간 기본급</small></div>
-      <div class="cmp">${year}년 최저시급 ${won(r.min)} 대비 ${gapTxt}</div>
-      <div class="note"><strong>야간수당은 최저임금 비교에서 제외됨.</strong> 기본급만 적어야 정확해요.</div>
-      <details><summary>계산 과정 펼쳐보기</summary><ol>
-        <li>${hoursStep}</li>
-        <li>시간당 기본급 = ${won(base)} ÷ ${num(r.hours)} = <b>${num(r.hourly)}원</b></li>
-        <li>${year}년 최저시급 = ${won(r.min)} → 비교: ${num(r.hourly)} ${r.pass ? "≥" : "<"} ${r.min.toLocaleString("ko-KR")} → <b>${r.pass ? "이상" : "미달"}</b></li>
-        <li>최저임금 기준 월 기본급 = ${num(r.hours)} × ${won(r.min)} = ${won(r.minMonthly)}</li>
-      </ol></details>`;
-  }
-  function render(focusTitle) {
-    APP.innerHTML = S.screen === "start" ? viewStart() : S.screen === "q" ? viewQuestion() : viewResult();
-    if (focusTitle) {
-      APP.scrollIntoView({ block: "start" });
-      const t = $("q-title"); if (t) t.focus({ preventScroll: true });
-    }
-  }
-  /* ── 동작 ──────────────────────────── */
-  function enterStep() {
-    const key = steps()[S.idx];
-    if (key === "wage" && !S.wageTouched) S.a.wage = String(C.MIN[S.a.year]);
-  }
-  function go(dir) {
-    if (dir > 0) {
-      const key = steps()[S.idx], e = stepError(key);
-      if (e) { S.err = e; render(); return; }
-      S.err = "";
-      if (S.idx === steps().length - 1) S.screen = "result"; else { S.idx++; enterStep(); }
-    } else {
-      S.err = "";
-      if (S.screen === "result") { S.screen = "q"; S.example = false; }
-      else if (S.idx === 0) S.screen = "start"; else S.idx--;
-    }
-    render(true);
-  }
-  // 숫자 질문은 숫자를 넣어야 '다음'이 눌림
-  function syncNext() {
-    if (S.screen !== "q") return;
-    const key = steps()[S.idx], empty = Q[key].kind !== "choice" && Number.isNaN(n(key));
-    const nb = $("btn-next"), need = $("need");
-    if (nb) nb.disabled = empty;
-    if (need) need.hidden = !empty;
-  }
-  function bump(key, sign) {
-    const q = Q[key], cur = n(key);
-    let v = Number.isNaN(cur) ? (sign > 0 ? q.step : q.min) : cur + sign * q.step;
-    v = Math.min(q.max, Math.max(q.min, Math.round(v * 100) / 100));
-    S.a[key] = String(v); S.err = "";
-    const input = $(`in-${key}`); if (input) input.value = S.a[key];
-    const e = $("q-err"); if (e) e.textContent = "";
-    syncNext();
-  }
-  APP.addEventListener("click", (ev) => {
-    const el = ev.target.closest("[data-act]"); if (!el) return;
-    const act = el.dataset.act;
-    if (act === "start") { S = { ...fresh(), screen: "q", mode: el.dataset.mode }; render(true); }
-    else if (act === "example") {
-      S = { ...fresh(), screen: "result", mode: "A", example: true, a: { year: "2026", wtype: "daily", wage: String(C.MIN[2026]), rest: "8", nightRest: "4", approved: "yes", five: "yes" } };
-      S.idx = steps().length - 1; render(true);
-    }
-    else if (act === "opt") {
-      const f = el.dataset.field; S.a[f] = el.dataset.value; S.err = "";
-      if (f === "year" && !S.wageTouched) delete S.a.wage;
-      render();
-    }
-    else if (act === "inc") bump(el.dataset.field, 1);
-    else if (act === "dec") bump(el.dataset.field, -1);
-    else if (act === "prev") go(-1);
-    else if (act === "next") go(1);
-    else if (act === "restart") { S = fresh(); render(true); }
-    else if (act === "refocus") { const i = $(`in-${el.dataset.field}`); i.scrollIntoView({ behavior: "smooth", block: "center" }); i.focus(); }
-  });
-  APP.addEventListener("input", (ev) => {
-    const f = ev.target.dataset.field; if (!f) return;
-    S.a[f] = ev.target.value; S.err = ""; const e = $("q-err"); if (e) e.textContent = "";
-    if (f === "wage") S.wageTouched = ev.target.value !== String(C.MIN[S.a.year]);
-    syncNext();
-  });
-  APP.addEventListener("change", (ev) => {
-    if (ev.target.dataset.act !== "chk") return;
-    S.checks[Number(ev.target.dataset.idx)] = ev.target.checked;
-    const w = $("restWarn"); if (w) w.hidden = !S.checks.some(Boolean);
-  });
-  render();
-})();
+var P = [
+"KGZ1bmN0aW9uICgpIHsKInVzZSBzdHJpY3QiOwovKiDilIDilIAg7IOB7IiYIOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKU",
+"gOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgCAqLwpjb25zdCBDID0geyBNSU46IHsgMjAyNjogMTAzMjAsIDIwMjc6",
+"IDEwNzAwIH0sIE5JR0hUX1JBVEU6IDAuNSwgTklHSFRfSE9VUlM6IDggLyogMjI6MDB+MDY6MDAgKi8sIERBWVM6IDM2NSB9OwoKLyog4pSA4pSAIOyInOyI",
+"mCDqs4TsgrAg7ZWo7IiYICjthYzsiqTtirgg64yA7IOBKSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAgKi8KLy8gMjTsi5zqsIQg6rKp7J28",
+"7KCcCmNvbnN0IG1vbnRobHlIb3VycyA9IChyZXN0KSA9PiAoMjQgLSByZXN0KSAqIEMuREFZUyAvIDI0Owpjb25zdCBuaWdodFdvcmtIb3VycyA9IChuaWdo",
+"dFJlc3QpID0+IEMuTklHSFRfSE9VUlMgLSBuaWdodFJlc3Q7CmNvbnN0IG1vbnRobHlOaWdodEhvdXJzID0gKG5pZ2h0UmVzdCkgPT4gbmlnaHRXb3JrSG91",
+"cnMobmlnaHRSZXN0KSAqIEMuREFZUyAvIDI0OwoKZnVuY3Rpb24gdmFsaWRhdGVSZXN0KHJlc3QsIG5pZ2h0UmVzdCkgewogIGlmICghKHJlc3QgPj0gMCAm",
+"JiByZXN0IDwgMjQpKSByZXR1cm4gIu2ctOqyjOyLnOqwhOydgCAwIOydtOyDgSAyNCDrr7jrp4zsnLzroZwg7J6F66Cl7ZWY7IS47JqULiI7CiAgaWYgKG5p",
+"Z2h0UmVzdCAhPT0gdW5kZWZpbmVkKSB7CiAgICBpZiAoIShuaWdodFJlc3QgPj0gMCAmJiBuaWdodFJlc3QgPD0gQy5OSUdIVF9IT1VSUykpIHJldHVybiAi",
+"7JW86rCEIO2ctOqyjOyLnOqwhOydgCAwfjjsi5zqsIQg7IKs7J2066GcIOyeheugpe2VmOyEuOyalC4iOwogICAgaWYgKG5pZ2h0UmVzdCA+IHJlc3QpIHJl",
+"dHVybiAi7JW86rCEIO2ctOqyjOyLnOqwhOydgCDsoITssrQg7Zy06rKM7Iuc6rCE67O064ukIO2BtCDsiJgg7JeG7Iq164uI64ukLiI7CiAgfQogIHJldHVy",
+"biAiIjsKfQoKZnVuY3Rpb24gY2FsY0EoeyB5ZWFyLCB3YWdlLCByZXN0LCBuaWdodFJlc3QsIGZpdmUgfSkgewogIGNvbnN0IGhvdXJzID0gbW9udGhseUhv",
+"dXJzKHJlc3QpOwogIGNvbnN0IGJhc2ljID0gTWF0aC5yb3VuZChob3VycyAqIHdhZ2UpOwogIGNvbnN0IG5Ib3VycyA9IG1vbnRobHlOaWdodEhvdXJzKG5p",
+"Z2h0UmVzdCk7CiAgY29uc3QgbmlnaHQgPSBmaXZlID8gTWF0aC5yb3VuZChuSG91cnMgKiB3YWdlICogQy5OSUdIVF9SQVRFKSA6IDA7CiAgcmV0dXJuIHsg",
+"eWVhciwgd2FnZSwgcmVzdCwgbmlnaHRSZXN0LCBmaXZlLCBob3VycywgYmFzaWMsIG5Ib3VycywgbmlnaHQsIHRvdGFsOiBiYXNpYyArIG5pZ2h0LCBtaW46",
+"IEMuTUlOW3llYXJdIH07Cn0KCi8vIOq1kOuMgOygnMK37KeB7KCRIOyeheugpQpjb25zdCBzaGlmdEhvdXJzID0gKGRheXMsIHNoaWZ0LCByZXN0KSA9PiBk",
+"YXlzICogKHNoaWZ0IC0gcmVzdCk7CgpmdW5jdGlvbiB2YWxpZGF0ZVNoaWZ0KHsgZGF5cywgc2hpZnQsIHJlc3QsIG5pZ2h0V29yayB9KSB7CiAgaWYgKCEo",
+"ZGF5cyA+IDAgJiYgZGF5cyA8PSAzMSkpIHJldHVybiAi7JuUIOq3vOustOydvOyImOuKlCAw67O064ukIO2BrOqzoCAzMSDsnbTtlZjroZwg7J6F66Cl7ZWY",
+"7IS47JqULiI7CiAgaWYgKCEoc2hpZnQgPiAwICYmIHNoaWZ0IDw9IDI0KSkgcmV0dXJuICIx7ZqMIOq3vOustOyLnOqwhOydgCAw67O064ukIO2BrOqzoCAy",
+"NCDsnbTtlZjroZwg7J6F66Cl7ZWY7IS47JqULiI7CiAgaWYgKCEocmVzdCA+PSAwICYmIHJlc3QgPCBzaGlmdCkpIHJldHVybiAiMe2ajCDtnLTqsozsi5zq",
+"sITsnYAgMCDsnbTsg4EsIOq3vOustOyLnOqwhCDrr7jrp4zsnLzroZwg7J6F66Cl7ZWY7IS47JqULiI7CiAgaWYgKG5pZ2h0V29yayAhPT0gdW5kZWZpbmVk",
+"KSB7CiAgICBpZiAoIShuaWdodFdvcmsgPj0gMCAmJiBuaWdodFdvcmsgPD0gQy5OSUdIVF9IT1VSUykpIHJldHVybiAi67CkIDEw7IucfuyYpOyghCA27Iuc",
+"7JeQIOydvO2VnCDsi5zqsITsnYAgMH447Iuc6rCEIOyCrOydtOuhnCDsnoXroKXtlZjshLjsmpQuIjsKICAgIGlmIChuaWdodFdvcmsgPiBzaGlmdCAtIHJl",
+"c3QpIHJldHVybiAi7JW86rCEIOq3vOuhnOyLnOqwhOydgCAx7ZqMIOyLpOygnCDqt7zroZzsi5zqsIQo6re866y07Iuc6rCEIOKIkiDtnLTqsowp67O064uk",
+"IO2BtCDsiJgg7JeG7Iq164uI64ukLiI7CiAgfQogIHJldHVybiAiIjsKfQoKZnVuY3Rpb24gY2FsY1NoaWZ0QSh7IHllYXIsIHdhZ2UsIGRheXMsIHNoaWZ0",
+"LCByZXN0LCBuaWdodFdvcmssIGZpdmUgfSkgewogIGNvbnN0IGhvdXJzID0gc2hpZnRIb3VycyhkYXlzLCBzaGlmdCwgcmVzdCk7CiAgY29uc3QgYmFzaWMg",
+"PSBNYXRoLnJvdW5kKGhvdXJzICogd2FnZSk7CiAgY29uc3QgbkhvdXJzID0gZGF5cyAqIG5pZ2h0V29yazsKICBjb25zdCBuaWdodCA9IGZpdmUgPyBNYXRo",
+"LnJvdW5kKG5Ib3VycyAqIHdhZ2UgKiBDLk5JR0hUX1JBVEUpIDogMDsKICByZXR1cm4geyB5ZWFyLCB3YWdlLCBkYXlzLCBzaGlmdCwgcmVzdCwgbmlnaHRX",
+"b3JrLCBmaXZlLCBob3VycywgYmFzaWMsIG5Ib3VycywgbmlnaHQsIHRvdGFsOiBiYXNpYyArIG5pZ2h0LCBtaW46IEMuTUlOW3llYXJdIH07Cn0KCi8vIOy1",
+"nOyggOyehOq4iCDtjJDsoJUgKOqzte2GtSkKZnVuY3Rpb24ganVkZ2UoeWVhciwgYmFzZSwgaG91cnMpIHsKICBjb25zdCBob3VybHkgPSBiYXNlIC8gaG91",
+"cnM7CiAgY29uc3QgbWluID0gQy5NSU5beWVhcl07CiAgY29uc3QgbWluTW9udGhseSA9IE1hdGgucm91bmQoaG91cnMgKiBtaW4pOwogIHJldHVybiB7IHll",
+"YXIsIGJhc2UsIGhvdXJzLCBob3VybHksIG1pbiwgbWluTW9udGhseSwgcGFzczogaG91cmx5ID49IG1pbiwgZ2FwOiBtaW5Nb250aGx5IC0gYmFzZSB9Owp9",
+"CmNvbnN0IGNhbGNCID0gKHsgeWVhciwgYmFzZSwgcmVzdCB9KSA9PiAoeyByZXN0LCAuLi5qdWRnZSh5ZWFyLCBiYXNlLCBtb250aGx5SG91cnMocmVzdCkp",
+"IH0pOwpjb25zdCBjYWxjU2hpZnRCID0gKHsgeWVhciwgYmFzZSwgZGF5cywgc2hpZnQsIHJlc3QgfSkgPT4gKHsgZGF5cywgc2hpZnQsIHJlc3QsIC4uLmp1",
+"ZGdlKHllYXIsIGJhc2UsIHNoaWZ0SG91cnMoZGF5cywgc2hpZnQsIHJlc3QpKSB9KTsKCmlmICh0eXBlb2Ygd2luZG93ICE9PSAidW5kZWZpbmVkIikgd2lu",
+"ZG93Lkd1YXJkQ2FsYyA9IHsgQywgbW9udGhseUhvdXJzLCBjYWxjQSwgY2FsY0IsIGNhbGNTaGlmdEEsIGNhbGNTaGlmdEIsIHZhbGlkYXRlUmVzdCwgdmFs",
+"aWRhdGVTaGlmdCB9OwoKLyog4pSA4pSAIO2ZlOuptCAo7ZWcIOuyiOyXkCDsp4jrrLgg7ZWY64KY7JSpKSDilIDilIDilIDilIDilIDilIDilIDilIDilIDi",
+"lIDilIAgKi8KKGZ1bmN0aW9uICgpIHsKICBpZiAodHlwZW9mIGRvY3VtZW50ID09PSAidW5kZWZpbmVkIikgcmV0dXJuOwogIGNvbnN0IFJPT1QgPSBkb2N1",
+"bWVudC5nZXRFbGVtZW50QnlJZCgiZ3VhcmQtY2FsYyIpOwogIGlmICghUk9PVCkgcmV0dXJuOwogIGNvbnN0ICQgPSAoaWQpID0+IGRvY3VtZW50LmdldEVs",
+"ZW1lbnRCeUlkKCJnYy0iICsgaWQpOwogIGNvbnN0IEFQUCA9ICQoImFwcCIpOwogIGNvbnN0IHdvbiA9IChuKSA9PiBNYXRoLnJvdW5kKG4pLnRvTG9jYWxl",
+"U3RyaW5nKCJrby1LUiIpICsgIuybkCI7CiAgY29uc3QgbnVtID0gKG4sIGQgPSAyKSA9PiAoTWF0aC5yb3VuZChuICogMTAgKiogZCkgLyAxMCAqKiBkKS50",
+"b0xvY2FsZVN0cmluZygia28tS1IiLCB7IG1heGltdW1GcmFjdGlvbkRpZ2l0czogZCB9KTsKICBjb25zdCBURUwgPSBgPGEgaHJlZj0idGVsOjEzNTAiPjEz",
+"NTA8L2E+YDsKCiAgLyog7KeI66y4IOygleydmDog7KCc66qpwrfrj4Tsm4Drp5DCt+yiheulmCAqLwogIGNvbnN0IFEgPSB7CiAgICB5ZWFyOiB7IHQ6ICLr",
+"qocg64WEIOyblOq4ieycvOuhnCDqs4TsgrDtlaDquYzsmpQ/IiwgaDogIuy1nOyggOyehOq4iOydgCDtlbTrp4jri6Qg64us65287JqULiIsIGtpbmQ6ICJj",
+"aG9pY2UiLAogICAgICBvcHRzOiBbXSAvKiDsl7Drj4Qg67KE7Yq87J2AIHllYXJPcHRzKCkg6rCAIO2YhOyerCDrgqDsp5wg6riw7KSA7Jy866GcIOunjOuT",
+"piAqLyB9LAogICAgd3R5cGU6IHsgdDogIuyWtOuWpCDrsKnsi53snLzroZwg7J287ZWY7IS47JqUPyIsIGg6ICLqt7zrrLTtkZzrgpgg6re866Gc6rOE7JW9",
+"7ISc7JeQIOygge2YgCDsnojslrTsmpQuIiwga2luZDogImNob2ljZSIsCiAgICAgIG9wdHM6IFtbImRhaWx5IiwgIjI07Iuc6rCEIOqyqeydvOygnCIsICLt",
+"lZjro6gg7J287ZWY6rOgIO2VmOujqCDsiazslrTsmpQiXSwgWyJzaGlmdCIsICLqtZDrjIDsoJzCt+yngeygkSDsnoXroKUiLCAi6re866y07J287IiY7JmA",
+"IOyLnOqwhOydhCDsp4HsoJEg7KCB7Ja07JqUIl1dIH0sCiAgICB3YWdlOiB7IHQ6ICLsi5zquIko7ZWcIOyLnOqwhCDsnbztlZwg6rCSKeydtCDslrzrp4js",
+"mIjsmpQ/IiwgaDogIuq3vOuhnOqzhOyVveyEnOyXkCDsoIHtmIAg7J6I7Ja07JqULiDrqqjrpbTrqbQg6re464yA66GcIOuRkOyEuOyalCjqt7jtlbQg7LWc",
+"7KCA7Iuc6riJKS4iLCBraW5kOiAibW9uZXkiLCB1bml0OiAi7JuQIiwgbGFiZWw6ICLsi5zquIkiIH0sCiAgICBiYXNlOiB7IHQ6ICLtlZwg64usIOq4sOuz",
+"uOq4ieydtCDslrzrp4jsmIjsmpQ/IiwgaDogIuq4ieyXrOuqheyEuOyEnOydmCDigJjquLDrs7jquInigJnsnbTsl5DsmpQuIOyVvOqwhOyImOuLueydgCDr",
+"ubzqs6Ag7KCB7Ja0IOyjvOyEuOyalC4iLCBraW5kOiAibW9uZXkiLCB1bml0OiAi7JuQIiwgbGFiZWw6ICLquLDrs7jquIkiIH0sCiAgICByZXN0OiB7IHQ6",
+"ICLtlZwg67KIIOy2nOq3vO2VmOuptCDrqocg7Iuc6rCEIOyJrOyEuOyalD8iLCBoOiAi6re866y07ZGc64KYIOq3vOuhnOqzhOyVveyEnOyXkCDsoIHtmIAg",
+"7J6I7Ja07JqULiAyNOyLnOqwhCDqt7zrrLTrnbzrqbQg67O07Ya1IOyJrOuKlCDsi5zqsITsnbQg66qHIOyLnOqwhOyUqSDsoJXtlbTsoLgg7J6I7Ja07JqU",
+"LiDqt7zrrLTtkZzrpbwg7ZmV7J247ZW0IOyjvOyEuOyalC4iLCBraW5kOiAiaG91cnMiLCBtaW46IDAsIG1heDogMjMuNSwgc3RlcDogMC41LCBwaDogIuyY",
+"iDogOCIsIGxhYmVsOiAi7Zy06rKM7Iuc6rCEIiwgY2hlY2s6IHRydWUgfSwKICAgIG5pZ2h0UmVzdDogeyB0OiAi6re47KSRIOuwpCAxMOyLnH7slYTsuagg",
+"NuyLnOyXkCDsiazripQg7Iuc6rCE7J2A7JqUPyIsIGg6ICLrsKTsl5Ag7J6Q6rGw64KYIOyJrOuKlCDsi5zqsITrp4wg7KCB7Ja07JqULiAwfjjsi5zqsITs",
+"nbTsl5DsmpQuIiwga2luZDogImhvdXJzIiwgbWluOiAwLCBtYXg6IDgsIHN0ZXA6IDAuNSwgcGg6ICLsmIg6IDQiLCBsYWJlbDogIuyVvOqwhCDtnLTqsozs",
+"i5zqsIQiIH0sCiAgICBkYXlzOiB7IHQ6ICLtlZwg64us7JeQIOupsOy5oCDsnbztlZjshLjsmpQ/IiwgaDogIuq3vOustO2RnOulvCDrs7Tqs6Ag7KCB7Ja0",
+"IOyjvOyEuOyalC4iLCBraW5kOiAiaG91cnMiLCBtaW46IDAsIG1heDogMzEsIHN0ZXA6IDEsIHBoOiAi7JiIOiAyMCIsIGxhYmVsOiAi7JuUIOq3vOustOyd",
+"vOyImCIsIHVuaXQ6ICLsnbwiIH0sCiAgICBzaGlmdDogeyB0OiAi7ZWcIOuyiCDstpzqt7ztlZjrqbQg66qHIOyLnOqwhCDsnbztlZjshLjsmpQ/IiwgaDog",
+"IuyJrOuKlCDsi5zqsITquYzsp4Ag7ZWp7LmcIOyLnOqwhOydtOyXkOyalC4g7JiIKSA47Iuc6rCEIOq3vOustCIsIGtpbmQ6ICJob3VycyIsIG1pbjogMCwg",
+"bWF4OiAyNCwgc3RlcDogMC41LCBwaDogIuyYiDogOCIsIGxhYmVsOiAiMe2ajCDqt7zrrLTsi5zqsIQiIH0sCiAgICByZXN0UzogeyB0OiAi6re47KSRIOyJ",
+"rOuKlCDsi5zqsITsnYAg66qHIOyLnOqwhOydtOyXkOyalD8iLCBoOiAi7KCQ7IuswrftnLTsi50g65OxIOyLpOygnOuhnCDsiazripQg7Iuc6rCE7J207JeQ",
+"7JqULiDqt7zrrLTtkZzrgpgg6re866Gc6rOE7JW97ISc7JeQIOygge2YgCDsnojslrTsmpQuIiwga2luZDogImhvdXJzIiwgbWluOiAwLCBtYXg6IDIzLjUs",
+"IHN0ZXA6IDAuNSwgcGg6ICLsmIg6IDEiLCBsYWJlbDogIjHtmowg7Zy06rKM7Iuc6rCEIiwgY2hlY2s6IHRydWUgfSwKICAgIG5pZ2h0V29yazogeyB0OiAi",
+"6re47KSRIOuwpCAxMOyLnH7slYTsuaggNuyLnOyXkCDsnbztlZjripQg7Iuc6rCE7J2A7JqUPyIsIGg6ICLsnbQg7Iuc6rCE7JeQIOyLpOygnOuhnCDsnbzt",
+"lZwg7Iuc6rCE66eMIOyggeyWtOyalC4gMH447Iuc6rCE7J207JeQ7JqULiIsIGtpbmQ6ICJob3VycyIsIG1pbjogMCwgbWF4OiA4LCBzdGVwOiAwLjUsIHBo",
+"OiAi7JiIOiA3IiwgbGFiZWw6ICLslbzqsIQg6re866Gc7Iuc6rCEIiB9LAogICAgYXBwcm92ZWQ6IHsgdDogIuKAmOqwkOyLnMK364uo7IaNIOq3vOuhnCDs",
+"irnsnbjigJnsnYQg67Cb7JWY64KY7JqUPyIsIGg6ICLtmozsgqzqsIAg64W464+Z7LKt7JeQ7IScIOuwm+uKlCDsirnsnbjsnbTsl5DsmpQuIOuqqOultOup",
+"tCDigJjrqqjrpbTqsqDslrTsmpTigJnrpbwg64iE66W07IS47JqULiIsIGtpbmQ6ICJjaG9pY2UiLAogICAgICBvcHRzOiBbWyJ5ZXMiLCAi7JiILCDrsJvs",
+"lZjslrTsmpQiLCAiIl0sIFsibm8iLCAi7JWE64uI7JqUIiwgIiJdLCBbInVua25vd24iLCAi66qo66W06rKg7Ja07JqUIiwgIiJdXSB9LAogICAgZml2ZTog",
+"eyB0OiAi7ZqM7IKsIOyghOyytCDqt7zroZzsnpDqsIAgNeuqhSDsnbTsg4HsnbjqsIDsmpQ/IiwgaDogIuuqqOultOuptCDigJjrqqjrpbTqsqDslrTsmpTi",
+"gJnrpbwg64iE66W07IS47JqULiIsIGtpbmQ6ICJjaG9pY2UiLAogICAgICBvcHRzOiBbWyJ5ZXMiLCAiNeuqhSDsnbTsg4EiLCAiIl0sIFsibm8iLCAiNeuq",
+"hSDrr7jrp4wiLCAiIl0sIFsidW5rbm93biIsICLrqqjrpbTqsqDslrTsmpQiLCAiIl1dIH0sCiAgfTsKICAvLyDsl7Drj4Qg67KE7Yq8OiDtmITsnqwg64Kg",
+"7KecIOq4sOykgOycvOuhnCAo7Jis7ZW0KS8o64K064WEKSDtkZzsi5wKICBjb25zdCB5ZWFyT3B0cyA9ICgpID0+IHsKICAgIGNvbnN0IG5vdyA9IG5ldyBE",
+"YXRlKCkuZ2V0RnVsbFllYXIoKTsKICAgIGNvbnN0IHRhZyA9ICh5KSA9PiAoeSA9PT0gbm93ID8gIiAo7Jis7ZW0KSIgOiB5ID09PSBub3cgKyAxID8gIiAo",
+"64K064WEKSIgOiAiIik7CiAgICByZXR1cm4gT2JqZWN0LmtleXMoQy5NSU4pLm1hcCgoeSkgPT4gW3ksIGAke3l964WEJHt0YWcoTnVtYmVyKHkpKX1gLCBg",
+"7LWc7KCA7Iuc6riJICR7Qy5NSU5beV0udG9Mb2NhbGVTdHJpbmcoImtvLUtSIil97JuQYF0pOwogIH07CiAgY29uc3QgQ0hFQ0tTID0gWyLsiazripQg7Iuc",
+"6rCE7JeQ64+EIOyInOywsOydtOuCmCDri6Trpbgg7J287J2EIO2VtOyVvCDtlZzri6QiLCAi7Ims64qUIOyLnOqwhOyXkCDsnpDrpqzrpbwg67mE7Jqw66m0",
+"IOyblOq4ieydtCDquY7snbTqsbDrgpgg7Zi864Kc64ukIiwgIuyJrOuKlCDsi5zqsITsl5Ag7J6Q66m0IO2YvOuCtOqxsOuCmCwg7J6Q64qU7KeAIOyngOy8",
+"nOuzuOuLpCIsICLqtIDrpqzsnpDqsIAg67aA66W066m0IOuwlOuhnCDsnbztlaAg7IiYIOyeiOqyjCDsnpDrpqzrpbwg7KeA7Lyc7JW8IO2VnOuLpCJdOwog",
+"IGNvbnN0IE1PREVfTkFNRSA9IHsgQTogIuyVnuycvOuhnCDrsJvsnYQg7JuU6riJIOuvuOumrCDqs4TsgrDtlZjquLAiLCBCOiAi64K0IOyblOq4iSwg7KCc",
+"64yA66GcIOuwm+yVmOuCmCDtmZXsnbjtlZjquLAiIH07CgogIGNvbnN0IGZyZXNoID0gKCkgPT4gKHsgc2NyZWVuOiAic3RhcnQiLCBtb2RlOiAiIiwgaWR4",
+"OiAwLCBhOiB7fSwgY2hlY2tzOiBbZmFsc2UsIGZhbHNlLCBmYWxzZSwgZmFsc2VdLCBlcnI6ICIiLCBleGFtcGxlOiBmYWxzZSwgd2FnZVRvdWNoZWQ6IGZh",
+"bHNlIH0pOwogIGxldCBTID0gZnJlc2goKTsKCiAgY29uc3Qgc3RlcHMgPSAoKSA9PiB7CiAgICBjb25zdCB3dCA9IFMuYS53dHlwZSA9PT0gInNoaWZ0IiA/",
+"ICJzaGlmdCIgOiAiZGFpbHkiOwogICAgY29uc3QgaGVhZCA9IFsieWVhciIsICJ3dHlwZSJdOwogICAgaWYgKFMubW9kZSA9PT0gIkEiKSByZXR1cm4gd3Qg",
+"PT09ICJkYWlseSIgPyBbLi4uaGVhZCwgIndhZ2UiLCAicmVzdCIsICJuaWdodFJlc3QiLCAiYXBwcm92ZWQiLCAiZml2ZSJdIDogWy4uLmhlYWQsICJ3YWdl",
+"IiwgImRheXMiLCAic2hpZnQiLCAicmVzdFMiLCAibmlnaHRXb3JrIiwgImFwcHJvdmVkIiwgImZpdmUiXTsKICAgIHJldHVybiB3dCA9PT0gImRhaWx5IiA/",
+"IFsuLi5oZWFkLCAiYmFzZSIsICJyZXN0IiwgImFwcHJvdmVkIl0gOiBbLi4uaGVhZCwgImJhc2UiLCAiZGF5cyIsICJzaGlmdCIsICJyZXN0UyIsICJhcHBy",
+"b3ZlZCJdOwogIH07CiAgY29uc3QgbiA9IChrKSA9PiAoUy5hW2tdID09PSB1bmRlZmluZWQgfHwgU3RyaW5nKFMuYVtrXSkudHJpbSgpID09PSAiIiA/IE5h",
+"TiA6IE51bWJlcihTLmFba10pKTsKCiAgLyog4pSA4pSAIOuLqOqzhOuzhCDqsoDsgqwgKOyYpOulmCDrrLjqtazripQg6riw7KG0IOqygOymnSDtlajsiJgg",
+"7J6s7IKs7JqpKSDilIDilIAgKi8KICBmdW5jdGlvbiBzdGVwRXJyb3Ioa2V5KSB7CiAgICBjb25zdCBxID0gUVtrZXldOwogICAgaWYgKHEua2luZCA9PT0g",
+"ImNob2ljZSIpIHJldHVybiBTLmFba2V5XSA/ICIiIDogIu2VmOuCmOulvCDqs6jrnbwg7KO87IS47JqULiI7CiAgICBjb25zdCB2ID0gbihrZXkpOwogICAg",
+"aWYgKE51bWJlci5pc05hTih2KSkgcmV0dXJuICLsiKvsnpDrpbwg7KCB7Ja0IOyjvOyEuOyalC4iOwogICAgc3dpdGNoIChrZXkpIHsKICAgICAgY2FzZSAi",
+"d2FnZSI6IHJldHVybiB2ID4gMCA/ICIiIDogIuyLnOq4ieydhCDsnoXroKXtlZjshLjsmpQuIjsKICAgICAgY2FzZSAiYmFzZSI6IHJldHVybiB2ID4gMCA/",
+"ICIiIDogIuq4sOuzuOq4ieydhCDsnoXroKXtlZjshLjsmpQuIjsKICAgICAgY2FzZSAicmVzdCI6IHJldHVybiB2YWxpZGF0ZVJlc3Qodik7CiAgICAgIGNh",
+"c2UgIm5pZ2h0UmVzdCI6IHJldHVybiB2YWxpZGF0ZVJlc3QobigicmVzdCIpLCB2KTsKICAgICAgY2FzZSAiZGF5cyI6IHJldHVybiB2YWxpZGF0ZVNoaWZ0",
+"KHsgZGF5czogdiwgc2hpZnQ6IDI0LCByZXN0OiAwIH0pOwogICAgICBjYXNlICJzaGlmdCI6IHJldHVybiB2YWxpZGF0ZVNoaWZ0KHsgZGF5czogMSwgc2hp",
+"ZnQ6IHYsIHJlc3Q6IDAgfSk7CiAgICAgIGNhc2UgInJlc3RTIjogcmV0dXJuIHZhbGlkYXRlU2hpZnQoeyBkYXlzOiAxLCBzaGlmdDogbigic2hpZnQiKSwg",
+"cmVzdDogdiB9KTsKICAgICAgY2FzZSAibmlnaHRXb3JrIjogcmV0dXJuIHZhbGlkYXRlU2hpZnQoeyBkYXlzOiAxLCBzaGlmdDogbigic2hpZnQiKSwgcmVz",
+"dDogbigicmVzdFMiKSwgbmlnaHRXb3JrOiB2IH0pOwogICAgfQogICAgcmV0dXJuICIiOwogIH0KCiAgLyog4pSA4pSAIO2ZlOuptCDqt7jrpqzquLAg4pSA",
+"4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSAICovCiAgY29uc3QgcmVzdEJhbm5lciA9ICgpID0+",
+"IFMuY2hlY2tzLnNvbWUoQm9vbGVhbikKICAgID8gYDxkaXYgY2xhc3M9Im5vdGUiPu2ctOqyjOyLnOqwhCDsoJDqsoDsl5DshJwg6re866Gc7Iuc6rCE7Jy8",
+"66GcIOyduOygleuQoCDsiJgg7J6I64qUIO2VreuqqeydtCDssrTtgazrkJjslrQg7J6I7Ja07JqULiDslYTrnpgg6rKw6rO864qUIOyLpOygnOuztOuLpCDs",
+"npHqsowg64KY7JisIOyImCDsnojsnLzri4gg7Zy06rKM7Iuc6rCE7J2EIOuLpOyLnCDtmZXsnbjtlZjshLjsmpQuPC9kaXY+YCA6ICIiOwoKICBmdW5jdGlv",
+"biB2aWV3U3RhcnQoKSB7CiAgICByZXR1cm4gYDxkaXYgY2xhc3M9ImNhcmQiPgogICAgICA8cCBjbGFzcz0ibGVhZCI+7KeI66y47JeQIO2VmOuCmOyUqSDr",
+"i7XtlZjrqbQg7JuU6riJ7J2EIOqzhOyCsO2VtCDrk5zroKTsmpQuIOuovOyggCDtlZjqs6Ag7Iu27J2AIOqyg+ydhCDqs6jrnbwg7KO87IS47JqULjwvcD4K",
+"ICAgICAgPGJ1dHRvbiB0eXBlPSJidXR0b24iIGNsYXNzPSJiaWctYnRuIiBpZD0iZ2Mtc3RhcnQtQiIgZGF0YS1hY3Q9InN0YXJ0IiBkYXRhLW1vZGU9IkIi",
+"PuuCtCDsm5TquIksIOygnOuMgOuhnCDrsJvslZjrgpgg7ZmV7J247ZWY6riwPHNtYWxsPuuwm+qzoCDsnojripQg6riw67O46riJ7J20IOy1nOyggOyehOq4",
+"iCDsnbTsg4Hsnbjsp4Ag67SQ7JqUPC9zbWFsbD48L2J1dHRvbj4KICAgICAgPGJ1dHRvbiB0eXBlPSJidXR0b24iIGNsYXNzPSJiaWctYnRuIGFsdCIgaWQ9",
+"ImdjLXN0YXJ0LUEiIGRhdGEtYWN0PSJzdGFydCIgZGF0YS1tb2RlPSJBIj7slZ7snLzroZwg67Cb7J2EIOyblOq4iSDrr7jrpqwg6rOE7IKw7ZWY6riwPHNt",
+"YWxsPuyLnOq4ieqzvCDqt7zrrLQg7Iuc6rCE7Jy866GcIO2VnCDri6wg7JuU6riJ7J2EIOqzhOyCsO2VtOyalDwvc21hbGw+PC9idXR0b24+CiAgICAgIDxi",
+"dXR0b24gdHlwZT0iYnV0dG9uIiBjbGFzcz0iZXgtYnRuIiBpZD0iZ2Mtc3RhcnQtZXhhbXBsZSIgZGF0YS1hY3Q9ImV4YW1wbGUiPuyYiOyLnOuhnCDtlbTr",
+"s7TquLA8L2J1dHRvbj4KICAgIDwvZGl2PmA7CiAgfQoKICBmdW5jdGlvbiBzdGVwcGVyKGtleSwgcSkgewogICAgY29uc3QgdmFsID0gUy5hW2tleV0gPz8g",
+"IiI7CiAgICByZXR1cm4gYDxkaXYgY2xhc3M9InN0cCI+CiAgICAgIDxidXR0b24gdHlwZT0iYnV0dG9uIiBpZD0iZ2MtZGVjLSR7a2V5fSIgZGF0YS1hY3Q9",
+"ImRlYyIgZGF0YS1maWVsZD0iJHtrZXl9IiBhcmlhLWxhYmVsPSIke3EubGFiZWx9IOykhOydtOq4sCI+4oiSPC9idXR0b24+CiAgICAgIDxpbnB1dCB0eXBl",
+"PSJudW1iZXIiIGlkPSJnYy1pbi0ke2tleX0iIGRhdGEtZmllbGQ9IiR7a2V5fSIgaW5wdXRtb2RlPSJkZWNpbWFsIiBtaW49IiR7cS5taW59IiBtYXg9IiR7",
+"cS5tYXh9IiBzdGVwPSIke3Euc3RlcH0iIHBsYWNlaG9sZGVyPSIke3EucGh9IiB2YWx1ZT0iJHt2YWx9IiBhcmlhLWxhYmVsPSIke3EubGFiZWx9Ij4KICAg",
+"ICAgPGJ1dHRvbiB0eXBlPSJidXR0b24iIGlkPSJnYy1pbmMtJHtrZXl9IiBkYXRhLWFjdD0iaW5jIiBkYXRhLWZpZWxkPSIke2tleX0iIGFyaWEtbGFiZWw9",
+"IiR7cS5sYWJlbH0g64qY66as6riwIj4rPC9idXR0b24+CiAgICA8L2Rpdj48cCBjbGFzcz0idW5pdCI+JHtxLnVuaXQgfHwgIuyLnOqwhCJ9PC9wPmA7CiAg",
+"fQoKICBmdW5jdGlvbiB2aWV3UXVlc3Rpb24oKSB7CiAgICBjb25zdCBsaXN0ID0gc3RlcHMoKSwga2V5ID0gbGlzdFtTLmlkeF0sIHEgPSBRW2tleV07CiAg",
+"ICBsZXQgYm9keSA9ICIiOwogICAgaWYgKHEua2luZCA9PT0gImNob2ljZSIpIHsKICAgICAgYm9keSA9IChrZXkgPT09ICJ5ZWFyIiA/IHllYXJPcHRzKCkg",
+"OiBxLm9wdHMpLm1hcCgoW3YsIGxhYmVsLCBzdWJdKSA9PiBgPGJ1dHRvbiB0eXBlPSJidXR0b24iIGNsYXNzPSJvcHQiIGlkPSJnYy1vcHQtJHtrZXl9LSR7",
+"dn0iIGRhdGEtYWN0PSJvcHQiIGRhdGEtZmllbGQ9IiR7a2V5fSIgZGF0YS12YWx1ZT0iJHt2fSIgYXJpYS1wcmVzc2VkPSIke1MuYVtrZXldID09PSB2fSI+",
+"JHtsYWJlbH0ke3N1YiA/IGA8c21hbGw+JHtzdWJ9PC9zbWFsbD5gIDogIiJ9PC9idXR0b24+YCkuam9pbigiIik7CiAgICB9IGVsc2UgewogICAgICBib2R5",
+"ID0gcS5raW5kID09PSAibW9uZXkiCiAgICAgICAgPyBgPGlucHV0IHR5cGU9Im51bWJlciIgY2xhc3M9Im51bS1pbiIgaWQ9ImdjLWluLSR7a2V5fSIgZGF0",
+"YS1maWVsZD0iJHtrZXl9IiBpbnB1dG1vZGU9Im51bWVyaWMiIG1pbj0iMCIgc3RlcD0iMTAiIHZhbHVlPSIke1MuYVtrZXldID8/ICIifSIgYXJpYS1sYWJl",
+"bD0iJHtxLmxhYmVsfSI+PHAgY2xhc3M9InVuaXQiPuybkDwvcD5gCiAgICAgICAgOiBzdGVwcGVyKGtleSwgcSk7CiAgICAgIGJvZHkgKz0gYDxwIGNsYXNz",
+"PSJuZWVkIiBpZD0iZ2MtbmVlZCIgJHtOdW1iZXIuaXNOYU4obihrZXkpKSA/ICIiIDogImhpZGRlbiJ9PuyIq+yekOulvCDrhKPsnLzrqbQg4oCY64uk7J2M",
+"4oCZIOuyhO2KvOydtCDriIzroKTsmpQuPC9wPmA7CiAgICB9CiAgICBpZiAocS5jaGVjaykgewogICAgICBjb25zdCBhbnkgPSBTLmNoZWNrcy5zb21lKEJv",
+"b2xlYW4pOwogICAgICBib2R5ICs9IGA8ZGl2IGNsYXNzPSJjaGsiPjxwPu2YueyLnCDsiazripQg7Iuc6rCE7JeQIOydtOufsCDsnbzsnbQg7J6I64KY7JqU",
+"PyDtlbTri7ntlZjrqbQg64iM65+sIOyjvOyEuOyalC48L3A+CiAgICAgICAgJHtDSEVDS1MubWFwKChjLCBpKSA9PiBgPGxhYmVsPjxpbnB1dCB0eXBlPSJj",
+"aGVja2JveCIgY2xhc3M9InJjIiBkYXRhLWFjdD0iY2hrIiBkYXRhLWlkeD0iJHtpfSIgJHtTLmNoZWNrc1tpXSA/ICJjaGVja2VkIiA6ICIifT4gJHtjfTwv",
+"bGFiZWw+YCkuam9pbigiIil9CiAgICAgICAgPGRpdiBpZD0iZ2MtcmVzdFdhcm4iIGNsYXNzPSJub3RlIHN0b3AiICR7YW55ID8gIiIgOiAiaGlkZGVuIn0+",
+"PHN0cm9uZz7snbQg7Iuc6rCE7J2AIOq3vOuhnOyLnOqwhOycvOuhnCDsnbjsoJXrkKAg7IiYIOyeiOydjDwvc3Ryb25nPjxicj7tlbTri7ntlZjripQg7Iuc",
+"6rCE7J2AIOyJrOuKlCDsi5zqsITsl5DshJwg67m86rOgIOuLpOyLnCDsoIHslrQg67O07IS47JqULiAo6re4IOyLnOqwhOydtCDrsKQgMTDsi5x+7JWE7Lmo",
+"IDbsi5zrnbzrqbQg7JW86rCEIO2ctOqyjOyLnOqwhOyXkOyEnOuPhCDrubzslbwg7ZW07JqULikKICAgICAgICA8ZGl2PjxidXR0b24gdHlwZT0iYnV0dG9u",
+"IiBjbGFzcz0iYnRuIiBpZD0iZ2MtcmVmb2N1cyIgZGF0YS1hY3Q9InJlZm9jdXMiIGRhdGEtZmllbGQ9IiR7a2V5fSI+7Zy06rKM7Iuc6rCEIOuLpOyLnCDs",
+"noXroKXtlZjquLA8L2J1dHRvbj48L2Rpdj48L2Rpdj48L2Rpdj5gOwogICAgfQogICAgcmV0dXJuIGA8ZGl2IGNsYXNzPSJjYXJkIiBpZD0iZ2MtcSIgZGF0",
+"YS1zdGVwPSIke2tleX0iPgogICAgICA8ZGl2IGNsYXNzPSJwcm9ncmVzcyI+PGIgaWQ9ImdjLXByb2dyZXNzIj4ke1MuaWR4ICsgMX0vJHtsaXN0Lmxlbmd0",
+"aH08L2I+PGRpdiBjbGFzcz0iYmFyIiBhcmlhLWhpZGRlbj0idHJ1ZSI+PGkgc3R5bGU9IndpZHRoOiR7TWF0aC5yb3VuZCgoKFMuaWR4ICsgMSkgLyBsaXN0",
+"Lmxlbmd0aCkgKiAxMDApfSUiPjwvaT48L2Rpdj48L2Rpdj4KICAgICAgPHNwYW4gY2xhc3M9Im1vZGUtdGFnIj4ke01PREVfTkFNRVtTLm1vZGVdfTwvc3Bh",
+"bj4KICAgICAgPGgyIGNsYXNzPSJxLXRpdGxlIiBpZD0iZ2MtcS10aXRsZSIgdGFiaW5kZXg9Ii0xIj4ke3EudH08L2gyPgogICAgICA8cCBjbGFzcz0icS1o",
+"ZWxwIj4ke3EuaH08L3A+CiAgICAgICR7Ym9keX0KICAgICAgPGRpdiBjbGFzcz0iZXJyIiBpZD0iZ2MtcS1lcnIiIHJvbGU9ImFsZXJ0Ij4ke1MuZXJyfTwv",
+"ZGl2PgogICAgICA8ZGl2IGNsYXNzPSJuYXYiPjxidXR0b24gdHlwZT0iYnV0dG9uIiBjbGFzcz0icHJldiIgaWQ9ImdjLWJ0bi1wcmV2IiBkYXRhLWFjdD0i",
+"cHJldiI+7J207KCEPC9idXR0b24+PGJ1dHRvbiB0eXBlPSJidXR0b24iIGNsYXNzPSJuZXh0IiBpZD0iZ2MtYnRuLW5leHQiIGRhdGEtYWN0PSJuZXh0IiAk",
+"e3Eua2luZCAhPT0gImNob2ljZSIgJiYgTnVtYmVyLmlzTmFOKG4oa2V5KSkgPyAiZGlzYWJsZWQiIDogIiJ9PiR7Uy5pZHggPT09IGxpc3QubGVuZ3RoIC0g",
+"MSA/ICLqsrDqs7wg67O06riwIiA6ICLri6TsnYwifTwvYnV0dG9uPjwvZGl2PgogICAgPC9kaXY+YDsKICB9CgogIGNvbnN0IG5vQXBwcm92YWwgPSAod2hh",
+"dCkgPT4gYDxkaXYgY2xhc3M9Im5vdGUgc3RvcCI+PHN0cm9uZz4ke3doYXR97J2EKOulvCkg6rOE7IKw7ZWY7KeAIOyViuyVmOyWtOyalC48L3N0cm9uZz48",
+"YnI+6rCQ7Iucwrfri6jsho0g7Iq57J247J20IOyXhuycvOuptCDsl7DsnqXCt+2ctOydvMK37KO87Zy0IOqwgOyCsCDrjIDsg4Hsnbwg7IiYIOyeiOyWtCDq",
+"uIjslaHsnbQg642UIO2BtCDsiJgg7J6I7Ja07JqULiDsoJXtmZXtlZwg6riI7JWh7J2AIOyDgeuLtCAke1RFTH0o6rOg7Jqp64W464+Z67aAKeyXkOyEnCDt",
+"mZXsnbjtlZjshLjsmpQuPC9kaXY+YDsKICBjb25zdCB1bmtub3duTm90ZXMgPSAoKSA9PiB7CiAgICBsZXQgcyA9ICIiOwogICAgaWYgKFMuYS5hcHByb3Zl",
+"ZCA9PT0gInVua25vd24iKSBzICs9IGA8ZGl2IGNsYXNzPSJub3RlIj7sirnsnbjsnYQg67Cb7J2AIOqyg+ycvOuhnCDqs4TsgrDtlojslrTsmpQuIOyKueyd",
+"uOydhCDslYgg67Cb7JWY64uk66m0IOydtOuztOuLpCDrjZQg67Cb7JWE7JW8IO2VoCDsiJgg7J6I7Ja07JqULiDsg4Hri7QgJHtURUx9PC9kaXY+YDsKICAg",
+"IGlmIChTLm1vZGUgPT09ICJBIiAmJiBTLmEuZml2ZSA9PT0gInVua25vd24iKSBzICs9IGA8ZGl2IGNsYXNzPSJub3RlIj7slYTtjIztirgg6rSA66as7JeF",
+"7LK064qUIOuMgOu2gOu2hCA17J24IOydtOyDgeydtOyXkOyalC4gNeyduCDsnbTsg4HsnLzroZwg6rOE7IKw7ZaI7Ja07JqULjwvZGl2PmA7CiAgICByZXR1",
+"cm4gczsKICB9OwoKICBmdW5jdGlvbiB2aWV3UmVzdWx0KCkgewogICAgY29uc3QgeWVhciA9IE51bWJlcihTLmEueWVhciksIHR5cGUgPSBTLmEud3R5cGUg",
+"PT09ICJzaGlmdCIgPyAic2hpZnQiIDogImRhaWx5IjsKICAgIGNvbnN0IGV4ID0gUy5leGFtcGxlID8gYDxkaXYgY2xhc3M9Im5vdGUiPjxzdHJvbmc+7JiI",
+"7IucIOqwkuycvOuhnCDqs4TsgrDtlZwg6rKw6rO87JiI7JqULjwvc3Ryb25nPiAo6rKp7J287KCcIMK3IO2ctOqyjCA47Iuc6rCEIMK3IOyVvOqwhO2ctOqy",
+"jCA07Iuc6rCEIMK3IOyKueyduCDCtyA17J24IOydtOyDgSk8L2Rpdj5gIDogIiI7CiAgICBsZXQgb3V0OwogICAgaWYgKFMubW9kZSA9PT0gIkEiKSBvdXQg",
+"PSByZXN1bHRBKHllYXIsIHR5cGUpOyBlbHNlIG91dCA9IHJlc3VsdEIoeWVhciwgdHlwZSk7CiAgICByZXR1cm4gYDxkaXYgY2xhc3M9ImNhcmQgcmVzIiBp",
+"ZD0iZ2MtcmVzdWx0Ij4ke2V4fTxzcGFuIGNsYXNzPSJtb2RlLXRhZyI+JHtNT0RFX05BTUVbUy5tb2RlXX08L3NwYW4+JHtvdXR9CiAgICAgIDxkaXYgY2xh",
+"c3M9ImhlbHAtbGluayI+6raB6riI7ZWcIOygkOydgCDqs6Dsmqnrhbjrj5nrtoAg7IOB64u0ICR7VEVMfTwvZGl2PgogICAgICA8ZGl2IGNsYXNzPSJuYXYi",
+"PjxidXR0b24gdHlwZT0iYnV0dG9uIiBjbGFzcz0icHJldiIgaWQ9ImdjLWJ0bi1wcmV2IiBkYXRhLWFjdD0icHJldiI+7J207KCEPC9idXR0b24+PGJ1dHRv",
+"biB0eXBlPSJidXR0b24iIGNsYXNzPSJuZXh0IiBpZD0iZ2MtYnRuLXJlc3RhcnQiIGRhdGEtYWN0PSJyZXN0YXJ0Ij7sspjsnYzsnLzroZw8L2J1dHRvbj48",
+"L2Rpdj48L2Rpdj5gOwogIH0KCiAgZnVuY3Rpb24gcmVzdWx0QSh5ZWFyLCB0eXBlKSB7CiAgICBjb25zdCB3YWdlID0gbigid2FnZSIpLCBhcHByb3ZlZCA9",
+"IFMuYS5hcHByb3ZlZDsKICAgIGlmIChhcHByb3ZlZCA9PT0gIm5vIikgcmV0dXJuIHJlc3RCYW5uZXIoKSArIG5vQXBwcm92YWwoIuq4iOyVoSIpOwogICAg",
+"Y29uc3QgaXNGaXZlID0gUy5hLmZpdmUgIT09ICJubyI7CiAgICBjb25zdCByID0gdHlwZSA9PT0gImRhaWx5IgogICAgICA/IGNhbGNBKHsgeWVhciwgd2Fn",
+"ZSwgcmVzdDogbigicmVzdCIpLCBuaWdodFJlc3Q6IG4oIm5pZ2h0UmVzdCIpLCBmaXZlOiBpc0ZpdmUgfSkKICAgICAgOiBjYWxjU2hpZnRBKHsgeWVhciwg",
+"d2FnZSwgZGF5czogbigiZGF5cyIpLCBzaGlmdDogbigic2hpZnQiKSwgcmVzdDogbigicmVzdFMiKSwgbmlnaHRXb3JrOiBuKCJuaWdodFdvcmsiKSwgZml2",
+"ZTogaXNGaXZlIH0pOwogICAgY29uc3QgbG93ID0gd2FnZSA8IHIubWluID8gYDxkaXYgY2xhc3M9Im5vdGUiPuyeheugpe2VnCDsi5zquInsnbQgJHt5ZWFy",
+"feuFhCDstZzsoIDsi5zquIkoJHt3b24oci5taW4pfSnrs7Tri6Qg64Ku7JWE7JqULjwvZGl2PmAgOiAiIjsKICAgIGNvbnN0IG5pZ2h0Q2VsbCA9IGlzRml2",
+"ZSA/IHdvbihyLm5pZ2h0KSA6ICIw7JuQICg17J24IOuvuOunjCkiOwogICAgY29uc3QgbmlnaHRGaW5hbCA9IGlzRml2ZSA/IHdvbihyLm5pZ2h0KSA6ICIw",
+"7JuQICg17J24IOuvuOunjOydgCDrspXsoJUg6rCA7IKwIOydmOustCDsl4bsnYwpIjsKICAgIGNvbnN0IHN0ZXBzID0gdHlwZSA9PT0gImRhaWx5IiA/IGAK",
+"ICAgICAgICA8bGk+7JuU7Y+J6regIOq3vOuhnOyLnOqwhCA9ICgyNCDiiJIgJHtudW0oci5yZXN0KX0pIMOXIDM2NSDDtyAyNCA9ICR7bnVtKDI0IC0gci5y",
+"ZXN0KX0gw5cgMzY1IMO3IDI0ID0gPGI+JHtudW0oci5ob3Vycyl97Iuc6rCEPC9iPjwvbGk+CiAgICAgICAgPGxpPuq4sOuzuOq4iSA9ICR7bnVtKHIuaG91",
+"cnMpfSDDlyAke3dvbih3YWdlKX0gPSA8Yj4ke3dvbihyLmJhc2ljKX08L2I+PC9saT4KICAgICAgICA8bGk+7JW86rCEIOq3vOuhnOyLnOqwhCgx7ZqMKSA9",
+"IDgg4oiSICR7bnVtKHIubmlnaHRSZXN0KX0gPSAke251bShuaWdodFdvcmtIb3VycyhyLm5pZ2h0UmVzdCkpfeyLnOqwhCDihpIg7JuU7Y+J6regICR7bnVt",
+"KG5pZ2h0V29ya0hvdXJzKHIubmlnaHRSZXN0KSl9IMOXIDM2NSDDtyAyNCA9ICR7bnVtKHIubkhvdXJzKX3si5zqsIQ8L2xpPgogICAgICAgIDxsaT7slbzq",
+"sITsiJjri7kgPSAke251bShyLm5Ib3Vycyl9IMOXICR7d29uKHdhZ2UpfSDDlyAwLjUgPSA8Yj4ke25pZ2h0RmluYWx9PC9iPjwvbGk+YCA6IGAKICAgICAg",
+"ICA8bGk+7JuUIOq3vOuhnOyLnOqwhCA9ICR7bnVtKHIuZGF5cyl9IMOXICgke251bShyLnNoaWZ0KX0g4oiSICR7bnVtKHIucmVzdCl9KSA9IDxiPiR7bnVt",
+"KHIuaG91cnMpfeyLnOqwhDwvYj48L2xpPgogICAgICAgIDxsaT7quLDrs7jquIkgPSAke251bShyLmhvdXJzKX0gw5cgJHt3b24od2FnZSl9ID0gPGI+JHt3",
+"b24oci5iYXNpYyl9PC9iPjwvbGk+CiAgICAgICAgPGxpPuyblCDslbzqsIQg6re866Gc7Iuc6rCEID0gJHtudW0oci5kYXlzKX0gw5cgJHtudW0oci5uaWdo",
+"dFdvcmspfSA9ICR7bnVtKHIubkhvdXJzKX3si5zqsIQ8L2xpPgogICAgICAgIDxsaT7slbzqsITsiJjri7kgPSAke251bShyLm5Ib3Vycyl9IMOXICR7d29u",
+"KHdhZ2UpfSDDlyAwLjUgPSA8Yj4ke25pZ2h0RmluYWx9PC9iPjwvbGk+YDsKICAgIHJldHVybiByZXN0QmFubmVyKCkgKyB1bmtub3duTm90ZXMoKSArIGxv",
+"dyArIGAKICAgICAgPHAgY2xhc3M9InJlcy1sZWFkIj7tlZwg64usIOyVvTwvcD4KICAgICAgPGRpdiBjbGFzcz0icmVzLWJpZyI+PHNwYW4gaWQ9ImdjLXRv",
+"dGFsQSI+JHt3b24oci50b3RhbCl9PC9zcGFuPjxzbWFsbD4o7IS46riIIOuWvOq4sCDsoIQpPC9zbWFsbD48L2Rpdj4KICAgICAgPGRpdiBjbGFzcz0iY21w",
+"Ij7quInsl6zrqoXshLjshJwg7LSd7JWh6rO8IOu5hOq1kO2VtCDrs7TshLjsmpQuPC9kaXY+CiAgICAgIDx0YWJsZSBjbGFzcz0iciI+PHRib2R5PgogICAg",
+"ICAgIDx0cj48dGQ+JHt0eXBlID09PSAiZGFpbHkiID8gIuyblO2Pieq3oCDqt7zroZzsi5zqsIQiIDogIuyblCDqt7zroZzsi5zqsIQifTwvdGQ+PHRkPiR7",
+"bnVtKHIuaG91cnMpfeyLnOqwhDwvdGQ+PC90cj4KICAgICAgICA8dHI+PHRkPuq4sOuzuOq4iTwvdGQ+PHRkPiR7d29uKHIuYmFzaWMpfTwvdGQ+PC90cj4K",
+"ICAgICAgICA8dHI+PHRkPuyVvOqwhOyImOuLuSAo6rCA7IKwIDUwJSk8L3RkPjx0ZD4ke25pZ2h0Q2VsbH08L3RkPjwvdHI+CiAgICAgIDwvdGJvZHk+PC90",
+"YWJsZT4KICAgICAgPGRldGFpbHM+PHN1bW1hcnk+6rOE7IKwIOqzvOyglSDtjrzss5Drs7TquLA8L3N1bW1hcnk+PG9sPiR7c3RlcHN9CiAgICAgICAgPGxp",
+"Pu2VqeqzhCA9ICR7d29uKHIuYmFzaWMpfSArICR7aXNGaXZlID8gd29uKHIubmlnaHQpIDogIjDsm5AifSA9IDxiPiR7d29uKHIudG90YWwpfTwvYj48L2xp",
+"PgogICAgICA8L29sPjwvZGV0YWlscz5gOwogIH0KCiAgZnVuY3Rpb24gcmVzdWx0Qih5ZWFyLCB0eXBlKSB7CiAgICBjb25zdCBiYXNlID0gbigiYmFzZSIp",
+"LCBhcHByb3ZlZCA9IFMuYS5hcHByb3ZlZDsKICAgIGlmIChhcHByb3ZlZCA9PT0gIm5vIikgcmV0dXJuIHJlc3RCYW5uZXIoKSArIG5vQXBwcm92YWwoIu2M",
+"kOyglSIpOwogICAgY29uc3QgciA9IHR5cGUgPT09ICJkYWlseSIgPyBjYWxjQih7IHllYXIsIGJhc2UsIHJlc3Q6IG4oInJlc3QiKSB9KSA6IGNhbGNTaGlm",
+"dEIoeyB5ZWFyLCBiYXNlLCBkYXlzOiBuKCJkYXlzIiksIHNoaWZ0OiBuKCJzaGlmdCIpLCByZXN0OiBuKCJyZXN0UyIpIH0pOwogICAgY29uc3QgdmVyZGlj",
+"dCA9IHIucGFzcyA/IGA8c3BhbiBjbGFzcz0iYmFkZ2Ugb2siPuy1nOyggOyehOq4iCDsnbTsg4E8L3NwYW4+YCA6IGA8c3BhbiBjbGFzcz0iYmFkZ2UgYmFk",
+"Ij7stZzsoIDsnoTquIgg66+464usPC9zcGFuPmA7CiAgICBjb25zdCBnYXBUeHQgPSByLnBhc3MgPyBg7LWc7KCA7J6E6riIIOq4sOykgCDsm5Qg6riw67O4",
+"6riJKCR7d29uKHIubWluTW9udGhseSl9KeuztOuLpCAke3dvbigtci5nYXApfSDrp47slYTsmpQuYCA6IGDstZzsoIDsnoTquIgg6riw7KSAIOyblCDquLDr",
+"s7jquIkoJHt3b24oci5taW5Nb250aGx5KX0p67O064ukICR7d29uKHIuZ2FwKX0g67aA7KGx7ZW07JqULmA7CiAgICBjb25zdCBob3Vyc1N0ZXAgPSB0eXBl",
+"ID09PSAiZGFpbHkiCiAgICAgID8gYOyblO2Pieq3oCDqt7zroZzsi5zqsIQgPSAoMjQg4oiSICR7bnVtKHIucmVzdCl9KSDDlyAzNjUgw7cgMjQgPSA8Yj4k",
+"e251bShyLmhvdXJzKX3si5zqsIQ8L2I+YAogICAgICA6IGDsm5Qg6re866Gc7Iuc6rCEID0gJHtudW0oci5kYXlzKX0gw5cgKCR7bnVtKHIuc2hpZnQpfSDi",
+"iJIgJHtudW0oci5yZXN0KX0pID0gPGI+JHtudW0oci5ob3Vycyl97Iuc6rCEPC9iPmA7CiAgICByZXR1cm4gcmVzdEJhbm5lcigpICsgdW5rbm93bk5vdGVz",
+"KCkgKyBgCiAgICAgIDxwIHN0eWxlPSJtYXJnaW46MTJweCAwIDRweCI+JHt2ZXJkaWN0fTwvcD4KICAgICAgPGRpdiBjbGFzcz0icmVzLWJpZyIgaWQ9Imdj",
+"LWhvdXJseUIiPiR7bnVtKHIuaG91cmx5KX3sm5A8c21hbGw+7ZWcIOyLnOqwhCDquLDrs7jquIk8L3NtYWxsPjwvZGl2PgogICAgICA8ZGl2IGNsYXNzPSJj",
+"bXAiPiR7eWVhcn3rhYQg7LWc7KCA7Iuc6riJICR7d29uKHIubWluKX0g64yA67mEICR7Z2FwVHh0fTwvZGl2PgogICAgICA8ZGl2IGNsYXNzPSJub3RlIj48",
+"c3Ryb25nPuyVvOqwhOyImOuLueydgCDstZzsoIDsnoTquIgg67mE6rWQ7JeQ7IScIOygnOyZuOuQqC48L3N0cm9uZz4g6riw67O46riJ66eMIOyggeyWtOyV",
+"vCDsoJXtmZXtlbTsmpQuPC9kaXY+CiAgICAgIDxkZXRhaWxzPjxzdW1tYXJ5PuqzhOyCsCDqs7zsoJUg7Y687LOQ67O06riwPC9zdW1tYXJ5PjxvbD4KICAg",
+"ICAgICA8bGk+JHtob3Vyc1N0ZXB9PC9saT4KICAgICAgICA8bGk+7Iuc6rCE64u5IOq4sOuzuOq4iSA9ICR7d29uKGJhc2UpfSDDtyAke251bShyLmhvdXJz",
+"KX0gPSA8Yj4ke251bShyLmhvdXJseSl97JuQPC9iPjwvbGk+CiAgICAgICAgPGxpPiR7eWVhcn3rhYQg7LWc7KCA7Iuc6riJID0gJHt3b24oci5taW4pfSDi",
+"hpIg67mE6rWQOiAke251bShyLmhvdXJseSl9ICR7ci5wYXNzID8gIuKJpSIgOiAiPCJ9ICR7ci5taW4udG9Mb2NhbGVTdHJpbmcoImtvLUtSIil9IOKGkiA8",
+"Yj4ke3IucGFzcyA/ICLsnbTsg4EiIDogIuuvuOuLrCJ9PC9iPjwvbGk+CiAgICAgICAgPGxpPuy1nOyggOyehOq4iCDquLDspIAg7JuUIOq4sOuzuOq4iSA9",
+"ICR7bnVtKHIuaG91cnMpfSDDlyAke3dvbihyLm1pbil9ID0gJHt3b24oci5taW5Nb250aGx5KX08L2xpPgogICAgICA8L29sPjwvZGV0YWlscz5gOwogIH0K",
+"CiAgZnVuY3Rpb24gcmVuZGVyKGZvY3VzVGl0bGUpIHsKICAgIEFQUC5pbm5lckhUTUwgPSBTLnNjcmVlbiA9PT0gInN0YXJ0IiA/IHZpZXdTdGFydCgpIDog",
+"Uy5zY3JlZW4gPT09ICJxIiA/IHZpZXdRdWVzdGlvbigpIDogdmlld1Jlc3VsdCgpOwogICAgaWYgKGZvY3VzVGl0bGUpIHsKICAgICAgQVBQLnNjcm9sbElu",
+"dG9WaWV3KHsgYmxvY2s6ICJzdGFydCIgfSk7CiAgICAgIGNvbnN0IHQgPSAkKCJxLXRpdGxlIik7IGlmICh0KSB0LmZvY3VzKHsgcHJldmVudFNjcm9sbDog",
+"dHJ1ZSB9KTsKICAgIH0KICB9CgogIC8qIOKUgOKUgCDrj5nsnpEg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA",
+"4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSAICovCiAgZnVuY3Rpb24gZW50ZXJTdGVwKCkgewogICAgY29uc3Qga2V5ID0gc3RlcHMoKVtTLmlk",
+"eF07CiAgICBpZiAoa2V5ID09PSAid2FnZSIgJiYgIVMud2FnZVRvdWNoZWQpIFMuYS53YWdlID0gU3RyaW5nKEMuTUlOW1MuYS55ZWFyXSk7CiAgfQogIGZ1",
+"bmN0aW9uIGdvKGRpcikgewogICAgaWYgKGRpciA+IDApIHsKICAgICAgY29uc3Qga2V5ID0gc3RlcHMoKVtTLmlkeF0sIGUgPSBzdGVwRXJyb3Ioa2V5KTsK",
+"ICAgICAgaWYgKGUpIHsgUy5lcnIgPSBlOyByZW5kZXIoKTsgcmV0dXJuOyB9CiAgICAgIFMuZXJyID0gIiI7CiAgICAgIGlmIChTLmlkeCA9PT0gc3RlcHMo",
+"KS5sZW5ndGggLSAxKSBTLnNjcmVlbiA9ICJyZXN1bHQiOyBlbHNlIHsgUy5pZHgrKzsgZW50ZXJTdGVwKCk7IH0KICAgIH0gZWxzZSB7CiAgICAgIFMuZXJy",
+"ID0gIiI7CiAgICAgIGlmIChTLnNjcmVlbiA9PT0gInJlc3VsdCIpIHsgUy5zY3JlZW4gPSAicSI7IFMuZXhhbXBsZSA9IGZhbHNlOyB9CiAgICAgIGVsc2Ug",
+"aWYgKFMuaWR4ID09PSAwKSBTLnNjcmVlbiA9ICJzdGFydCI7IGVsc2UgUy5pZHgtLTsKICAgIH0KICAgIHJlbmRlcih0cnVlKTsKICB9CiAgLy8g7Iir7J6Q",
+"IOyniOusuOydgCDsiKvsnpDrpbwg64Sj7Ja07JW8ICfri6TsnYwn7J20IOuIjOumvAogIGZ1bmN0aW9uIHN5bmNOZXh0KCkgewogICAgaWYgKFMuc2NyZWVu",
+"ICE9PSAicSIpIHJldHVybjsKICAgIGNvbnN0IGtleSA9IHN0ZXBzKClbUy5pZHhdLCBlbXB0eSA9IFFba2V5XS5raW5kICE9PSAiY2hvaWNlIiAmJiBOdW1i",
+"ZXIuaXNOYU4obihrZXkpKTsKICAgIGNvbnN0IG5iID0gJCgiYnRuLW5leHQiKSwgbmVlZCA9ICQoIm5lZWQiKTsKICAgIGlmIChuYikgbmIuZGlzYWJsZWQg",
+"PSBlbXB0eTsKICAgIGlmIChuZWVkKSBuZWVkLmhpZGRlbiA9ICFlbXB0eTsKICB9CiAgZnVuY3Rpb24gYnVtcChrZXksIHNpZ24pIHsKICAgIGNvbnN0IHEg",
+"PSBRW2tleV0sIGN1ciA9IG4oa2V5KTsKICAgIGxldCB2ID0gTnVtYmVyLmlzTmFOKGN1cikgPyAoc2lnbiA+IDAgPyBxLnN0ZXAgOiBxLm1pbikgOiBjdXIg",
+"KyBzaWduICogcS5zdGVwOwogICAgdiA9IE1hdGgubWluKHEubWF4LCBNYXRoLm1heChxLm1pbiwgTWF0aC5yb3VuZCh2ICogMTAwKSAvIDEwMCkpOwogICAg",
+"Uy5hW2tleV0gPSBTdHJpbmcodik7IFMuZXJyID0gIiI7CiAgICBjb25zdCBpbnB1dCA9ICQoYGluLSR7a2V5fWApOyBpZiAoaW5wdXQpIGlucHV0LnZhbHVl",
+"ID0gUy5hW2tleV07CiAgICBjb25zdCBlID0gJCgicS1lcnIiKTsgaWYgKGUpIGUudGV4dENvbnRlbnQgPSAiIjsKICAgIHN5bmNOZXh0KCk7CiAgfQoKICBB",
+"UFAuYWRkRXZlbnRMaXN0ZW5lcigiY2xpY2siLCAoZXYpID0+IHsKICAgIGNvbnN0IGVsID0gZXYudGFyZ2V0LmNsb3Nlc3QoIltkYXRhLWFjdF0iKTsgaWYg",
+"KCFlbCkgcmV0dXJuOwogICAgY29uc3QgYWN0ID0gZWwuZGF0YXNldC5hY3Q7CiAgICBpZiAoYWN0ID09PSAic3RhcnQiKSB7IFMgPSB7IC4uLmZyZXNoKCks",
+"IHNjcmVlbjogInEiLCBtb2RlOiBlbC5kYXRhc2V0Lm1vZGUgfTsgcmVuZGVyKHRydWUpOyB9CiAgICBlbHNlIGlmIChhY3QgPT09ICJleGFtcGxlIikgewog",
+"ICAgICBTID0geyAuLi5mcmVzaCgpLCBzY3JlZW46ICJyZXN1bHQiLCBtb2RlOiAiQSIsIGV4YW1wbGU6IHRydWUsIGE6IHsgeWVhcjogIjIwMjYiLCB3dHlw",
+"ZTogImRhaWx5Iiwgd2FnZTogU3RyaW5nKEMuTUlOWzIwMjZdKSwgcmVzdDogIjgiLCBuaWdodFJlc3Q6ICI0IiwgYXBwcm92ZWQ6ICJ5ZXMiLCBmaXZlOiAi",
+"eWVzIiB9IH07CiAgICAgIFMuaWR4ID0gc3RlcHMoKS5sZW5ndGggLSAxOyByZW5kZXIodHJ1ZSk7CiAgICB9CiAgICBlbHNlIGlmIChhY3QgPT09ICJvcHQi",
+"KSB7CiAgICAgIGNvbnN0IGYgPSBlbC5kYXRhc2V0LmZpZWxkOyBTLmFbZl0gPSBlbC5kYXRhc2V0LnZhbHVlOyBTLmVyciA9ICIiOwogICAgICBpZiAoZiA9",
+"PT0gInllYXIiICYmICFTLndhZ2VUb3VjaGVkKSBkZWxldGUgUy5hLndhZ2U7CiAgICAgIHJlbmRlcigpOwogICAgfQogICAgZWxzZSBpZiAoYWN0ID09PSAi",
+"aW5jIikgYnVtcChlbC5kYXRhc2V0LmZpZWxkLCAxKTsKICAgIGVsc2UgaWYgKGFjdCA9PT0gImRlYyIpIGJ1bXAoZWwuZGF0YXNldC5maWVsZCwgLTEpOwog",
+"ICAgZWxzZSBpZiAoYWN0ID09PSAicHJldiIpIGdvKC0xKTsKICAgIGVsc2UgaWYgKGFjdCA9PT0gIm5leHQiKSBnbygxKTsKICAgIGVsc2UgaWYgKGFjdCA9",
+"PT0gInJlc3RhcnQiKSB7IFMgPSBmcmVzaCgpOyByZW5kZXIodHJ1ZSk7IH0KICAgIGVsc2UgaWYgKGFjdCA9PT0gInJlZm9jdXMiKSB7IGNvbnN0IGkgPSAk",
+"KGBpbi0ke2VsLmRhdGFzZXQuZmllbGR9YCk7IGkuc2Nyb2xsSW50b1ZpZXcoeyBiZWhhdmlvcjogInNtb290aCIsIGJsb2NrOiAiY2VudGVyIiB9KTsgaS5m",
+"b2N1cygpOyB9CiAgfSk7CiAgQVBQLmFkZEV2ZW50TGlzdGVuZXIoImlucHV0IiwgKGV2KSA9PiB7CiAgICBjb25zdCBmID0gZXYudGFyZ2V0LmRhdGFzZXQu",
+"ZmllbGQ7IGlmICghZikgcmV0dXJuOwogICAgUy5hW2ZdID0gZXYudGFyZ2V0LnZhbHVlOyBTLmVyciA9ICIiOyBjb25zdCBlID0gJCgicS1lcnIiKTsgaWYg",
+"KGUpIGUudGV4dENvbnRlbnQgPSAiIjsKICAgIGlmIChmID09PSAid2FnZSIpIFMud2FnZVRvdWNoZWQgPSBldi50YXJnZXQudmFsdWUgIT09IFN0cmluZyhD",
+"Lk1JTltTLmEueWVhcl0pOwogICAgc3luY05leHQoKTsKICB9KTsKICBBUFAuYWRkRXZlbnRMaXN0ZW5lcigiY2hhbmdlIiwgKGV2KSA9PiB7CiAgICBpZiAo",
+"ZXYudGFyZ2V0LmRhdGFzZXQuYWN0ICE9PSAiY2hrIikgcmV0dXJuOwogICAgUy5jaGVja3NbTnVtYmVyKGV2LnRhcmdldC5kYXRhc2V0LmlkeCldID0gZXYu",
+"dGFyZ2V0LmNoZWNrZWQ7CiAgICBjb25zdCB3ID0gJCgicmVzdFdhcm4iKTsgaWYgKHcpIHcuaGlkZGVuID0gIVMuY2hlY2tzLnNvbWUoQm9vbGVhbik7CiAg",
+"fSk7CgogIHJlbmRlcigpOwp9KSgpOwp9KSgpOw=="
+];
+var code = new TextDecoder("utf-8").decode(Uint8Array.from(atob(P.join("")), function (c) { return c.charCodeAt(0); }));
+var s = document.createElement("script");
+s.text = code;
+document.head.appendChild(s);
+document.head.removeChild(s);
 })();
 </script>
 </div>

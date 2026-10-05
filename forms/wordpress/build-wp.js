@@ -63,6 +63,26 @@ must(!/document\.(querySelector|getElementsBy)/.test(js.replace(/document\.getEl
 js = js.replace('"use strict";', "").trim();
 js = `(function () {\n"use strict";\n${js}\n})();`;
 
+/* ── 워드프레스 안전 처리 ─────────────────────────────────────────
+   워드프레스가 본문을 출력하면서 스크립트 안의 &&, <, > 를 HTML 로 착각해 &#038;&#038; 등으로 바꾸면
+   스크립트가 깨진다(Invalid or unexpected token). 그래서 스크립트 본문 전체를 base64 로 인코딩하고,
+   &, <, > 가 하나도 없는 짧은 로더가 풀어서 실행한다. (base64 문자: A-Z a-z 0-9 + / =)
+   로더는 인라인 <script> 를 하나 만들어 실행하므로 eval 을 쓰지 않는다. */
+const b64 = Buffer.from(js, "utf8").toString("base64");
+const chunks = b64.match(/.{1,120}/g).map((c) => `"${c}"`).join(",\n");
+const loader = `(function () {
+var P = [
+${chunks}
+];
+var code = new TextDecoder("utf-8").decode(Uint8Array.from(atob(P.join("")), function (c) { return c.charCodeAt(0); }));
+var s = document.createElement("script");
+s.text = code;
+document.head.appendChild(s);
+document.head.removeChild(s);
+})();`;
+must(!/[&<>]/.test(loader), "로더에 &, <, > 가 있음");
+js = loader;
+
 /* ── 조립 ───────────────────────────── */
 const compact = (s) => s.replace(/\n\s*\n/g, "\n"); // 빈 줄 제거(자동 <p> 삽입 방지)
 const out = compact(`<!-- 경비원 월급 계산기 · 워드프레스 '사용자 정의 HTML' 블록에 통째로 붙여넣기 (build-wp.js 로 생성, 직접 수정 금지) -->

@@ -42,18 +42,43 @@ ok("2_계산기: 설명글 id(gcs-)와 충돌 없음", !/id="gcs-/.test(calc));
 /* ── ③ 업로드용 합본: 요약 → 계산기 → 목차 → 설명글 ── */
 const ALL = fs.readFileSync(path.join(__dirname, "wp-guard-calc-all.html"), "utf8");
 const at = (needle) => ALL.indexOf(needle);
+const scripts = (html) => [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+const B64LINE = /^"[A-Za-z0-9+/=]+",?$/;
+const encScript = scripts(ALL)[0];
+const b64Lines = encScript.split("\n").filter((l) => B64LINE.test(l));
+const loaderText = encScript.split("\n").filter((l) => !B64LINE.test(l)).join("\n");
+const decoded = Buffer.from(b64Lines.map((l) => l.replace(/[",]/g, "")).join(""), "base64").toString("utf8");
 {
   const order = ["2줄 요약", 'id="guard-calc"', 'class="gc-toc"', 'id="gcs-approval"', 'id="gcs-changes"', 'id="gcs-rest"', 'id="gcs-night"', 'id="gcs-examples"', 'id="gcs-faq"', 'id="gcs-links"', 'id="gcs-source"'];
   const pos = order.map(at);
   ok(`합본 순서: ${order.join(" → ")}`, pos.every((v) => v >= 0) && pos.every((v, i) => i === 0 || v > pos[i - 1]));
   ok("합본에 테마 견본(h1·버튼·문단) 없음", !/sentinel-|테마 제목|테마 버튼|테마 문단/.test(ALL));
-  ok("합본: 계산기 첫 화면 버튼 2개 + 예시 버튼 포함", ALL.includes("내 월급, 제대로 받았나 확인하기") && ALL.includes("앞으로 받을 월급 미리 계산하기") && ALL.includes("예시로 해보기"));
+  ok("합본: 계산기 첫 화면 버튼 2개 + 예시 버튼 포함 (스크립트는 base64 라 풀어서 확인)", decoded.includes("내 월급, 제대로 받았나 확인하기") && decoded.includes("앞으로 받을 월급 미리 계산하기") && decoded.includes("예시로 해보기") && ALL.includes('id="gc-app"'));
   const toc = ALL.slice(at('class="gc-toc"'), at('class="gc-toc"') + 900);
   ok("합본: 목차 7개 항목, '계산기 바로 사용하기' 항목 없음", (toc.match(/<li><a href="#gcs-/g) || []).length === 7 && !ALL.includes("계산기 바로 사용하기") && !toc.includes('href="#guard-calc"'));
   ok("합본: <style> 2개(설명글 1 + 계산기 1), <script> 1개, 문서 한 덩어리", (ALL.match(/<style>/g) || []).length === 2 && (ALL.match(/<script>/g) || []).length === 1 && ALL.trimStart().startsWith("<!--"));
   ok("합본: 운영자 문단 없음", !ALL.includes("gc-operator") && !ALL.includes("blockquote"));
   const PRE = fs.readFileSync(path.join(__dirname, "preview-all.html"), "utf8");
   ok("테스트용 preview-all.html 은 합본 + 테마 견본(같은 내용 포함)", PRE.includes(ALL) && PRE.includes("sentinel-h1"));
+}
+
+/* ── 워드프레스 안전: <script> 안에 &, <, > 가 하나도 없어야 함 (base64 + 짧은 로더) ── */
+for (const f of ["wp-guard-calc-all.html", "2_계산기.html", "preview-all.html"]) {
+  const sc = scripts(fs.readFileSync(path.join(__dirname, f), "utf8"));
+  const bad = sc.map((s) => ({ amp: (s.match(/&/g) || []).length, lt: (s.match(/</g) || []).length, gt: (s.match(/>/g) || []).length }));
+  ok(`${f}: <script> ${sc.length}개 안의 & / < / > 문자 0개 (${JSON.stringify(bad)})`, sc.length >= 1 && bad.every((x) => x.amp + x.lt + x.gt === 0));
+}
+ok(`로더는 짧음 (${loaderText.trim().length}자) · base64 ${b64Lines.length}줄`, loaderText.trim().length < 700 && b64Lines.length > 10);
+ok("로더에 & < > 없음 · eval 미사용 · atob 로 풀어 <script> 를 만들어 실행", !/[&<>]/.test(loaderText) && !/\beval\b/.test(loaderText) && /atob\(/.test(loaderText) && /createElement\("script"\)/.test(loaderText));
+ok("base64 줄은 A-Z a-z 0-9 + / = 만 사용", b64Lines.every((l) => /^"[A-Za-z0-9+/=]+",?$/.test(l)));
+let syntaxOk = true; try { new Function(decoded); } catch (e) { syntaxOk = false; }
+ok("base64를 풀면 계산기 스크립트(문법 정상, && · < · > 는 인코딩 안에만 존재)", syntaxOk && decoded.includes("guard-calc") && decoded.includes("window.GuardCalc") && /&&/.test(decoded) && /</.test(decoded) && />/.test(decoded));
+ok("풀린 스크립트는 한글을 그대로 포함(UTF-8 보존)", decoded.includes("한 달 약") && decoded.includes("예시로 해보기"));
+{
+  // 대조군: 인코딩하지 않은 원본 스크립트에 워드프레스식 변형(& → &#038;)을 하면 SyntaxError (콘솔의 Invalid or unexpected token 재현)
+  const raw = fs.readFileSync(path.join(__dirname, "..", "guard-salary-calculator.html"), "utf8").match(/<script>([\s\S]*)<\/script>/)[1];
+  let rawThrows = false; try { new Function(raw.replace(/&/g, "&#038;")); } catch (e) { rawThrows = e instanceof SyntaxError; }
+  ok("(대조군) 인코딩 전 스크립트는 &→&#038; 변형에서 SyntaxError — 이번 수정이 필요한 이유", rawThrows);
 }
 
 /* ── ① 금지 표현이 forms/ 전체에 없음 ── */
@@ -105,6 +130,16 @@ const at = (needle) => ALL.indexOf(needle);
   await only.click("#gc-start-example");
   ok("합본만 붙여넣은 페이지에서도 계산기 동작(예시 → 2,825,100원)", (await only.innerText("#gc-totalA")) === "2,825,100원" && e2.length === 0);
   await only.close();
+  // 워드프레스식 변형 재현: 문서 전체의 & 를 &#038; 로, 스크립트가 없는 > 는 건드리지 않음 → 계산기가 그대로 동작해야 함
+  const mangled = ALL.replace(/&/g, "&#038;");
+  const wp = await b.newPage({ viewport: { width: 390, height: 900 } });
+  const e3 = []; wp.on("pageerror", (e) => e3.push(e.message)); wp.on("console", (m) => { if (m.type() === "error") e3.push(m.text()); });
+  await wp.setContent(`<!doctype html><html lang="ko"><body style="margin:0"><div class="entry-content">${mangled}</div></body></html>`);
+  await wp.click("#gc-start-example");
+  ok("&→&#038; 변형된 합본에서도 계산기 동작 + 콘솔 오류 없음 (예시 → 2,825,100원)", (await wp.innerText("#gc-totalA")) === "2,825,100원" && e3.length === 0);
+  await wp.click("#gc-btn-restart"); await wp.click("#gc-start-B");
+  ok("변형된 합본에서 모드 B 첫 질문까지 정상", (await wp.innerText("#gc-progress")) === "1/5");
+  await wp.close();
   ok("가로 스크롤 없음(390px, 표는 자체 스크롤)", await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   ok("목차 앵커가 모두 실제 요소를 가리킴", await p.evaluate(() => [...document.querySelectorAll(".gc-toc a")].every((a) => document.querySelector(a.getAttribute("href")))));
   ok("JS 오류 없음", errs.length === 0);
