@@ -1,0 +1,159 @@
+<!-- 자체 양식 5종 안내 · 워드프레스 '사용자 정의 HTML' 블록에 통째로 붙여넣기 (build-wp-pages.js 로 생성, 직접 수정 금지). 스크립트 없음. 페이지 제목은 워드프레스 제목(h1)을 사용 -->
+<div class="idf" id="idf-own-forms-guide">
+<style>
+.idf{--bg:#fff;--fg:#1c1f26;--mut:#5b6472;--line:#d9dee7;--soft:#f4f6fa;--acc:#1f4e9c;--warn-bg:#fff6e5;--warn-line:#f0c36d}
+.idf *{box-sizing:border-box}
+.idf{margin:0;background:var(--bg);color:var(--fg);font:16px/1.7 "Pretendard","Noto Sans KR","맑은 고딕",system-ui,sans-serif}
+.idf{max-width:820px;margin:0 auto;padding:24px 16px 56px}
+.idf h1{font-size:1.7rem;line-height:1.35;margin:.2em 0 .4em}
+.idf h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:2px solid var(--line)}
+.idf .badges{display:flex;flex-wrap:wrap;gap:6px;margin:.4em 0 1em}
+.idf .badge{font-size:.8rem;padding:2px 10px;border-radius:99px;background:var(--soft);border:1px solid var(--line);color:var(--mut)}
+.idf .lead{color:var(--mut)}
+.idf .notice{background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:8px;padding:12px 14px;margin:1.2em 0}
+.idf .box{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:16px;margin:1em 0}
+.idf .btns{display:flex;flex-wrap:wrap;gap:10px;margin:.8em 0}
+.idf .btn{display:inline-block;padding:10px 18px;border-radius:8px;background:var(--acc);color:#fff;text-decoration:none;font-weight:600}
+.idf .btn.sub{background:transparent;color:var(--acc);border:1px solid var(--acc)}
+.idf .tbl-wrap{overflow-x:auto}
+.idf table{border-collapse:collapse;width:100%;min-width:560px;font-size:.95rem}
+.idf th,.idf td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+.idf th{background:var(--soft);white-space:nowrap}
+.idf td.ex{color:var(--acc);font-weight:600}
+.idf table.dl{min-width:0}
+.idf table.dl .btn{padding:6px 10px;font-size:.85rem;white-space:nowrap}
+.idf details{border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:8px 0}
+.idf summary{cursor:pointer;font-weight:600}
+.idf ul.slots{list-style:none;padding:0;display:grid;gap:8px}
+.idf a.slot{display:block;padding:10px 14px;border:1px dashed var(--line);border-radius:8px;color:var(--acc);text-decoration:none}
+.idf .src{font-size:.88rem;color:var(--mut)}
+.idf .credit{margin-top:2.5em;padding-top:1em;border-top:1px solid var(--line);text-align:center;font-size:.85rem;color:var(--mut)}
+.idf{background:#fff;text-align:left;letter-spacing:normal}
+.idf h3{font-size:1.05rem;margin:1.4em 0 .4em;color:var(--fg)}
+.idf p{margin:.7em 0}
+.idf a{color:var(--acc)}
+.idf a.btn,.idf a.btn:hover{color:#fff;text-decoration:none}
+.idf a.btn.sub,.idf a.btn.sub:hover{color:var(--acc)}
+.idf img{max-width:100%;height:auto;display:block}
+.idf .pair{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin:12px 0}
+@media (min-width:640px){.idf .pair{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.idf figure{margin:0;min-width:0}
+.idf figcaption{font-size:.88rem;color:var(--mut);margin-top:6px}
+.idf .toc{border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:1em 0;background:var(--soft)}
+.idf .toc ol{margin:.4em 0 0;padding-left:1.3em}
+.idf .slot.off{display:block;padding:10px 14px;border:1px dashed var(--line);border-radius:8px;color:var(--mut)}
+</style>
+<div class="badges"><span class="badge">자체 양식 5종</span><span class="badge">DOCX·PDF</span><span class="badge">무료</span><span class="badge">확인일 2026년 10월 4일</span></div>
+<p class="lead">일반적으로 필요한 항목으로 새로 구성한 자체 양식입니다. 칸 채우기 쉽게 만들었고, 모든 양식 하단에 ‘인컴다운 제공 무료 양식’이 표기되어 있습니다.</p>
+<div class="notice" role="note"><strong>제출 전 확인</strong> — 회사나 제출처가 정한 양식이 있으면 그 양식을 우선 사용하세요. 이 양식은 참고용이며 법률 자문이 아닙니다.</div>
+<nav class="toc" aria-label="목차"><strong>목차</strong>
+<ol>
+<li><a href="#idf-guide-resignation-letter">사직서</a></li>
+<li><a href="#idf-guide-employment-certificate">재직증명서</a></li>
+<li><a href="#idf-guide-career-certificate">경력증명서</a></li>
+<li><a href="#idf-guide-annual-leave-request">연차휴가신청서</a></li>
+<li><a href="#idf-guide-severance-interim-request">퇴직금 중간정산 신청서</a></li>
+<li><a href="#idf-guide-faq">자주 묻는 질문</a></li>
+</ol></nav>
+<section>
+<h2>한눈에 보기</h2>
+<div class="tbl-wrap"><table class="dl">
+<thead><tr><th>양식</th><th>워드</th><th>PDF</th></tr></thead>
+<tbody>
+<tr><th scope="row"><a href="#idf-guide-resignation-letter">사직서</a></th><td><a class="btn" href="/wp-content/uploads/2026/10/incomedown-resignation-letter.docx" download>DOCX</a></td><td><a class="btn sub" href="/wp-content/uploads/2026/10/incomedown-resignation-letter.pdf" download>PDF</a></td></tr>
+<tr><th scope="row"><a href="#idf-guide-employment-certificate">재직증명서</a></th><td><a class="btn" href="/wp-content/uploads/2026/10/incomedown-employment-certificate.docx" download>DOCX</a></td><td><a class="btn sub" href="/wp-content/uploads/2026/10/incomedown-employment-certificate.pdf" download>PDF</a></td></tr>
+<tr><th scope="row"><a href="#idf-guide-career-certificate">경력증명서</a></th><td><a class="btn" href="/wp-content/uploads/2026/10/incomedown-career-certificate.docx" download>DOCX</a></td><td><a class="btn sub" href="/wp-content/uploads/2026/10/incomedown-career-certificate.pdf" download>PDF</a></td></tr>
+<tr><th scope="row"><a href="#idf-guide-annual-leave-request">연차휴가신청서</a></th><td><a class="btn" href="/wp-content/uploads/2026/10/incomedown-annual-leave-request.docx" download>DOCX</a></td><td><a class="btn sub" href="/wp-content/uploads/2026/10/incomedown-annual-leave-request.pdf" download>PDF</a></td></tr>
+<tr><th scope="row"><a href="#idf-guide-severance-interim-request">퇴직금 중간정산 신청서</a></th><td><a class="btn" href="/wp-content/uploads/2026/10/incomedown-severance-interim-request.docx" download>DOCX</a></td><td><a class="btn sub" href="/wp-content/uploads/2026/10/incomedown-severance-interim-request.pdf" download>PDF</a></td></tr>
+</tbody>
+</table></div>
+</section>
+<h2 id="idf-guide-resignation-letter">사직서</h2>
+<p><strong>이럴 때 쓰세요</strong> — 회사에 퇴직 의사를 전할 때</p>
+<p><strong>들어 있는 항목</strong> — 인적 사항(소속·직위·사번·연락처·입사일·퇴직 희망일), 사직 사유 체크(개인 사정·이직·건강·학업·가사·육아·기타·권고사직·계약기간 만료)와 상세 사유, 인수인계(담당 업무·대상자·완료 예정일), 사직 문구, 서명란</p>
+<div class="pair">
+<figure><a href="/wp-content/uploads/2026/10/incomedown-resignation-letter-blank.png" target="_blank" rel="noopener noreferrer"><img src="/wp-content/uploads/2026/10/incomedown-resignation-letter-blank.png" alt="사직서 빈 양식 미리보기" width="745" height="1053" loading="lazy"></a><figcaption>빈 양식 (A4 1쪽)</figcaption></figure>
+<figure><a href="/wp-content/uploads/2026/10/incomedown-resignation-letter-example.png" target="_blank" rel="noopener noreferrer"><img src="/wp-content/uploads/2026/10/incomedown-resignation-letter-example.png" alt="사직서 작성 예시 (가상 정보)" width="910" height="1287" loading="lazy"></a><figcaption>작성 예시 (홍길동·(주)예시회사, 가상 정보)</figcaption></figure>
+</div>
+<div class="btns"><a class="btn" href="/wp-content/uploads/2026/10/incomedown-resignation-letter.docx" download>사직서 DOCX 받기</a><a class="btn sub" href="/wp-content/uploads/2026/10/incomedown-resignation-letter.pdf" download>사직서 PDF 받기</a></div>
+<h3>채울 때 참고하세요</h3>
+<ul>
+<li>사유 구분에서 실제 사정에 맞는 항목 하나를 체크하세요. ‘권고사직’과 ‘계약기간 만료’는 회사 요청이나 계약 종료로 그만두는 경우에 쓰는 항목입니다.</li>
+<li>이직 사유는 실업급여 등에서 중요하게 쓰이는 항목이니 사실과 다르게 적지 마세요. 해당 여부의 판단은 고용센터가 합니다.</li>
+<li>퇴직 희망일과 인수인계 완료 예정일을 날짜까지 적어 두면 협의가 쉽습니다.</li>
+</ul>
+<h2 id="idf-guide-employment-certificate">재직증명서</h2>
+<p><strong>이럴 때 쓰세요</strong> — 금융기관·관공서 등에 재직 사실을 증명할 때</p>
+<p><strong>들어 있는 항목</strong> — 문서번호, 인적 사항, 재직 사항(소속·직위·입사일·재직 여부·담당 업무), 용도 체크(금융기관·관공서·학교·기타)와 제출처, 증명 문구, 발급 기관(회사명·대표자·사업자등록번호·전화번호·소재지), 직인 자리</p>
+<div class="pair">
+<figure><a href="/wp-content/uploads/2026/10/incomedown-employment-certificate-blank.png" target="_blank" rel="noopener noreferrer"><img src="/wp-content/uploads/2026/10/incomedown-employment-certificate-blank.png" alt="재직증명서 빈 양식 미리보기" width="745" height="1053" loading="lazy"></a><figcaption>빈 양식 (A4 1쪽)</figcaption></figure>
+<figure><a href="/wp-content/uploads/2026/10/incomedown-employment-certificate-example.png" target="_blank" rel="noopener noreferrer"><img src="/wp-content/uploads/2026/10/incomedown-employment-certificate-example.png" alt="재직증명서 작성 예시 (가상 정보)" width="910" height="1287" loading="lazy"></a><figcaption>작성 예시 (홍길동·(주)예시회사, 가상 정보)</figcaption></figure>
+</div>
+<div class="btns"><a class="btn" href="/wp-content/uploads/2026/10/incomedown-employment-certificate.docx" download>재직증명서 DOCX 받기</a><a class="btn sub" href="/wp-content/uploads/2026/10/incomedown-employment-certificate.pdf" download>재직증명서 PDF 받기</a></div>
+<h3>채울 때 참고하세요</h3>
+<ul>
+<li>문서번호와 발급 기관, 직인은 증명서를 발급하는 회사가 채우는 칸입니다.</li>
+<li>용도와 제출처를 적어 두면 제출처에서 요구하는 형식과 맞는지 확인하기 쉽습니다.</li>
+<li>제출처가 지정한 양식이 있으면 그 양식을 우선 사용하세요.</li>
+</ul>
+<h2 id="idf-guide-career-certificate">경력증명서</h2>
+<p><strong>이럴 때 쓰세요</strong> — 이직·지원 등에서 근무 경력을 증명할 때</p>
+<p><strong>들어 있는 항목</strong> — 문서번호, 인적 사항, 근무 경력 표(근무 기간·소속·직위·담당 업무, 4행), 총 근무 기간, 퇴직 사유, 용도 체크와 제출처, 증명 문구, 발급 기관, 직인 자리</p>
+<div class="pair">
+<figure><a href="/wp-content/uploads/2026/10/incomedown-career-certificate-blank.png" target="_blank" rel="noopener noreferrer"><img src="/wp-content/uploads/2026/10/incomedown-career-certificate-blank.png" alt="경력증명서 빈 양식 미리보기" width="745" height="1053" loading="lazy"></a><figcaption>빈 양식 (A4 1쪽)</figcaption></figure>
+<figure><a href="/wp-content/uploads/2026/10/incomedown-career-certificate-example.png" target="_blank" rel="noopener noreferrer"><img src="/wp-content/uploads/2026/10/incomedown-career-certificate-example.png" alt="경력증명서 작성 예시 (가상 정보)" width="910" height="1287" loading="lazy"></a><figcaption>작성 예시 (홍길동·(주)예시회사, 가상 정보)</figcaption></figure>
+</div>
+<div class="btns"><a class="btn" href="/wp-content/uploads/2026/10/incomedown-career-certificate.docx" download>경력증명서 DOCX 받기</a><a class="btn sub" href="/wp-content/uploads/2026/10/incomedown-career-certificate.pdf" download>경력증명서 PDF 받기</a></div>
+<h3>채울 때 참고하세요</h3>
+<ul>
+<li>근무 경력은 입사 순서대로 적고, 행이 모자라면 DOCX 파일에서 표의 행을 추가하세요.</li>
+<li>총 근무 기간은 각 근무 기간을 합산해 적습니다.</li>
+<li>퇴직 사유 칸은 사실대로 적고, 제출처가 요구하지 않으면 비워 둘 수도 있습니다.</li>
+</ul>
+<h2 id="idf-guide-annual-leave-request">연차휴가신청서</h2>
+<p><strong>이럴 때 쓰세요</strong> — 연차·반차·병가 등 휴가를 신청할 때</p>
+<p><strong>들어 있는 항목</strong> — 결재란(담당·팀장·대표), 신청자 정보, 휴가 종류 체크(연차·반차 오전/오후·병가·경조사·기타), 휴가 기간·사용 일수·복귀 예정일, 사유, 업무 대행자·비상 연락처, 연차 현황(인사 담당 기재)</p>
+<div class="pair">
+<figure><a href="/wp-content/uploads/2026/10/incomedown-annual-leave-request-blank.png" target="_blank" rel="noopener noreferrer"><img src="/wp-content/uploads/2026/10/incomedown-annual-leave-request-blank.png" alt="연차휴가신청서 빈 양식 미리보기" width="745" height="1053" loading="lazy"></a><figcaption>빈 양식 (A4 1쪽)</figcaption></figure>
+<figure><a href="/wp-content/uploads/2026/10/incomedown-annual-leave-request-example.png" target="_blank" rel="noopener noreferrer"><img src="/wp-content/uploads/2026/10/incomedown-annual-leave-request-example.png" alt="연차휴가신청서 작성 예시 (가상 정보)" width="910" height="1287" loading="lazy"></a><figcaption>작성 예시 (홍길동·(주)예시회사, 가상 정보)</figcaption></figure>
+</div>
+<div class="btns"><a class="btn" href="/wp-content/uploads/2026/10/incomedown-annual-leave-request.docx" download>연차휴가신청서 DOCX 받기</a><a class="btn sub" href="/wp-content/uploads/2026/10/incomedown-annual-leave-request.pdf" download>연차휴가신청서 PDF 받기</a></div>
+<h3>채울 때 참고하세요</h3>
+<ul>
+<li>휴가 종류를 체크하고 기간과 사용 일수를 함께 적으면 결재가 빠릅니다.</li>
+<li>업무 대행자와 비상 연락처는 자리를 비우는 동안의 업무 공백을 줄이기 위한 칸입니다.</li>
+<li>‘연차 현황’ 칸은 인사 담당자가 채우는 칸이니 비워서 내면 됩니다.</li>
+</ul>
+<h2 id="idf-guide-severance-interim-request">퇴직금 중간정산 신청서</h2>
+<p><strong>이럴 때 쓰세요</strong> — 재직 중에 퇴직금을 미리 정산받고 싶을 때</p>
+<p><strong>들어 있는 항목</strong> — 결재란, 신청자 정보, 중간정산 기준일·정산 대상 기간, 신청 사유 체크(무주택자 주택 구입·전세보증금·6개월 이상 요양·파산·개인회생·재난·임금피크제·기타 법령상 사유), 상세 내용, 증빙 서류 체크, 수령 계좌, 확인 문구, 회사 기재란(평균임금·정산 금액·지급 예정일)</p>
+<div class="pair">
+<figure><a href="/wp-content/uploads/2026/10/incomedown-severance-interim-request-blank.png" target="_blank" rel="noopener noreferrer"><img src="/wp-content/uploads/2026/10/incomedown-severance-interim-request-blank.png" alt="퇴직금 중간정산 신청서 빈 양식 미리보기" width="745" height="1053" loading="lazy"></a><figcaption>빈 양식 (A4 1쪽)</figcaption></figure>
+<figure><a href="/wp-content/uploads/2026/10/incomedown-severance-interim-request-example.png" target="_blank" rel="noopener noreferrer"><img src="/wp-content/uploads/2026/10/incomedown-severance-interim-request-example.png" alt="퇴직금 중간정산 신청서 작성 예시 (가상 정보)" width="910" height="1287" loading="lazy"></a><figcaption>작성 예시 (홍길동·(주)예시회사, 가상 정보)</figcaption></figure>
+</div>
+<div class="btns"><a class="btn" href="/wp-content/uploads/2026/10/incomedown-severance-interim-request.docx" download>퇴직금 중간정산 신청서 DOCX 받기</a><a class="btn sub" href="/wp-content/uploads/2026/10/incomedown-severance-interim-request.pdf" download>퇴직금 중간정산 신청서 PDF 받기</a></div>
+<h3>채울 때 참고하세요</h3>
+<ul>
+<li>중간정산은 법령에서 정한 사유에 한해 인정되는 것으로 알려져 있습니다. 해당 여부는 회사 담당자나 고용노동부 상담 1350에서 확인하세요.</li>
+<li>신청 사유에 맞는 증빙 서류(계약서·진단서·법원 결정문 등)를 함께 준비하세요.</li>
+<li>‘회사 기재란’은 회사가 채우는 칸이므로 비워서 제출합니다.</li>
+</ul>
+<h2 id="idf-guide-faq">자주 묻는 질문 (FAQ)</h2>
+<details><summary>회사에서 정한 양식이 따로 있으면 어떻게 하나요?</summary><p>회사나 제출처가 지정한 양식이 있으면 그 양식을 우선 사용하세요. 이 양식은 일반적으로 필요한 항목으로 새로 구성한 참고용 양식입니다.</p></details>
+<details><summary>워드 파일을 열면 글꼴이 다르게 보여요.</summary><p>글꼴을 ‘맑은 고딕’으로 지정했습니다. 컴퓨터에 해당 글꼴이 없으면 다른 글꼴로 보일 수 있으며, 내용에는 영향이 없습니다.</p></details>
+<details><summary>PDF는 컴퓨터에서 바로 입력할 수 있나요?</summary><p>PDF는 출력해서 손으로 쓰는 용도입니다. 컴퓨터로 입력하려면 DOCX(워드) 파일을 사용하세요.</p></details>
+<details><summary>작성 예시 이미지의 이름과 회사는 실제 정보인가요?</summary><p>아닙니다. ‘홍길동’, ‘(주)예시회사’ 등 모두 가상의 정보이며 실제 개인정보가 아닙니다.</p></details>
+<details><summary>사직서에 ‘권고사직’, ‘계약기간 만료’ 항목이 있는 이유는요?</summary><p>이직 사유는 실업급여 등을 확인할 때 중요하게 쓰이는 항목이라 선택지로 넣었습니다. 사유가 사실과 맞는지 확인해 적으시고, 해당 여부의 판단은 고용센터가 합니다.</p></details>
+<details><summary>서명이나 직인은 어떻게 하나요?</summary><p>신청서류에는 서명 또는 인감 자리를, 증명서류에는 발급 기관의 직인 자리를 두었습니다. 출력한 뒤 서명이나 날인하세요.</p></details>
+<section>
+<h2>관련 서식·계산기</h2>
+<ul class="slots">
+  <li><a class="slot" href="https://incomedown.com/%EC%9D%B4%EC%A7%81%ED%99%95%EC%9D%B8%EC%84%9C-%EC%96%91%EC%8B%9D-%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C/">이직확인서 서식 페이지</a></li>
+  <li><a class="slot" href="https://incomedown.com/%EC%88%98%EA%B8%89%EC%9E%90%EA%B2%A9-%EC%9D%B8%EC%A0%95%EC%8B%A0%EC%B2%AD%EC%84%9C-%EC%96%91%EC%8B%9D/">수급자격 인정신청서 서식 페이지</a></li>
+  <li><a class="slot" href="https://incomedown.com/2026%EB%85%84-%ED%91%9C%EC%A4%80%EA%B7%BC%EB%A1%9C%EA%B3%84%EC%95%BD%EC%84%9C-%EC%96%91%EC%8B%9D-%EB%AC%B4%EB%A3%8C-%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-hwp-word/">표준근로계약서 안내 페이지</a></li>
+  <li><span class="slot off">퇴직금 계산기 (준비 중)</span></li>
+</ul>
+</section>
+<p class="src">양식은 인컴다운이 일반적인 항목으로 새로 구성했으며 특정 업체의 양식을 가져다 쓰지 않았습니다. 작성 예시의 이름·회사는 모두 가상입니다.</p>
+<p class="credit">인컴다운 제공 무료 정보 · 작성 예시는 이해를 돕기 위한 가상 데이터이며 법률 자문이 아닙니다.</p>
+</div>
