@@ -80,7 +80,7 @@ ok("링크 자리는 site-links.json 에서 채워짐 (비어 있으면 '준비 
   const SITE = JSON.parse(read("site-links.json"));
   const U = {
     guide: "https://incomedown.com/무료-양식-사직서-재직증명서-경력증명서/",
-    isik: "https://incomedown.com/피보험자-이직확인서-양식-다운로드-별지-제75호의4서식/",
+    isik: "https://incomedown.com/이직확인서-양식-다운로드/",
     elig: "https://incomedown.com/실업급여-수급자격-인정신청서-양식-다운로드-유형/",
     std: "https://incomedown.com/2026년-표준근로계약서-양식-무료-다운로드-hwp-word/",
     ia: "https://incomedown.com/산재-요양급여-신청서-서식근로복지공단-무료-다운/",
@@ -88,6 +88,13 @@ ok("링크 자리는 site-links.json 에서 채워짐 (비어 있으면 '준비 
   };
   ok("site-links.json: 알려주신 6개 주소가 그대로 저장됨", SITE["own-forms-guide"] === U.guide && SITE["form-isik"] === U.isik && SITE["form-sugub"] === U.elig && SITE["std-contract"] === U.std && SITE["industrial-accident"] === U.ia && SITE["calc-guard"] === U.calc);
   ok("site-links.json: 사직서·재직증명서·병가/휴가 링크는 안내 페이지의 해당 양식 위치(#앵커)로 연결", SITE["form-resign"] === U.guide + "#idf-guide-resignation-letter" && SITE["form-employment-cert"] === U.guide + "#idf-guide-employment-certificate" && SITE["form-sick-leave"] === U.guide + "#idf-guide-annual-leave-request");
+  /* 워드프레스는 글 슬러그를 퍼센트 인코딩한 상태로 200자까지만 저장하고 넘으면 끝을 자른다 (한글 1글자 = 9자) */
+  const slugOf = (u) => decodeURIComponent(new URL(u).pathname.replace(/^\/|\/$/g, ""));
+  const slugLens = Object.entries(SITE).filter(([, u]) => u).map(([k, u]) => [k, encodeURIComponent(slugOf(u)).length]);
+  ok(`슬러그 길이: 모든 주소가 인코딩 후 200자 이내 (최대 ${Math.max(...slugLens.map((x) => x[1]))}자 — 여유 ${200 - Math.max(...slugLens.map((x) => x[1]))}자)`, slugLens.every(([, n]) => n <= 200));
+  ok("이직확인서 주소는 짧은 슬러그(인코딩 후 101자)로 교체됨", encodeURIComponent(slugOf(SITE["form-isik"])).length === 101 && SITE["form-isik"] === "https://incomedown.com/이직확인서-양식-다운로드/");
+  const OLD = "피보험자-이직확인서-양식-다운로드-별지";
+  ok("옛 이직확인서 주소(…별지-제75호의4서식)가 어떤 페이지·설정에도 남아 있지 않음 (원문·인코딩 모두)", ![allHtml, read("site-links.json"), read("build-wp-pages.js")].some((t) => t.includes(OLD) || t.includes(encodeURIComponent(OLD))));
   const enc = (u) => `href="${encodeURI(u)}"`;
   const empty = (h) => (h.match(/준비 중/g) || []).length;
   ok("링크 값은 퍼센트 인코딩되어 들어가고 디코딩하면 원래 주소와 같음", [...allHtml.matchAll(/class="slot" href="([^"]+)"/g)].every((m) => /^[\x21-\x7e]+$/.test(m[1]) && Object.values(SITE).includes(decodeURI(m[1]))));
