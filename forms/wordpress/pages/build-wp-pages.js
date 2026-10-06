@@ -78,7 +78,7 @@ function loadLinks(keys) {
   return merged;
 }
 const slotList = (items, links) => `<ul class="slots">\n${items.map(([key, label]) => links[key]
-  ? `  <li><a class="slot" href="${esc(links[key])}">${esc(label)}</a></li>`
+  ? `  <li><a class="slot" href="${esc(encodeURI(links[key]))}">${esc(label)}</a></li>` // 한글 주소는 퍼센트 인코딩해서 링크로 씀
   : `  <li><span class="slot off">${esc(label)} (준비 중)</span></li>`).join("\n")}\n</ul>`;
 
 /* ───────── 공통 도우미 ───────── */
@@ -224,7 +224,8 @@ for (const s of SEO) for (const m of s.metas) if ([...m].length > 80) throw new 
 /* ───────── 실행 ───────── */
 function build({ base = DEFAULT_BASE, outDir = __dirname, copy = true } = {}) {
   if (!base.endsWith("/")) base += "/";
-  const keys = new Set([...PAGES.flatMap((x) => x.p.slots.map((s) => s[0])), ...GUIDE_SLOTS.map((s) => s[0])]);
+  const STORED_ONLY = ["own-forms-guide", "industrial-accident"]; // 슬롯에는 안 쓰지만 사이트 주소로 보관
+  const keys = new Set([...PAGES.flatMap((x) => x.p.slots.map((s) => s[0])), ...GUIDE_SLOTS.map((s) => s[0]), ...STORED_ONLY]);
   const links = loadLinks(keys);
   const pages = {};
   pages["wp-form-own-forms-guide.html"] = guideFragment(base, links);

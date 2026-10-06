@@ -58,6 +58,13 @@ const decoded = Buffer.from(b64Lines.map((l) => l.replace(/[",]/g, "")).join("")
   ok("합본: 목차 7개 항목, '계산기 바로 사용하기' 항목 없음", (toc.match(/<li><a href="#gcs-/g) || []).length === 7 && !ALL.includes("계산기 바로 사용하기") && !toc.includes('href="#guard-calc"'));
   ok("합본: <style> 2개(설명글 1 + 계산기 1), <script> 1개, 문서 한 덩어리", (ALL.match(/<style>/g) || []).length === 2 && (ALL.match(/<script>/g) || []).length === 1 && ALL.trimStart().startsWith("<!--"));
   ok("합본: 운영자 문단 없음", !ALL.includes("gc-operator") && !ALL.includes("blockquote"));
+  {
+    const STD = JSON.parse(fs.readFileSync(path.join(__dirname, "pages", "site-links.json"), "utf8"))["std-contract"];
+    const links = ALL.slice(at('id="gcs-links"'), at('id="gcs-source"'));
+    ok("합본 관련 링크: 인컴다운 표준근로계약서 페이지 추가(실제 주소, 같은 창) + 고용노동부 링크 유지 + 최저임금 링크 유지", !!STD && links.includes(`href="${encodeURI(STD)}"`) && !/data-slot="standard-contract-page"[^>]*target=/.test(links) && links.includes("moel.go.kr/policy/policydata/view.do?bbs_seq=20250300356") && links.includes("news_seq=19744"));
+    ok("합본 관련 링크: 표준근로계약서(인컴다운) → 고용노동부 표준근로계약서 → 야간·연장수당 계산기(준비 중) 순서", links.indexOf("standard-contract-page") < links.indexOf('data-slot="standard-contract"') && links.indexOf('data-slot="standard-contract"') < links.indexOf("night-overtime-calc"));
+    ok("합본 관련 링크: 죽은 링크(href=\"#\") 없음", !/href="#"/.test(links));
+  }
   ok("합본에 <h1> 없음 (마크업·풀린 스크립트 모두) — 워드프레스 페이지 제목이 h1", !/<h1[\s>]/i.test(ALL) && !/<h1[\s>]/i.test(decoded));
   ok("합본의 계산기 제목 '경비원 월급 계산기'는 <h2 class=\"gc-title\">", /<h2 class="gc-title">경비원 월급 계산기<\/h2>/.test(ALL));
   const standalone = fs.readFileSync(path.join(__dirname, "..", "guard-salary-calculator.html"), "utf8");

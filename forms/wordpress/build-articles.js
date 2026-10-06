@@ -4,6 +4,9 @@ const fs = require("fs");
 const path = require("path");
 const css = fs.readFileSync(path.join(__dirname, "article-css.txt"), "utf8").trim();
 const compact = (s) => s.replace(/\n\s*\n/g, "\n");
+// 사이트 주소는 pages/site-links.json 한 곳에서 관리 (없으면 해당 링크는 생략)
+let SITE = {}; try { SITE = JSON.parse(fs.readFileSync(path.join(__dirname, "pages", "site-links.json"), "utf8")); } catch (e) { /* 없음 */ }
+const STD_PAGE = SITE["std-contract"] || "";
 const BASIS = "확인 기준일 2026년 10월 4일";
 const ext = (url, label) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
 const tbl = (head, rows, numCols = []) =>
@@ -162,7 +165,7 @@ ${faq.map(([q, a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).j
 <h2 id="gcs-links">관련 링크</h2>
 <ul class="gc-links">
 <li>${ext("https://www.moel.go.kr/news/enews/report/enewsView.do?news_seq=19744", "2027년도 적용 최저임금 시간급 10,700원 (고용노동부)").replace("<a ", '<a data-slot="minwage-2027" ')}</li>
-<li>${ext("https://www.moel.go.kr/policy/policydata/view.do?bbs_seq=20250300356", "표준근로계약서 2025년 배포판 (고용노동부 게시판)").replace("<a ", '<a data-slot="standard-contract" ')}</li>
+${STD_PAGE ? `<li><a data-slot="standard-contract-page" href="${encodeURI(STD_PAGE)}">표준근로계약서 양식 다운로드·작성 예시 (인컴다운)</a></li>\n` : ""}<li>${ext("https://www.moel.go.kr/policy/policydata/view.do?bbs_seq=20250300356", "표준근로계약서 2025년 배포판 (고용노동부 게시판)").replace("<a ", '<a data-slot="standard-contract" ')}</li>
 <li><span data-slot="night-overtime-calc">야간·연장수당 계산기 (준비 중)</span></li>
 </ul>
 

@@ -42,8 +42,9 @@ for (const f of PAGES) {
   const ids = [...h.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]);
   ok(`${f}: id 는 모두 idf- 접두어, 중복 없음 (${ids.length}개)`, ids.every((x) => x.startsWith("idf-")) && new Set(ids).size === ids.length);
   ok(`${f}: href="#" 죽은 링크 없음`, !/href="#"/.test(h));
-  const ext = [...h.matchAll(/<a [^>]*href="(https?:[^"]+)"[^>]*>/g)];
-  ok(`${f}: 외부 링크(${ext.length}개)는 새 창 + rel=noopener`, ext.every((m) => /target="_blank"/.test(m[0]) && /rel="noopener noreferrer"/.test(m[0])));
+  const anchors = [...h.matchAll(/<a [^>]*href="(https?:[^"]+)"[^>]*>/g)];
+  const own = anchors.filter((m) => m[1].startsWith("https://incomedown.com/")), ext = anchors.filter((m) => !m[1].startsWith("https://incomedown.com/"));
+  ok(`${f}: 외부 링크(${ext.length}개)는 새 창 + rel=noopener, 내 사이트 링크(${own.length}개)는 같은 창`, ext.every((m) => /target="_blank"/.test(m[0]) && /rel="noopener noreferrer"/.test(m[0])) && own.every((m) => !/target=/.test(m[0])));
   ok(`${f}: 금지 표현 없음`, !["3" + "교대", "저희 " + "근무지", "경비 일을 " + "하고", "2026년 " + "개정"].some((w) => h.includes(w)));
 }
 
@@ -73,6 +74,29 @@ ok("표준근로계약서: '2025년 배포판' + 공식 게시판 링크 + 파�
 ok("산재 요양급여신청서: 요양업무처리규정 별지 제2호 + 근로복지공단 서식자료실 링크 + 파일 첨부 없음", ia.includes("별지 제2호") && ia.includes("comwel.or.kr/comwel/info/data/papr/papr_lst.jsp") && names(ia).length === 0);
 ok("4개 서식 페이지 모두 칸별 작성 예시 표·FAQ·관련 링크·제출 전 공식 사이트 확인 포함", [isik, elig, std, ia].every((h) => h.includes("칸별 작성 예시") && h.includes("자주 묻는 질문") && h.includes("관련 서식·계산기") && h.includes("제출 전 공식 사이트 확인") && /가상\(홍길동\/\(주\)예시회사\)/.test(h)));
 ok("링크 자리는 site-links.json 에서 채워짐 (비어 있으면 '준비 중' 표기, 죽은 링크 아님)", /준비 중/.test(isik) && JSON.parse(read("site-links.json")) && Object.keys(JSON.parse(read("site-links.json"))).length >= 10);
+
+/* ── 3-2. site-links.json: 발행된 실제 주소로 링크 채움 ── */
+{
+  const SITE = JSON.parse(read("site-links.json"));
+  const U = {
+    guide: "https://incomedown.com/무료-양식-사직서-재직증명서-경력증명서/",
+    isik: "https://incomedown.com/피보험자-이직확인서-양식-다운로드-별지-제75호의4서식/",
+    elig: "https://incomedown.com/실업급여-수급자격-인정신청서-양식-다운로드-유형/",
+    std: "https://incomedown.com/2026년-표준근로계약서-양식-무료-다운로드-hwp-word/",
+    ia: "https://incomedown.com/산재-요양급여-신청서-서식근로복지공단-무료-다운/",
+    calc: "https://incomedown.com/guard-salary-calculator/",
+  };
+  ok("site-links.json: 알려주신 6개 주소가 그대로 저장됨", SITE["own-forms-guide"] === U.guide && SITE["form-isik"] === U.isik && SITE["form-sugub"] === U.elig && SITE["std-contract"] === U.std && SITE["industrial-accident"] === U.ia && SITE["calc-guard"] === U.calc);
+  ok("site-links.json: 사직서·재직증명서·병가/휴가 링크는 안내 페이지의 해당 양식 위치(#앵커)로 연결", SITE["form-resign"] === U.guide + "#idf-guide-resignation-letter" && SITE["form-employment-cert"] === U.guide + "#idf-guide-employment-certificate" && SITE["form-sick-leave"] === U.guide + "#idf-guide-annual-leave-request");
+  const enc = (u) => `href="${encodeURI(u)}"`;
+  const empty = (h) => (h.match(/준비 중/g) || []).length;
+  ok("링크 값은 퍼센트 인코딩되어 들어가고 디코딩하면 원래 주소와 같음", [...allHtml.matchAll(/class="slot" href="([^"]+)"/g)].every((m) => /^[\x21-\x7e]+$/.test(m[1]) && Object.values(SITE).includes(decodeURI(m[1]))));
+  ok("이직확인서 페이지: 수급자격·사직서 링크가 실제 주소, '(준비 중)'은 실업급여·퇴직금 계산기 2개만", isik.includes(enc(U.elig)) && isik.includes(enc(SITE["form-resign"])) && empty(isik) === 2);
+  ok("수급자격 인정신청서 페이지: 이직확인서·사직서 링크가 실제 주소, '(준비 중)'은 실업급여 계산기 1개만", elig.includes(enc(U.isik)) && elig.includes(enc(SITE["form-resign"])) && empty(elig) === 1);
+  ok("표준근로계약서 페이지: 경비원 월급 계산기·사직서·재직증명서 링크가 실제 주소, '(준비 중)'은 2개(최저임금·월급, 퇴직금 계산기)", std.includes(enc(U.calc)) && std.includes(enc(SITE["form-resign"])) && std.includes(enc(SITE["form-employment-cert"])) && empty(std) === 2);
+  ok("산재 요양급여신청서 페이지: 병가·휴가·사직서 링크가 실제 주소, '(준비 중)'은 평균임금 계산기 1개만", ia.includes(enc(SITE["form-sick-leave"])) && ia.includes(enc(SITE["form-resign"])) && empty(ia) === 1);
+  ok("자체 양식 안내 페이지: 이직확인서·수급자격·표준근로계약서 링크가 실제 주소, '(준비 중)'은 퇴직금 계산기 1개만", guide.includes(enc(U.isik)) && guide.includes(enc(U.elig)) && guide.includes(enc(U.std)) && empty(guide) === 1);
+}
 
 /* ── 4. 제목·메타설명 ── */
 const seo = read("titles-and-meta.md");
