@@ -81,7 +81,7 @@ ok("링크 자리는 site-links.json 에서 채워짐 (비어 있으면 '준비 
   const U = {
     guide: "https://incomedown.com/무료-양식-사직서-재직증명서-경력증명서/",
     isik: "https://incomedown.com/이직확인서-양식-다운로드/",
-    elig: "https://incomedown.com/실업급여-수급자격-인정신청서-양식-다운로드-유형/",
+    elig: "https://incomedown.com/수급자격-인정신청서-양식/",
     std: "https://incomedown.com/2026년-표준근로계약서-양식-무료-다운로드-hwp-word/",
     ia: "https://incomedown.com/산재-요양급여-신청서-서식근로복지공단-무료-다운/",
     calc: "https://incomedown.com/guard-salary-calculator/",
@@ -93,8 +93,10 @@ ok("링크 자리는 site-links.json 에서 채워짐 (비어 있으면 '준비 
   const slugLens = Object.entries(SITE).filter(([, u]) => u).map(([k, u]) => [k, encodeURIComponent(slugOf(u)).length]);
   ok(`슬러그 길이: 모든 주소가 인코딩 후 200자 이내 (최대 ${Math.max(...slugLens.map((x) => x[1]))}자 — 여유 ${200 - Math.max(...slugLens.map((x) => x[1]))}자)`, slugLens.every(([, n]) => n <= 200));
   ok("이직확인서 주소는 짧은 슬러그(인코딩 후 101자)로 교체됨", encodeURIComponent(slugOf(SITE["form-isik"])).length === 101 && SITE["form-isik"] === "https://incomedown.com/이직확인서-양식-다운로드/");
-  const OLD = "피보험자-이직확인서-양식-다운로드-별지";
-  ok("옛 이직확인서 주소(…별지-제75호의4서식)가 어떤 페이지·설정에도 남아 있지 않음 (원문·인코딩 모두)", ![allHtml, read("site-links.json"), read("build-wp-pages.js")].some((t) => t.includes(OLD) || t.includes(encodeURIComponent(OLD))));
+  ok("수급자격 주소는 짧은 슬러그로 교체됨", SITE["form-sugub"] === "https://incomedown.com/수급자격-인정신청서-양식/" && encodeURIComponent(slugOf(SITE["form-sugub"])).length <= 120);
+  ok("산재 요양급여신청서 주소는 기존 글 그대로 유지", SITE["industrial-accident"] === "https://incomedown.com/산재-요양급여-신청서-서식근로복지공단-무료-다운/");
+  const OLDS = ["피보험자-이직확인서-양식-다운로드-별지", "실업급여-수급자격-인정신청서-양식-다운로드-유형"];
+  ok("옛 이직확인서·수급자격 주소가 어떤 페이지·설정에도 남아 있지 않음 (원문·인코딩 모두)", ![allHtml, read("site-links.json"), read("build-wp-pages.js")].some((t) => OLDS.some((o) => t.includes(o) || t.includes(encodeURIComponent(o)))));
   const enc = (u) => `href="${encodeURI(u)}"`;
   const empty = (h) => (h.match(/준비 중/g) || []).length;
   ok("링크 값은 퍼센트 인코딩되어 들어가고 디코딩하면 원래 주소와 같음", [...allHtml.matchAll(/class="slot" href="([^"]+)"/g)].every((m) => /^[\x21-\x7e]+$/.test(m[1]) && Object.values(SITE).includes(decodeURI(m[1]))));
