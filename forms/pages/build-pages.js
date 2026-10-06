@@ -51,8 +51,11 @@ const slots = (items) =>
 const verify = (extra = "") =>
   `<div class="notice" role="note"><strong>제출 전 공식 사이트 확인</strong> — 서식은 개정될 수 있습니다. 제출 전에 아래 공식 사이트에서 현행 서식과 작성 방법을 반드시 다시 확인하세요.${extra}</div>`;
 
-function page(file, p) {
-  const html = `<!doctype html>
+const PAGES = []; // { file, p } — 아래 page() 호출이 채움. 단독 페이지 출력과 워드프레스 조각 출력이 같은 데이터를 씀
+function page(file, p) { PAGES.push({ file, p }); }
+
+function renderStandalone(p) {
+  return `<!doctype html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
@@ -81,7 +84,6 @@ ${verify()}
 </body>
 </html>
 `;
-  fs.writeFileSync(file, html);
 }
 
 const LAW_REPUB = (name, no) => `<div class="box"><strong>출처 표기 (복사해서 사용)</strong><br>
@@ -232,3 +234,8 @@ ${btn("정부24 안내 보기", "https://www.gov.kr/mw/AA020InfoCappView.do?High
   slots: [["form-sick-leave", "병가·휴가 관련 서식 페이지"], ["calc-avgwage", "평균임금 계산기"], ["form-resign", "사직서 양식"]],
   src: "근거: 근로복지공단 「산업재해보상보험 요양업무처리규정」 별지 제2호, 근로복지공단 서식자료실, 정부24. 이 페이지는 공식 기관이 아닙니다.",
 });
+
+module.exports = { PAGES, CSS, CHECKED, esc, btn, table, faq, slots, verify, section };
+
+// 직접 실행(node build-pages.js)하면 단독 HTML 페이지 4개를 씀
+if (require.main === module) for (const { file, p } of PAGES) fs.writeFileSync(file, renderStandalone(p));
