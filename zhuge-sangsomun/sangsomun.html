@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>제갈량 상소문</title>
+<style>
+  @font-face { font-family: "Galmuri14"; src: url("fonts/Galmuri14.woff2") format("woff2"); font-display: swap; }
+  @font-face { font-family: "Galmuri11B"; src: url("fonts/Galmuri11-Bold.woff2") format("woff2"); font-display: swap; }
+  :root {
+    --win-top: #1c2658;
+    --win-bot: #0c1030;
+    --frame: #e9d9a2;
+    --frame-dark: #5b4a1e;
+    --text: #f4f0e0;
+    --dim: #b9b3a0;
+    --gold: #ffd866;
+    --npc: #b4f07a;
+    --sky: #7fdcff;
+    --red: #d8412f;
+    --body: "Galmuri14", "DungGeunMo", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    --ui: "Galmuri11B", "Galmuri14", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: #10200f; color: var(--text); font-family: var(--body); overflow: hidden;
+    -webkit-font-smoothing: none; font-smooth: never; user-select: none; }
+  #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+
+  /* ---------- 게임 창 공통 ---------- */
+  .win { position: fixed; background: linear-gradient(180deg, rgba(28,38,88,0.94), rgba(12,16,48,0.94));
+    border: 2px solid var(--frame);
+    box-shadow: 0 0 0 2px #000, inset 0 0 0 2px var(--frame-dark), 5px 5px 0 2px rgba(0,0,0,0.45); }
+  .bar { font-family: var(--ui); font-size: 12px; line-height: 12px; color: #ffeebb; padding: 5px 8px 4px;
+    background: linear-gradient(180deg, #7a5820, #43300f); border-bottom: 2px solid #000; display: flex; gap: 8px; align-items: center; }
+  .bar .x { margin-left: auto; }
+  .pxbtn { font-family: var(--ui); font-size: 12px; line-height: 12px; color: #2a1a06; cursor: pointer;
+    background: #d6bf84; padding: 6px 10px 5px; border: 2px solid; border-color: #fff5cf #5a4318 #5a4318 #fff5cf; box-shadow: 0 0 0 1px #000; }
+  .pxbtn:hover { background: #ecd699; }
+  .pxbtn:active { border-color: #5a4318 #fff5cf #fff5cf #5a4318; }
+  .pxbtn:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
+  .pxbtn[disabled] { opacity: 0.45; cursor: default; }
+
+  /* ---------- 좌상단: 주공 정보 ---------- */
+  #status { top: 14px; left: 14px; width: 232px; font-family: var(--ui); font-size: 12px; line-height: 12px; }
+  #status .rows { padding: 10px 10px 4px; display: grid; grid-template-columns: 56px 1fr; row-gap: 8px; }
+  #status .k { color: var(--dim); }
+  #status .v { color: var(--text); }
+  .gauge { margin: 0 10px 8px; }
+  .gauge .lbl { display: flex; justify-content: space-between; margin-bottom: 3px; color: var(--dim); }
+  .gauge .track { height: 10px; background: #05071a; border: 2px solid #000; box-shadow: inset 0 0 0 1px #3a3f66; }
+  .gauge .fill { height: 100%; }
+  .hp .fill { background: repeating-linear-gradient(90deg, #e2483a 0 6px, #c8321f 6px 8px); width: 100%; }
+  .mp .fill { background: repeating-linear-gradient(90deg, #3d8cf0 0 6px, #2a6bd0 6px 8px); width: 100%; }
+  .xp .fill { background: repeating-linear-gradient(90deg, #ffd866 0 6px, #e0b43a 6px 8px); width: 0; transition: width .3s steps(6); }
+
+  /* ---------- 우상단: 상소 목록 ---------- */
+  #quest { top: 14px; right: 14px; width: 272px; }
+  #quest ul { list-style: none; margin: 0; padding: 6px; }
+  #quest li { font-family: var(--ui); font-size: 12px; line-height: 12px; padding: 8px 8px 7px; cursor: pointer; display: flex; gap: 6px; color: var(--text); }
+  #quest li:hover { background: rgba(255,255,255,0.08); }
+  #quest li.on { background: rgba(255, 216, 102, 0.16); color: var(--gold); }
+  #quest li .lab { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  #quest li .cnt { margin-left: auto; color: var(--dim); flex: none; }
+  #quest li.done .cnt { color: var(--npc); }
+
+  /* ---------- 좌측: 채팅창 ---------- */
+  #chat { left: 14px; width: min(440px, calc(100% - 28px)); bottom: calc(var(--dlg-h) + 34px); background: rgba(0,0,0,0.45);
+    border: 0; box-shadow: none; padding: 6px 8px; font-family: var(--ui); font-size: 12px; line-height: 18px; text-shadow: 1px 1px 0 #000; }
+  #chat div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .c-notice { color: var(--gold); } .c-sys { color: var(--sky); } .c-whisper { color: #ff9ad5; } .c-guide { color: #d9d4c0; }
+
+  /* ---------- 하단: 대화창 ---------- */
+  :root { --dlg-h: 250px; }
+  #dialog { left: 50%; transform: translateX(-50%); bottom: 14px; width: min(1040px, calc(100% - 28px)); height: var(--dlg-h);
+    display: flex; gap: 14px; padding: 14px; }
+  .portrait { flex: none; width: 132px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .portrait .frame { width: 132px; height: 132px; background: #2a3a2a; border: 2px solid var(--frame); box-shadow: 0 0 0 2px #000, inset 0 0 0 2px var(--frame-dark); }
+  .portrait canvas { width: 128px; height: 128px; image-rendering: pixelated; display: block; }
+  .portrait .who { font-family: var(--ui); font-size: 12px; line-height: 12px; color: var(--npc); text-shadow: 1px 1px 0 #000; }
+  .portrait .rank { font-family: var(--ui); font-size: 12px; line-height: 12px; color: var(--gold); }
+  .dlg-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .dlg-head { display: flex; gap: 10px; align-items: baseline; font-family: var(--ui); font-size: 12px; line-height: 12px; padding-bottom: 8px; border-bottom: 2px dotted rgba(233,217,162,0.35); }
+  .dlg-head .npc { color: var(--npc); }
+  .dlg-head .sec { color: var(--gold); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .dlg-head .pg { margin-left: auto; color: var(--dim); flex: none; }
+  #text { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 4px 4px 0; font-size: 15px; line-height: 27px; word-break: keep-all; overflow-wrap: anywhere; cursor: pointer;
+    scrollbar-width: thin; scrollbar-color: var(--frame-dark) transparent; }
+  #text strong, #book strong { color: var(--gold); font-weight: normal; }
+  #text code, #book code { color: var(--sky); font-family: var(--body); }
+  #text .hanja { display: block; font-size: 30px; line-height: 44px; color: var(--gold); margin: 6px 0; }
+  .dlg-foot { display: flex; gap: 8px; align-items: center; padding-top: 8px; }
+  .dlg-foot .hint { font-family: var(--ui); font-size: 12px; color: var(--dim); margin-left: 4px; }
+  .more { margin-left: auto; color: var(--gold); font-family: var(--ui); font-size: 12px; animation: blink 0.8s steps(2) infinite; }
+  .more.hide { visibility: hidden; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* 인장 */
+  .seal { display: inline-grid; grid-template-rows: 1fr 1fr; grid-auto-flow: column; grid-auto-columns: 1fr; width: 56px; height: 56px; padding: 5px; margin: 6px 0 0 8px; vertical-align: middle;
+    background: var(--red); color: #fff3dc; font-family: var(--ui); font-size: 12px; line-height: 12px; place-items: center; direction: rtl;
+    box-shadow: 0 0 0 2px #7a1a10, inset 0 0 0 2px #fff3dc; }
+  .seal span { direction: ltr; }
+  .seal.stamp { animation: stamp 0.35s steps(4) both; }
+  @keyframes stamp { from { transform: scale(2.2) rotate(-12deg); opacity: 0; } to { transform: scale(1) rotate(-4deg); opacity: 1; } }
+
+  /* ---------- 전체 읽기 ---------- */
+  #book { position: fixed; inset: 0; display: none; background: rgba(0,0,0,0.55); z-index: 10; }
+  #book.open { display: block; }
+  #book .win { top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(880px, calc(100% - 28px)); height: min(86vh, calc(100% - 28px)); display: flex; flex-direction: column; }
+  #book .scrollbody { flex: 1; overflow-y: auto; padding: 18px 26px 26px; font-size: 15px; line-height: 28px; word-break: keep-all; overflow-wrap: anywhere; user-select: text;
+    scrollbar-width: thin; scrollbar-color: var(--frame-dark) transparent; }
+  #book h1 { font-family: var(--body); font-weight: normal; font-size: 30px; line-height: 40px; color: var(--gold); margin: 4px 0 2px; }
+  #book h2 { font-family: var(--ui); font-weight: normal; font-size: 12px; line-height: 12px; color: #1a1206; background: var(--frame); display: inline-block; padding: 6px 8px 5px; margin: 26px 0 10px; }
+  #book p { margin: 0 0 14px; }
+  #book .meta { color: var(--dim); font-family: var(--ui); font-size: 12px; }
+
+  @media (prefers-reduced-motion: reduce) { .more, .seal.stamp { animation: none; } }
+  @media (max-width: 900px) { #status { display: none; } #quest { width: 230px; } }
+  @media (max-width: 640px) {
+    :root { --dlg-h: 58vh; }
+    #quest, #chat { display: none; }
+    #dialog { flex-direction: column; gap: 8px; padding: 10px; }
+    .portrait { flex-direction: row; width: auto; }
+    .portrait .frame { width: 52px; height: 52px; }
+    .portrait canvas { width: 48px; height: 48px; }
+    .dlg-foot .hint { display: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="scene" aria-hidden="true"></canvas>
+
+<section class="win" id="status" aria-label="주공 정보">
+  <div class="bar">주공 정보</div>
+  <div class="rows">
+    <span class="k">이름</span><span class="v">주공</span>
+    <span class="k">칭호</span><span class="v">초보 군주</span>
+    <span class="k">알현</span><span class="v" id="days">1일째</span>
+    <span class="k">오늘</span><span class="v" id="dateHan"></span>
+  </div>
+  <div class="gauge hp"><div class="lbl"><span>체력</span><span>100%</span></div><div class="track"><div class="fill"></div></div></div>
+  <div class="gauge mp"><div class="lbl"><span>마력</span><span>100%</span></div><div class="track"><div class="fill"></div></div></div>
+  <div class="gauge xp"><div class="lbl"><span>경험치 (오늘의 상소)</span><span id="xpPct">0%</span></div><div class="track"><div class="fill" id="xpFill"></div></div></div>
+</section>
+
+<section class="win" id="quest" aria-label="상소 목록">
+  <div class="bar">상소 목록 <span class="x" id="qTitle"></span></div>
+  <ul id="questList"></ul>
+</section>
+
+<section class="win" id="chat" aria-live="polite"></section>
+
+<section class="win" id="dialog" aria-label="제갈량의 상소">
+  <div class="portrait">
+    <div class="frame"><canvas id="face" width="32" height="32"></canvas></div>
+    <div class="who">제갈량</div>
+    <div class="rank">[촉한 승상]</div>
+  </div>
+  <div class="dlg-body">
+    <div class="dlg-head"><span class="npc">제갈량</span><span class="sec" id="sec"></span><span class="pg" id="pg"></span></div>
+    <div id="text" tabindex="0" aria-live="polite"></div>
+    <div class="dlg-foot">
+      <button class="pxbtn" id="btnPrev" type="button">◀ 이전</button>
+      <button class="pxbtn" id="btnNext" type="button">다음 ▶</button>
+      <button class="pxbtn" id="btnAll" type="button">전체 읽기</button>
+      <span class="hint">클릭 · Space · Enter 다음 / ← 이전 / A 전체</span>
+      <span class="more" id="more">▼</span>
+    </div>
+  </div>
+</section>
+
+<div id="book" role="dialog" aria-modal="true" aria-label="상소문 전체">
+  <section class="win">
+    <div class="bar"><span id="bookTitle">상소문 전체</span><button class="pxbtn x" id="btnClose" type="button">닫기 ✕</button></div>
+    <div class="scrollbody" id="bookBody"></div>
+  </section>
+</div>
+
+<script>
+/* ======================================================================
+   기본 상소문 — 클로드가 아직 오늘의 상소를 쓰지 못했을 때 보여 주는 글.
+   매일 새 글은 run 스크립트가 data/today.js 에 써 넣습니다.
+   ====================================================================== */
+const DEFAULT_CONTENT = {
+  title: "주공께 올리는 첫 상소",
+  part1: {
+    heading: "클로드 코드를 부리는 법에 관하여",
+    paragraphs: [
+      "신(臣) 량(亮)이 아뢰옵니다. 주공께서 근래 클로드 코드라는 새로운 병기를 손에 넣으셨다 들었사옵니다. 이 병기는 말 한마디로 성을 쌓고 길을 닦는 신묘한 물건이오나, 병기가 날카로울수록 쓰는 이의 법도가 바로 서야 하는 법이옵니다. 명검도 함부로 휘두르면 제 발을 베는 것이니, 신이 아는 바를 하나하나 적어 올리옵니다. 주공께서 아직 초보라 하시나 부끄러워하실 일이 결코 아니옵니다. 신 또한 남양 융중에서 밭을 갈던 한낱 서생이었사옵니다.",
+      "**첫째, 명령은 목적부터 내리시옵소서.** 장수에게 \"싸워라\"라고만 하면 어디서 누구와 싸울지 몰라 헤매게 되옵니다. 클로드에게도 \"홈페이지 만들어줘\"라고만 하지 마시고, \"나는 무엇을 하는 사람이고, 이 페이지를 보는 손님은 누구이며, 다 만들어지면 어떤 모습이어야 하는지\"를 먼저 일러 주시옵소서. 무엇을(목표), 왜(이유), 어디까지(완성의 기준) — 이 세 가지만 갖추어도 명령의 절반은 이긴 것이옵니다.",
+      "**둘째, 큰일은 잘게 나누어 하나씩 맡기시옵소서.** 신이 남만을 평정할 때도 한 번에 모든 부족을 치지 않고 한 고을씩 차례로 다스렸사옵니다. 한꺼번에 열 가지를 시키면 열 가지가 다 어설퍼지옵니다. 먼저 뼈대를 세우게 하시고, 그것을 눈으로 확인하신 뒤에 살을 붙이게 하시옵소서. 일이 크다 싶을 때에는 `Shift+Tab`을 눌러 '계획 모드(Plan mode)'로 바꾸시어, 손을 대기 전에 작전도부터 올리게 하시옵소서. 작전도를 읽고 고개를 끄덕이신 뒤에 군을 움직여도 결코 늦지 않사옵니다.",
+      "**셋째, 군령장(軍令狀)을 써 두시옵소서.** 클로드는 새 대화를 열 때마다 어제 일을 잊어버리는 장수이옵니다. 그러니 프로젝트 폴더에 `CLAUDE.md`라는 문서를 두시고, 이 일의 목적과 지켜야 할 규칙, 자주 쓰는 명령을 적어 두시옵소서. `/init`이라 치시면 클로드가 스스로 초안을 써 올리오니, 주공께서는 그것을 다듬기만 하시면 되옵니다. 한 번 적어 둔 군령은 매번 되풀이해 말하지 않아도 모든 장수가 지키게 되옵니다.",
+      "**넷째, 퇴로를 먼저 확보하시옵소서.** 병법에 이르기를 들어갈 길보다 나올 길을 먼저 살피라 하였사옵니다. 코드에서 퇴로란 곧 git 커밋이옵니다. 한 단계가 잘 되었다 싶으면 \"지금까지 한 것 커밋해줘\"라고 명하시옵소서. 그리하면 훗날 일이 꼬여도 그 자리로 돌아올 수 있사옵니다. 또 클로드가 방금 한 일이 마음에 들지 않으시면 `Esc`를 두 번 눌러 앞선 지점으로 되감으실 수도 있사옵니다. 퇴로가 있는 장수는 과감해지고, 퇴로가 없는 장수는 겁을 먹는 법이옵니다.",
+      "**다섯째, 보고를 믿되 반드시 눈으로 확인하시옵소서.** 클로드가 \"다 되었습니다\"라고 아뢰어도, 주공께서 직접 브라우저로 열어 보시고 버튼을 눌러 보셔야 하옵니다. 더 나아가 \"다 만들었으면 제대로 되는지 네가 직접 검사까지 해줘\"라고 명하시면, 장수가 스스로 성벽을 두드려 보고 보고를 올리니 실수가 크게 줄어드옵니다.",
+      "**여섯째, 모르는 것을 부끄러워 마시고 물으시옵소서.** \"나는 초보이니 쉬운 말로 설명해줘\", \"방금 고친 부분이 무슨 뜻인지 한 줄씩 풀어줘\"라고 청하시면, 클로드는 기꺼이 스승이 되어 드리옵니다. 시키기만 하고 배우지 않으면 평생 남의 손을 빌려야 하오나, 시키면서 배우시면 머지않아 장수를 가려 쓰는 눈이 생기옵니다.",
+      "**일곱째, 진중이 어지러우면 진을 새로 치시옵소서.** 한 대화에서 이 일 저 일을 오래 뒤섞으면 장수도 지치고 헷갈리게 되옵니다. 주제가 바뀌면 `/clear`로 새 판을 여시고, 대화가 너무 길어졌으면 `/compact`로 요점만 남기게 하시옵소서. 깨끗한 진중에서라야 명령이 또렷하게 전해지옵니다.",
+      "**여덟째, 탈이 나면 상처를 통째로 보여 주시옵소서.** 의원에게 \"어딘가 아프오\"라고만 하면 약을 지을 수 없사옵니다. 화면에 붉은 글씨의 오류가 뜨면 \"안 돼\"라고만 하지 마시고, 그 오류 문구를 처음부터 끝까지 그대로 복사하여 붙여 주시옵소서. 무엇을 하려 했는데, 무엇을 눌렀더니, 어떤 일이 벌어졌는지를 순서대로 말씀하시면 됩니다. 화면이 이상하면 그림(스크린샷)을 찍어 붙이셔도 되옵니다. 증상을 소상히 아뢸수록 처방은 빠르고 정확해지옵니다.",
+      "**아홉째, 인장(印章)을 찍기 전에 문서를 읽으시옵소서.** 클로드가 파일을 지우거나 명령을 실행하려 할 때에는 주공께 허락을 구하옵니다. 이때 습관처럼 '예'를 누르지 마시고, 무엇을 하려는지 한 번은 읽어 보시옵소서. 모르는 명령이면 \"이게 무슨 일을 하는 명령이야?\"라고 되물으셔도 되옵니다. 특히 무언가를 지우거나 인터넷에 올리는 일은 되돌리기 어려우니 더욱 삼가 살피시옵소서. 옥새를 가벼이 찍는 군주는 나라를 잃는 법이옵니다.",
+      "신이 주공의 첫 성(城)을 살펴보았사옵니다. 주공께서 손수 쌓으신 `index.html`과 `1.html`·`2.html`·`3.html` 네 채의 집이옵니다. 그 성문 곳곳에 `target=\"_blak\"`이라는 작은 틈이 있사옵고, `\"1.html\"target` 사이에는 띄어쓰기 한 칸이 빠져 있사옵니다. 흠을 잡으려는 것이 아니옵니다. 바로 이런 것을 클로드에게 \"이 파일들을 살펴보고 잘못된 곳을 찾아서 초보도 알게 설명해줘\"라고 맡겨 보시라는 뜻이옵니다. 처음 쌓으신 성을 교재로 삼으시면, 배움이 곧 수리가 되고 수리가 곧 배움이 되옵니다.",
+      "끝으로, 하루에 작은 전투 하나씩만 치르시옵소서. 오늘은 버튼 하나, 내일은 글꼴 하나, 모레는 사진 한 장이옵니다. 작은 승리가 쌓이면 어느새 한 고을이 주공의 것이 되어 있을 것이옵니다. 병기는 매일 닦아야 녹이 슬지 않사옵니다."
+    ]
+  },
+  part2: {
+    heading: "주공의 대업과 삶의 방향에 관하여",
+    paragraphs: [
+      "신 량이 다시 아뢰옵니다. 옛날 선제(先帝)께서 신의 초려를 세 번 찾아오셨을 때, 신은 천하의 형세를 논하여 융중대(隆中對)를 올렸사옵니다. 조조는 천시(天時)를 얻었고 손권은 지리(地利)를 얻었으니, 우리는 인화(人和)를 얻어야 한다 하였사옵니다. 신이 주공의 사업을 곁에서 모두 지켜보지는 못하였사오나, 천하를 도모하는 이치는 예나 지금이나 다르지 않사오니 그 이치로써 아뢰옵니다.",
+      "먼저 주공께서 지금 서 계신 자리를 아뢰옵니다. 신이 살피건대 주공께서는 몇 해 전 봄, 손수 HTML과 CSS와 자바스크립트를 한 글자씩 익히시어 네 채의 작은 집을 짓고 \"웹사이트 완성!\"이라 적으셨사옵니다. 그리고 세월이 흐른 지금, 다시 클로드 코드라는 새 병기를 들고 배움의 길에 돌아오셨사옵니다. 한 번 놓았던 붓을 다시 드는 일은 처음 붓을 드는 일보다 어렵사옵니다. 그 어려운 일을 이미 하셨으니, 주공께는 끈기라는 가장 귀한 군사가 이미 있는 것이옵니다. 신은 이것을 주공의 첫째 밑천으로 삼으시기를 청하옵니다.",
+      "**첫째, 싸울 땅을 먼저 고르시옵소서.** 선제께서는 처음부터 중원을 노리지 않으시고, 형주와 익주라는 발 디딜 땅을 먼저 얻으셨사옵니다. 주공의 사업도 그러하옵니다. \"모두를 위한 무엇\"을 만들려 하지 마시고, 주공께서 가장 잘 아시는 좁은 땅 한 곳을 먼저 정하시옵소서. 주공께서 오래 몸담으신 일, 남들이 주공께 자주 묻는 것, 밤새 이야기해도 지치지 않는 주제 — 이 세 가지가 겹치는 곳이 바로 주공의 형주이옵니다. 형주를 얻기 전에 중원을 넘보면 가진 것마저 잃게 되옵니다.",
+      "**둘째, 백성 한 사람의 얼굴을 떠올리시옵소서.** 인화란 곧 사람의 마음을 얻는 것이옵니다. 사업의 방향이 흐릿할 때에는 \"나의 손님은 누구이며, 그이는 무엇 때문에 밤잠을 설치는가\"를 종이에 적어 보시옵소서. 막연한 '고객들'이 아니라 이름과 나이와 하루 일과가 떠오르는 단 한 사람이어야 하옵니다. 그이의 고통을 덜어 주는 일이라면 값을 치르는 이가 반드시 나타나고, 그렇지 않다면 아무리 훌륭한 물건도 창고에서 먼지를 쓰게 되옵니다.",
+      "**셋째, 칠종칠금(七縱七擒)의 마음으로 시험하시옵소서.** 신이 남만의 맹획을 일곱 번 잡고 일곱 번 놓아준 것은, 한 번의 승리로는 마음을 얻을 수 없음을 알았기 때문이옵니다. 사업도 한 번에 맞히려 하지 마시옵소서. 작게 만들어 내보이고, 사람들의 반응을 보고, 고쳐서 다시 내보이시옵소서. 지금 주공께는 클로드 코드라는 목우유마(木牛流馬)가 있사옵니다. 예전 같으면 몇 달이 걸리던 시험용 페이지나 작은 도구를 이제는 며칠, 때로는 하루 만에 만들 수 있사옵니다. 실패는 패배가 아니라 적의 진영을 한 번 더 살펴본 것일 뿐이옵니다. 다만 한 번 시험할 때마다 '무엇을 배웠는가'를 반드시 적어 두시옵소서. 적어 두지 않은 실패는 같은 자리에서 또 넘어지게 하옵니다.",
+      "**넷째, 초보라는 것을 약점이 아니라 강점으로 쓰시옵소서.** 세상의 많은 이들이 아직 이 새로운 병기를 두려워하거나 멀리하고 있사옵니다. 주공께서 초보의 눈으로 부딪히며 배운 것들 — 무엇이 어렵고, 어디서 막히고, 어떻게 풀었는지 — 은 그 자체로 뒤따라오는 이들에게 귀한 지도가 되옵니다. 배우는 과정을 글로, 영상으로, 기록으로 남기시옵소서. 주공께서 가시는 길이 곧 다른 이의 길잡이가 되고, 그것이 다시 주공의 사업이 될 수도 있사옵니다. 또한 주공의 본업에서 매일 되풀이되는 귀찮은 일부터 클로드에게 맡겨 덜어 내 보시옵소서. 제 성의 곳간부터 채운 장수라야 남의 성도 넘볼 수 있사옵니다.",
+      "**다섯째, 읍참마속(泣斬馬謖)의 결단을 두려워 마시옵소서.** 신은 가정(街亭)의 싸움에서 아끼던 마속이 군령을 어겨 대패하자 눈물을 흘리며 그를 베었사옵니다. 주공의 사업에도 정이 든 계획, 오래 붙들고 있던 생각이 있을 것이옵니다. 그러나 정해 두신 기한 동안 공을 들여도 아무 반응이 없는 일이라면, 아까워도 내려놓으셔야 하옵니다. 시작할 때 '언제까지, 무엇이 되지 않으면 거둔다'는 기준을 미리 적어 두시옵소서. 기준을 미리 세운 장수는 눈물을 흘릴지언정 망설이지는 않사옵니다. 버리기를 두려워하는 이는 새로운 것을 얻지 못하옵니다.",
+      "**여섯째, 식소사번(食少事煩)을 경계하시옵소서.** 신의 맞수였던 사마의는 신의 사자에게 \"공명은 먹는 것은 적고 하는 일은 번다하니 어찌 오래 가겠는가\"라 하였고, 과연 신은 오장원의 가을바람 속에 뜻을 다 이루지 못하고 스러졌사옵니다. 신은 스무 대 이상의 매를 치는 일까지 몸소 살피다 몸을 상하였사옵니다. 주공께서는 부디 신의 전철을 밟지 마시옵소서. 잠을 줄여 얻은 한 시간은 반드시 병으로 되갚게 되옵니다. 끼니를 거르지 마시고, 하루 한 번은 몸을 움직이시고, 모든 일을 손수 하려 하지 마시고 맡길 수 있는 일은 사람에게든 클로드에게든 맡기시옵소서. 대업은 백 리를 가는 길이지 십 리를 내달리는 길이 아니옵니다. 몸이 무너지면 뜻도 함께 무너지오니, 주공의 몸이 곧 주공의 사업에서 가장 귀한 밑천임을 잊지 마시옵소서. 밤이 깊었는데도 화면 앞에 계시거든, 오늘의 싸움은 여기까지라 선언하고 잠자리에 드시옵소서.",
+      "**일곱째, 곁에 둘 사람을 가리시옵소서.** 신이 출사표에 \"어진 신하를 가까이하고 소인을 멀리한 것, 이것이 선한(先漢)이 흥한 까닭\"이라 적었사옵니다. 듣기 좋은 말만 하는 이보다 주공의 계획에 쓴소리를 해 주는 이를 귀히 여기시옵소서. 같은 길을 걷는 동료를 몇 사람이라도 사귀시어 서로의 진척을 나누시옵소서. 옛말에 홀로 가는 길은 빠르나 함께 가는 길은 멀리 간다 하였사옵니다.",
+      "**여덟째, 마음의 중심을 고요히 하시옵소서.** 신이 아들에게 남긴 계자서(誡子書)에 \"담박하지 않으면 뜻을 밝힐 수 없고, 고요하지 않으면 멀리 이를 수 없다(非淡泊無以明志 非寧靜無以致遠)\"고 적었사옵니다. 누가 무엇으로 얼마를 벌었다는 소문, 날마다 쏟아지는 새 도구의 소식에 마음이 흔들릴 때가 많으실 것이옵니다. 그럴 때일수록 주공께서 왜 이 길을 시작하셨는지, 처음의 뜻을 되새기시옵소서. 하루를 시작할 때 오늘 반드시 이룰 한 가지를 정하시고, 하루를 마칠 때 무엇을 배웠는지 한 줄 적으시옵소서. 이 작은 습관이 쌓이면 흔들리지 않는 뿌리가 되옵니다.",
+      "**아홉째, 곳간을 먼저 살피시옵소서.** 군량이 떨어진 군대는 아무리 용맹해도 물러날 수밖에 없사옵니다. 신이 북벌 때마다 가장 애를 태운 것도 칼이 아니라 군량을 나르는 길이었사옵니다. 주공께서도 매달 들어오는 돈과 나가는 돈을 한 장에 적어 두시고, 지금 가진 것으로 몇 달을 버틸 수 있는지 늘 헤아리시옵소서. 처음에는 고정으로 나가는 비용을 가볍게 하시고, 돈을 쓰기 전에 먼저 한 사람에게서라도 돈을 받아 보시옵소서. 단 한 푼이라도 값을 치른 손님은, 백 번의 칭찬보다 더 정직하게 주공의 길이 옳은지를 알려 주옵니다.",
+      "**열째, 매주 한 번 군막에서 회의를 여시옵소서.** 한 주의 끝에 반 시간만 내시어 스스로에게 세 가지를 물으시옵소서. 이번 주에 무엇을 이루었는가, 무엇이 뜻대로 되지 않았는가, 다음 주에 단 하나만 한다면 무엇을 할 것인가. 이 답을 이 상소문 폴더의 `about-me.md`에 적어 두시면, 신이 매일 아침 그것을 읽고 더 주공께 맞는 계책을 올릴 수 있사옵니다. 신이 주공의 사정을 소상히 알수록 상소는 더 날카로워지옵니다. 기록하지 않는 장수는 같은 싸움을 두 번 지고, 기록하는 장수는 진 싸움에서도 다음 승리를 건져 오옵니다.",
+      "**마지막으로, 급히 가지 마시되 멈추지도 마시옵소서.** 신이 여러 차례 기산으로 나아간 것은 한 번에 이길 수 없음을 알았기 때문이옵니다. 오늘 하루의 진척이 보잘것없어 보여도, 일 년 뒤의 주공은 오늘의 주공이 상상하지 못한 자리에 서 계실 것이옵니다. 스스로 배우기를 청하시는 그 마음 하나로, 주공께서는 이미 절반은 이기신 것이옵니다.",
+      "신은 본래 포의(布衣)로 남양에서 몸소 밭을 갈며 난세에 목숨이나 보전하고자 하였을 뿐, 이름을 떨칠 생각이 없었사옵니다. 그런데도 주공께서 신을 비루하다 여기지 않으시고 뜻을 물어 주시니, 신은 몸을 굽혀 힘을 다하고 죽은 뒤에야 그칠 따름이옵니다(鞠躬盡瘁 死而後已). 이제 표를 올림에 눈물이 흘러 무슨 말을 아뢰었는지 알지 못하겠사옵니다(臨表涕零 不知所言)."
+    ]
+  },
+  maxim: null
+};
+
+/* 오늘의 한 수 — 날짜마다 돌아가며 한 구절 */
+const MAXIMS = [
+  { hanja: "非淡泊無以明志 非寧靜無以致遠", reading: "비담박무이명지 비영정무이치원", meaning: "담박하지 않으면 뜻을 밝힐 수 없고, 고요하지 않으면 멀리 이를 수 없다. — 계자서" },
+  { hanja: "夫學須靜也 才須學也", reading: "부학수정야 재수학야", meaning: "배움은 모름지기 고요해야 하고, 재주는 모름지기 배워야 한다. — 계자서" },
+  { hanja: "非學無以廣才 非志無以成學", reading: "비학무이광재 비지무이성학", meaning: "배우지 않으면 재주를 넓힐 수 없고, 뜻이 없으면 배움을 이룰 수 없다. — 계자서" },
+  { hanja: "靜以修身 儉以養德", reading: "정이수신 검이양덕", meaning: "고요함으로 몸을 닦고, 검소함으로 덕을 기른다. — 계자서" },
+  { hanja: "年與時馳 意與日去", reading: "연여시치 의여일거", meaning: "나이는 때와 함께 달려가고, 뜻은 날과 함께 사라진다. 미루지 말라. — 계자서" },
+  { hanja: "不宜妄自菲薄", reading: "불의망자비박", meaning: "스스로를 함부로 하찮게 여기지 마시옵소서. — 출사표" },
+  { hanja: "親賢臣 遠小人", reading: "친현신 원소인", meaning: "어진 이를 가까이하고 소인을 멀리하라. — 출사표" },
+  { hanja: "鞠躬盡瘁 死而後已", reading: "국궁진췌 사이후이", meaning: "몸을 굽혀 힘을 다하고, 죽은 뒤에야 그친다. — 후출사표" },
+  { hanja: "勿以惡小而爲之 勿以善小而不爲", reading: "물이악소이위지 물이선소이불위", meaning: "악이 작다고 행하지 말고, 선이 작다고 하지 않음이 없게 하라. — 선주의 유조" },
+  { hanja: "攻心爲上 攻城爲下", reading: "공심위상 공성위하", meaning: "마음을 얻는 것이 으뜸이요, 성을 치는 것은 아래다. — 남정 때 받든 계책" },
+  { hanja: "淫慢則不能勵精 險躁則不能治性", reading: "음만즉불능려정 험조즉불능치성", meaning: "게으르면 정진할 수 없고, 조급하면 본성을 다스릴 수 없다. — 계자서" },
+  { hanja: "謀事在人 成事在天", reading: "모사재인 성사재천", meaning: "일을 꾀하는 것은 사람이요, 이루는 것은 하늘이다. 할 바를 다하고 결과에 매이지 말라." }
+];
+
+/* ---------------- helpers ---------------- */
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+const HAN_NUM = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+function hanNum(n) {
+  if (n <= 10) return HAN_NUM[n];
+  if (n < 20) return "十" + HAN_NUM[n - 10];
+  return HAN_NUM[Math.floor(n / 10)] + "十" + HAN_NUM[n % 10];
+}
+function ganji(year) {
+  const stems = "甲乙丙丁戊己庚辛壬癸", branches = "子丑寅卯辰巳午未申酉戌亥";
+  return stems[(year - 4) % 10] + branches[(year - 4) % 12];
+}
+function ymd(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function inline(s) {
+  return esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+function valid(c) {
+  return c && c.part1 && c.part2 && Array.isArray(c.part1.paragraphs) && Array.isArray(c.part2.paragraphs)
+    && c.part1.paragraphs.length > 0 && c.part2.paragraphs.length > 0;
+}
+const NOW = new Date();
+const TODAY = ymd(NOW);
+const DATE_HAN = ganji(NOW.getFullYear()) + "年 " + hanNum(NOW.getMonth() + 1) + "月 " + hanNum(NOW.getDate()) + "日";
+const REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ======================================================================
+   도트 그림 — 궁궐 마당, 제갈량, 주공, 바람에 날리는 잎
+   ====================================================================== */
+const W = 320, H = 180;
+const buf = document.createElement("canvas"); buf.width = W; buf.height = H;
+const bx = buf.getContext("2d");
+const bg = document.createElement("canvas"); bg.width = W; bg.height = H;
+const g = bg.getContext("2d");
+
+let seed = 7;
+function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+function rect(c, x, y, w, h, col) { c.fillStyle = col; c.fillRect(x | 0, y | 0, w | 0, h | 0); }
+
+function drawTree(cx, cy, r) {
+  rect(g, cx - 2, cy + r - 4, 4, 9, "#5e3f22");
+  rect(g, cx - 1, cy + r - 4, 1, 9, "#7a5530");
+  for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
+    const d = x * x + y * y * 1.15;
+    if (d > r * r) continue;
+    let col = "#2e6a2e";
+    if (d > (r - 1.5) * (r - 1.5)) col = "#173f1c";
+    else if (x + y < -r * 0.6) col = "#56a14a";
+    else if (x + y < -r * 0.1) col = "#3f8538";
+    if (col !== "#173f1c" && rnd() < 0.08) col = "#6bb85a";
+    rect(g, cx + x, cy + y, 1, 1, col);
+  }
+}
+
+function drawBackground() {
+  seed = 7;
+  // 잔디
+  rect(g, 0, 0, W, H, "#4a8a3b");
+  for (let i = 0; i < 1400; i++) rect(g, rnd() * W, rnd() * H, 1, 1, rnd() < 0.5 ? "#3e7a32" : "#5b9e48");
+  for (let i = 0; i < 26; i++) {
+    const x = rnd() * W, y = rnd() * H;
+    if (x > 40 && x < 280 && y > 50) continue;
+    rect(g, x, y, 1, 1, ["#f2e36b", "#f59ab8", "#ffffff"][i % 3]);
+  }
+  // 박석 마당
+  rect(g, 40, 52, 240, 128, "#b8ae97");
+  for (let y = 52; y < H; y += 7) {
+    rect(g, 40, y, 240, 1, "#a1977f");
+    const off = ((y / 7) | 0) % 2 ? 0 : 6;
+    for (let x = 40 + off; x < 280; x += 12) rect(g, x, y, 1, 7, "#a1977f");
+  }
+  for (let i = 0; i < 500; i++) rect(g, 40 + rnd() * 240, 52 + rnd() * 128, 1, 1, rnd() < 0.5 ? "#c7bea8" : "#aaa089");
+  rect(g, 39, 52, 1, 128, "#7f7662"); rect(g, 280, 52, 1, 128, "#7f7662");
+  // 기단
+  rect(g, 64, 46, 192, 8, "#9e988a"); rect(g, 64, 46, 192, 1, "#cfcabc"); rect(g, 64, 53, 192, 1, "#6f6a5e");
+  for (let x = 64; x < 256; x += 16) rect(g, x, 47, 1, 6, "#85807a");
+  // 계단
+  for (let i = 0; i < 3; i++) { rect(g, 136 - i * 2, 54 + i * 3, 48 + i * 4, 3, i % 2 ? "#a7a192" : "#c6c0b1"); rect(g, 136 - i * 2, 56 + i * 3, 48 + i * 4, 1, "#7a7568"); }
+  // 벽과 기둥, 창살문
+  rect(g, 74, 30, 172, 16, "#e3d3a4");
+  for (let x = 74; x < 246; x += 3) rect(g, x, 30, 1, 16, "#b89a60");
+  for (let y = 30; y < 46; y += 3) rect(g, 74, y, 172, 1, "#b89a60");
+  for (let x = 74; x <= 242; x += 28) { rect(g, x, 29, 4, 17, "#b2362b"); rect(g, x, 29, 1, 17, "#d65a47"); rect(g, x + 3, 29, 1, 17, "#7d2119"); }
+  // 현판
+  rect(g, 146, 31, 28, 7, "#3a2412"); rect(g, 147, 32, 26, 5, "#5a3a1c"); rect(g, 146, 31, 28, 1, "#d8b45a"); rect(g, 146, 37, 28, 1, "#d8b45a");
+  for (let x = 150; x < 172; x += 6) rect(g, x, 33, 3, 3, "#e8c86a");
+  // 단청
+  rect(g, 70, 26, 180, 4, "#2f8f6f");
+  for (let x = 72; x < 250; x += 6) { rect(g, x, 27, 2, 2, "#d8412f"); rect(g, x + 3, 27, 1, 1, "#f1ead2"); }
+  rect(g, 70, 29, 180, 1, "#1d5a47");
+  // 기와 지붕
+  for (let y = 6; y < 26; y++) {
+    const spread = (y - 6) * 1.55;
+    const x0 = Math.round(98 - spread), x1 = Math.round(222 + spread);
+    for (let x = x0; x < x1; x++) {
+      let col = (x % 4 === 0) ? "#2f3542" : "#4a5264";
+      if ((y - 6) % 5 === 4) col = "#353b49";
+      rect(g, x, y, 1, 1, col);
+    }
+  }
+  rect(g, 66, 25, 188, 2, "#232833");
+  // 처마 끝 올림
+  for (let i = 0; i < 6; i++) { rect(g, 62 + i, 24 - (5 - i), 3, 2, "#232833"); rect(g, 255 - i, 24 - (5 - i), 3, 2, "#232833"); }
+  // 용마루
+  rect(g, 96, 3, 128, 4, "#2a2f3a"); rect(g, 96, 3, 128, 1, "#5d667a");
+  rect(g, 90, 0, 7, 6, "#2a2f3a"); rect(g, 223, 0, 7, 6, "#2a2f3a");
+  // 석등
+  [118, 196].forEach(x => {
+    rect(g, x, 58, 6, 2, "#8d887c"); rect(g, x + 1, 60, 4, 6, "#a8a396"); rect(g, x + 2, 61, 2, 3, "#ffd46a");
+    rect(g, x - 1, 66, 8, 2, "#8d887c"); rect(g, x + 2, 68, 2, 5, "#9a9588"); rect(g, x, 73, 6, 2, "#7d786c");
+  });
+  // 나무
+  [[20, 16, 13], [300, 18, 13], [52, 4, 9], [268, 4, 9], [16, 70, 12], [304, 78, 12], [22, 128, 13], [298, 136, 13], [14, 172, 10], [306, 176, 10]]
+    .forEach(([x, y, r]) => drawTree(x, y, r));
+}
+
+const PAL = { k: "#15110d", h: "#2c2c3c", j: "#6fd0ae", s: "#f1c69c", e: "#1a1410", m: "#3b2a1e", w: "#f5f1e6", g: "#c8c1b0", b: "#3c62b0",
+  o: "#cfc8b4", f: "#fffbea", F: "#8a5a2b", H: "#211b17", c: "#8b6a44", C: "#6e5234", B: "#3a2a1a", P: "#55473a", K: "#2a2018", y: "#ffd866" };
+const ZHUGE = [
+  "......kkkk......", ".....khhhhk.....", "....khhhhhhk....", "....khhjjhhk....", "...kkkkkkkkkk...",
+  "....kssssssk....", "....ksessesk....", "....kssssssk....", "....ksmmmmsk....", ".....kmmmmk.....",
+  "....kwwmmwwk....", "...kwwwbbwwwk...", "..kwwwwbbwwwwk..", "..kwgwwbbwwgwk..", "..ksgwwbbwwgsk..",
+  "..kkgwwbbwwgkk..", "...kgwwbbwwgk...", "...kgwwbbwwgk...", "...kgwwbbwwgk...", "...kbbbbbbbbk...",
+  "...kwwwwwwwwk...", "....kkkkkkkk....", "....kkk..kkk....", "................"];
+const FAN = [".ooo..", "offfo.", "offffo", "offffo", ".offo.", "..oo..", "..F...", "..F..."];
+const LORD = [
+  ".......kk.......", "......kHHk......", ".....kkHHkk.....", "....kHHHHHHk....", "....kHHHHHHk....",
+  "....kHHHHHHk....", "....kHHHHHHk....", ".....kHHHHk.....", "....kksssskk....", "...kcccccccck...",
+  "..kccccccccccck.", "..kcCccccccCck..", "..kcCccccccCck..", "..kkBBBBBBBBkk..", "..ksCccccccCsk..",
+  "...kCccccccCk...", "...kcccccccck...", "...kPPPPPPPPk...", "...kPPPkkPPPk...", "...kPPPkkPPPk...",
+  "...kPPPkkPPPk...", "...kKKKkkKKKk...", "................", "................"];
+const FACE = [
+  "..........kkkkkkkkkkkk..........", ".........khhhhhhhhhhhhk.........", "........khhhhhhhhhhhhhhk........",
+  "........khhhhhjjjjhhhhhk........", "........khhhhhjjjjhhhhhk........", "........khhhhhhhhhhhhhhk........",
+  ".......kkkkkkkkkkkkkkkkkk.......", "........ksssssssssssssssk.......", "........ksssssssssssssssk.......",
+  "........ksskkksssskkksssk.......", "........ksssekssssseksssk.......", "........ksssssssssssssssk.......",
+  "........kssssssskssssssk........", "........ksssssssssssssssk.......", "........ksssmmssssmmssssk.......",
+  "........kssmmmmmmmmmmsssk.......", ".........ksmmmmmmmmmmssk........", ".........kmmmmmmmmmmmmk.........",
+  "..........kmmmmmmmmmmk..........", "...........kmmmmmmmmk......ooo..", "........kkkkwmmmmmmwkkk...offfo.",
+  ".......kwwwwwwmmmmwwwwwk.offfffo", "......kwwwwwwwbbbbwwwwwwkofffffo", ".....kwwwwwwwwbbbbwwwwwwkofffffo",
+  ".....kwwgwwwwwbbbbwwwwwgkkoffffo", ".....kwwgwwwwwbbbbwwwwwgskkoffo.", ".....kwwgwwwwwbbbbwwwwwgsk..FF..",
+  ".....kwwgwwwwwbbbbwwwwwgwk..F...", ".....kwwgwwwwwbbbbwwwwwgwk..F...", ".....kwwgwwwwwbbbbwwwwwgwk......",
+  ".....kwwgwwwwwbbbbwwwwwgwk......", ".....kkkkkkkkkkkkkkkkkkkkk......"];
+function sprite(c, rows, x, y) {
+  for (let r = 0; r < rows.length; r++) for (let i = 0; i < rows[r].length; i++) {
+    const ch = rows[r][i]; if (ch !== ".") rect(c, x + i, y + r, 1, 1, PAL[ch]);
+  }
+}
+
+const leaves = Array.from({ length: 28 }, (_, i) => ({
+  x: Math.random() * W, y: Math.random() * H, v: 0.6 + Math.random() * 0.9, p: Math.random() * 6.3,
+  col: ["#6bb85a", "#9ad06b", "#f5a8c0", "#e9e3c8"][i % 4], big: i % 3 === 0 }));
+
+const scene = $("scene"), sc = scene.getContext("2d");
+let frame = 0, view = { s: 1, ox: 0, oy: 0 };
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  scene.width = Math.round(innerWidth * dpr); scene.height = Math.round(innerHeight * dpr);
+  const s = Math.max(scene.width / W, scene.height / H);
+  view = { s, ox: (scene.width - W * s) / 2, oy: Math.min(0, (scene.height - H * s) * 0.2), dpr };
+  paint();
+}
+function nameTag(text, x, y, color, sub) {
+  const { s, ox, oy, dpr } = view;
+  const px = ox + x * s, py = oy + y * s;
+  sc.font = (12 * dpr) + "px Galmuri11B, sans-serif"; sc.textAlign = "center"; sc.textBaseline = "top";
+  const draw = (t, yy, col) => {
+    sc.fillStyle = "#000";
+    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) sc.fillText(t, px + dx * dpr, yy + dy * dpr);
+    sc.fillStyle = col; sc.fillText(t, px, yy);
+  };
+  if (sub) draw(sub, py, "#ffd866");
+  draw(text, py + (sub ? 16 * dpr : 0), color);
+}
+function paint() {
+  const bob = REDUCED ? 0 : (frame % 2);
+  bx.drawImage(bg, 0, 0);
+  // 그림자
+  bx.fillStyle = "rgba(0,0,0,0.25)"; bx.fillRect(146, 90, 14, 3); bx.fillRect(178, 106, 14, 3);
+  sprite(bx, ZHUGE, 144, 68 - bob);
+  sprite(bx, FAN, 155 + (REDUCED ? 0 : (frame % 4 < 2 ? 0 : 1)), 77 - bob);
+  sprite(bx, LORD, 177, 84);
+  // 퀘스트 느낌표
+  if (!REDUCED) { const t = frame % 6 < 3 ? 0 : 1; rect(bx, 151, 58 - t, 2, 5, "#ffd866"); rect(bx, 151, 64 - t, 2, 2, "#ffd866"); }
+  // 바람
+  for (const l of leaves) {
+    rect(bx, l.x, l.y, l.big ? 2 : 1, 1, l.col);
+    if (!REDUCED) { l.x += l.v; l.y += Math.sin(l.p + frame * 0.25) * 0.6 + 0.25; if (l.x > W + 2) { l.x = -2; l.y = Math.random() * H; } if (l.y > H) l.y = 0; }
+  }
+  sc.imageSmoothingEnabled = false;
+  sc.drawImage(buf, view.ox, view.oy, W * view.s, H * view.s);
+  nameTag("제갈량", 152, 93, "#b4f07a", "[촉한 승상]");
+  nameTag("주공", 185, 109, "#ffffff");
+}
+drawBackground();
+(function drawFace() {
+  const f = $("face").getContext("2d");
+  f.fillStyle = "#35523a"; f.fillRect(0, 0, 32, 32);
+  for (let y = 0; y < 32; y += 4) for (let x = (y / 4) % 2 ? 2 : 0; x < 32; x += 4) { f.fillStyle = "#3d5d42"; f.fillRect(x, y, 2, 2); }
+  sprite(f, FACE, 0, 0);
+})();
+resize();
+addEventListener("resize", resize);
+if (!REDUCED) setInterval(() => { frame++; paint(); }, 160);
+document.fonts && document.fonts.ready.then(paint);
+
+/* ======================================================================
+   상소 넘기기 (게임 대화창)
+   ====================================================================== */
+let pages = [], sections = [], cur = 0, typing = null, content = DEFAULT_CONTENT, readMax = 0;
+
+function segments(p) {
+  const out = []; const re = /\*\*(.+?)\*\*|`([^`]+)`/g; let last = 0, m;
+  while ((m = re.exec(p))) {
+    if (m.index > last) out.push({ t: p.slice(last, m.index), tag: "" });
+    out.push({ t: m[1] || m[2], tag: m[1] ? "strong" : "code" });
+    last = re.lastIndex;
+  }
+  if (last < p.length) out.push({ t: p.slice(last), tag: "" });
+  return out;
+}
+function segHTML(segs, n) {
+  let html = "", left = n;
+  for (const s of segs) {
+    if (left <= 0) break;
+    const t = esc(s.t.slice(0, left)); left -= s.t.length;
+    html += s.tag ? "<" + s.tag + ">" + t + "</" + s.tag + ">" : t;
+  }
+  return html;
+}
+
+function buildPages(c) {
+  const maxim = (c.maxim && c.maxim.hanja) ? c.maxim : MAXIMS[Math.floor(NOW.getTime() / 86400000) % MAXIMS.length];
+  pages = []; sections = [];
+  const add = (sec, key, text, extra) => pages.push({ sec, key, segs: segments(text), extra });
+  sections.push({ key: "open", label: "序. 알현", start: 0 });
+  add("序. 알현", "open", "주공, 신 제갈량이 오늘의 상소를 올리옵니다. 제목은 「" + (c.title || "주공께 올리는 글") + "」이옵니다. 모두 두 편이오니, 대화창을 누르시거나 Space를 누르시어 한 장씩 넘겨 보시옵소서.");
+  sections.push({ key: "p1", label: "一. " + (c.part1.heading || "클로드 코드를 부리는 법"), start: pages.length });
+  c.part1.paragraphs.forEach(p => add("一. " + (c.part1.heading || ""), "p1", p));
+  sections.push({ key: "p2", label: "二. " + (c.part2.heading || "대업과 삶의 방향"), start: pages.length });
+  c.part2.paragraphs.forEach(p => add("二. " + (c.part2.heading || ""), "p2", p));
+  sections.push({ key: "mx", label: "今日一言", start: pages.length });
+  add("今日一言 · 오늘의 한 구절", "mx", (maxim.reading ? "(" + maxim.reading + ") " : "") + (maxim.meaning || ""), { hanja: maxim.hanja });
+  add("結. 맺음", "mx", DATE_HAN + " 臣 諸葛亮 頓首再拜", { seal: true });
+  sections.forEach((s, i) => s.end = (i + 1 < sections.length ? sections[i + 1].start : pages.length));
+  buildBook(c, maxim);
+}
+
+function buildBook(c, maxim) {
+  const ps = list => list.map(p => "<p>" + inline(p) + "</p>").join("");
+  $("bookTitle").textContent = "상소문 전체 — " + (c.title || "");
+  $("bookBody").innerHTML =
+    '<div class="meta">' + DATE_HAN + ' · ' + NOW.getFullYear() + '년 ' + (NOW.getMonth() + 1) + '월 ' + NOW.getDate() + '일 · 臣 亮 謹上</div>' +
+    '<h1>上疏文 · ' + esc(c.title || "") + '</h1>' +
+    '<h2>一. ' + esc(c.part1.heading || "") + '</h2>' + ps(c.part1.paragraphs) +
+    '<h2>二. ' + esc(c.part2.heading || "") + '</h2>' + ps(c.part2.paragraphs) +
+    '<h2>今日一言</h2><p style="font-size:24px;line-height:36px;color:var(--gold)">' + esc(maxim.hanja) + '</p><p>' + esc((maxim.reading ? "(" + maxim.reading + ") " : "") + (maxim.meaning || "")) + '</p>' +
+    '<p style="text-align:right;margin-top:24px">' + DATE_HAN + ' 臣 諸葛亮 頓首再拜 <span class="seal"><span>臥</span><span>龍</span><span>之</span><span>印</span></span></p>';
+}
+
+function renderQuest() {
+  $("questList").innerHTML = sections.map((s, i) => {
+    const total = s.end - s.start, read = Math.max(0, Math.min(total, readMax + 1 - s.start));
+    const on = cur >= s.start && cur < s.end;
+    return '<li data-i="' + i + '" class="' + (on ? "on " : "") + (read >= total ? "done" : "") + '"><span>' + (on ? "▶" : "·") + '</span><span class="lab">' + esc(s.label) + '</span><span class="cnt">' + (read >= total ? "완료" : read + "/" + total) + '</span></li>';
+  }).join("");
+  const pct = Math.round((readMax + 1) / pages.length * 100);
+  $("xpFill").style.width = pct + "%"; $("xpPct").textContent = pct + "%";
+}
+
+function show(i, instant) {
+  cur = Math.max(0, Math.min(pages.length - 1, i));
+  const was = readMax;
+  readMax = Math.max(readMax, cur);
+  store.set("sangsomun-page", JSON.stringify({ date: TODAY, key: contentKey, cur, readMax }));
+  const pg = pages[cur];
+  $("sec").textContent = pg.sec;
+  $("pg").textContent = (cur + 1) + " / " + pages.length;
+  $("btnPrev").disabled = cur === 0;
+  $("btnNext").disabled = cur === pages.length - 1;
+  renderQuest();
+  if (was < pages.length - 1 && readMax === pages.length - 1) chat("c-sys", "[시스템] 오늘의 상소를 모두 읽으셨습니다. 경험치 +100, 지혜 +1");
+  clearInterval(typing); typing = null;
+  const total = pg.segs.reduce((a, s) => a + s.t.length, 0);
+  const head = pg.extra && pg.extra.hanja ? '<span class="hanja">' + esc(pg.extra.hanja) + '</span>' : "";
+  const tail = () => pg.extra && pg.extra.seal ? '<span class="seal stamp"><span>臥</span><span>龍</span><span>之</span><span>印</span></span>' : "";
+  const box = $("text"); box.scrollTop = 0;
+  if (instant || REDUCED) { box.innerHTML = head + segHTML(pg.segs, total) + tail(); $("more").classList.toggle("hide", cur === pages.length - 1); return; }
+  let n = 0; $("more").classList.add("hide");
+  typing = setInterval(() => {
+    n += 3;
+    box.innerHTML = head + segHTML(pg.segs, n);
+    box.scrollTop = box.scrollHeight;
+    if (n >= total) { clearInterval(typing); typing = null; box.innerHTML = head + segHTML(pg.segs, total) + tail(); box.scrollTop = 0; $("more").classList.toggle("hide", cur === pages.length - 1); }
+  }, 30);
+}
+function next() { if (typing) { show(cur, true); return; } if (cur < pages.length - 1) show(cur + 1); }
+function prev() { if (cur > 0) show(cur - 1, true); }
+
+function chat(cls, msg) {
+  const d = document.createElement("div"); d.className = cls; d.textContent = msg; d.title = msg;
+  const box = $("chat"); box.appendChild(d);
+  while (box.children.length > 6) box.removeChild(box.firstChild);
+}
+
+$("text").addEventListener("click", next);
+$("btnNext").onclick = next;
+$("btnPrev").onclick = prev;
+$("btnAll").onclick = () => { $("book").classList.add("open"); $("btnClose").focus(); };
+$("btnClose").onclick = () => $("book").classList.remove("open");
+$("book").addEventListener("click", e => { if (e.target.id === "book") $("book").classList.remove("open"); });
+$("questList").addEventListener("click", e => { const li = e.target.closest("li"); if (li) show(sections[+li.dataset.i].start); });
+addEventListener("keydown", e => {
+  const bookOpen = $("book").classList.contains("open");
+  if (e.key === "Escape") { $("book").classList.remove("open"); return; }
+  if (bookOpen || e.target.tagName === "BUTTON" && (e.key === "Enter" || e.key === " ")) return;
+  if (e.key === " " || e.key === "Enter" || e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); next(); }
+  else if (e.key === "ArrowLeft" || e.key === "Backspace" || e.key === "PageUp") { e.preventDefault(); prev(); }
+  else if (e.key === "a" || e.key === "A" || e.key === "ㅁ") $("btnAll").click();
+});
+
+/* ---------------- data loading ---------------- */
+function loadScript(src) {
+  return new Promise(resolve => {
+    const s = document.createElement("script");
+    s.src = src + "?t=" + Date.now();
+    s.onload = () => { s.remove(); resolve(true); };
+    s.onerror = () => { s.remove(); resolve(false); };
+    document.head.appendChild(s);
+  });
+}
+
+let contentKey = "", pollCount = 0, writingShown = false;
+function useContent(c, key) {
+  content = c; contentKey = key; buildPages(c);
+  let saved = null; try { saved = JSON.parse(store.get("sangsomun-page") || "null"); } catch (e) {}
+  if (saved && saved.date === TODAY && saved.key === key) { readMax = Math.min(saved.readMax || 0, pages.length - 1); show(saved.cur || 0, true); }
+  else { readMax = 0; show(0); }
+}
+
+async function refresh() {
+  window.SANGSOMUN_TODAY = null; window.SANGSOMUN_STATUS = null;
+  await loadScript("data/today.js");
+  await loadScript("data/status.js");
+  const saved = window.SANGSOMUN_TODAY, status = window.SANGSOMUN_STATUS;
+  const writing = status && status.state === "writing" && status.date === TODAY;
+  let c = DEFAULT_CONTENT, key = "default", info = "";
+  if (saved && valid(saved.content)) { c = saved.content; key = saved.date + ":" + (saved.content.title || ""); if (saved.date !== TODAY) info = saved.date + "에 올린 상소입니다."; }
+  else info = "기본 상소입니다. 클로드 코드가 설치되어 있으면 매일 새 상소가 올라옵니다.";
+  if (key !== contentKey) {
+    const first = contentKey === "";
+    useContent(c, key);
+    if (!first) chat("c-notice", "[공지] 제갈량의 오늘 상소가 도착했습니다!");
+    if (info) chat("c-sys", "[시스템] " + info);
+  }
+  if (status && status.state === "failed" && status.date === TODAY && pollCount === 0) {
+    chat("c-sys", "[시스템] 오늘의 새 상소 작성 실패: " + ({
+      "claude-not-found": "클로드 코드(claude)를 찾지 못했습니다",
+      "claude-error": "클로드 코드가 응답하지 않았습니다",
+      "bad-output": "상소 파일을 받지 못했습니다" }[status.reason] || "원인 미상"));
+  }
+  if (writing && pollCount < 180) {
+    if (!writingShown) { chat("c-whisper", "[귓속말] 제갈량: 주공, 오늘의 상소를 붓으로 쓰는 중이옵니다. 잠시만 기다려 주시옵소서…"); writingShown = true; }
+    pollCount++; setTimeout(refresh, 5000);
+  }
+}
+
+// 알현 일수
+(function days() {
+  let list = []; try { list = JSON.parse(store.get("sangsomun-days") || "[]"); } catch (e) {}
+  if (!list.includes(TODAY)) { list.push(TODAY); store.set("sangsomun-days", JSON.stringify(list.slice(-2000))); }
+  $("days").textContent = list.length + "일째";
+})();
+$("dateHan").textContent = DATE_HAN;
+chat("c-notice", "[공지] " + DATE_HAN + ", 제갈량이 주공께 상소를 올렸습니다.");
+chat("c-guide", "[안내] 대화창 클릭·Space: 다음 / ←: 이전 / A: 전체 읽기");
+refresh();
+</script>
+</body>
+</html>
